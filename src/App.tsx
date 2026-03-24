@@ -2,23 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import {
-  CalculatorIcon as Calculator,
-  Cog6ToothIcon as Settings,
-  PaperAirplaneIcon as Send,
-  BoltIcon as Zap,
-  FireIcon as Flame,
-  InformationCircleIcon as Info,
-  CheckCircleIcon as CheckCircle2,
-  ArrowTrendingDownIcon as TrendingDown,
-  ArrowPathIcon as Loader2,
-  DocumentCheckIcon as Save,
-  ArrowPathIcon as RefreshCw,
+  DualEnergyIcon as Calculator,
+  SettingsIcon as Settings,
+  SendIcon as Send,
+  ZapIcon as Zap,
+  FlameIcon as Flame,
+  InfoIcon as Info,
+  CheckIcon as CheckCircle2,
+  TrendingDownIcon as TrendingDown,
+  RefreshCwIcon as Loader2,
+  SaveIcon as Save,
+  RefreshCwIcon as RefreshCw,
   ChevronRightIcon as ChevronRight,
   ChevronLeftIcon as ChevronLeft
-} from '@heroicons/react/24/outline';
+} from './components/Icons';
 import axios from 'axios';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { supabase } from './supabase';
+import Header from './components/Header';
 
 type EnergyType = 'ELEC' | 'GAS' | 'BOTH' | null;
 
@@ -664,40 +665,13 @@ export default function App() {
         </svg>
       </div>
 
-      <header className="px-6 py-5 flex justify-between items-center max-w-7xl mx-auto w-full relative z-40 mt-3">
-        <div className="flex items-center">
-          <img src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png" alt="Telenco Logo" className="h-7 sm:h-8 object-contain opacity-90 transition-opacity hover:opacity-100" style={{ filter: 'brightness(0) invert(1)' }} />
-        </div>
-        <div className="flex items-center gap-3">
-          {isAdmin && (
-            <button onClick={() => navigate('/admin')} className="p-2 rounded-full transition-colors bg-white/20 border border-white/30 text-white hover:bg-white hover:text-[#E74B4D]">
-              <Settings className="w-5 h-5" />
-            </button>
-          )}
-          <div className="flex bg-white/20 p-1 rounded-full shadow-sm backdrop-blur-md border border-white/30 relative">
-            {['NL', 'FR'].map((l) => (
-              <button
-                key={l}
-                onClick={() => setLang(l as 'NL' | 'FR')}
-                className={`relative px-4 py-1.5 text-xs font-bold rounded-full transition-colors z-10 w-12 flex justify-center items-center ${lang === l ? 'text-[#E74B4D]' : 'text-white hover:text-white/80'}`}
-              >
-                {lang === l && (
-                  <motion.div
-                    layoutId="activeLangBubbleApp"
-                    className="absolute inset-0 bg-white rounded-full shadow-sm -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-                <span className="relative z-20">{l}</span>
-              </button>
-            ))}
-          </div>
+      <Header 
+        actionButton={
           <button onClick={() => navigate('/home')} className="p-2 rounded-full transition-colors bg-white/20 border border-white/30 text-white hover:bg-white hover:text-[#E74B4D]" title={text.backToHome}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m15 18-6-6 6-6" /></svg>
           </button>
-        </div>
-      </header>
-
+        }
+      />
 
 
       <AnimatePresence mode="wait">
@@ -715,10 +689,6 @@ export default function App() {
               {/* STEP 1 */}
               {currentStep === 1 && (
                 <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="text-center mb-10">
-                    <h2 className="text-3xl font-bold tracking-tight text-white mb-2">{text.step1Title}</h2>
-                    <p className="text-white/80 font-medium">{text.step1Desc}</p>
-                  </div>
                   <div className="bg-white rounded-[2.5rem] p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-4">
                     {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
                       const isSelected = energyType === type;
@@ -738,9 +708,6 @@ export default function App() {
               {/* STEP 2 */}
               {currentStep === 2 && (
                 <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="text-center mb-10">
-                    <h2 className="text-3xl font-bold tracking-tight text-white mb-2">{text.step2Title}</h2>
-                  </div>
                   <div className="flex flex-col md:flex-row gap-6 w-full">
                     {getRequiredTypes().map(type => (
                       <React.Fragment key={type}>{renderConsumptionInput(type)}</React.Fragment>
@@ -752,9 +719,6 @@ export default function App() {
               {/* STEP 3 */}
               {currentStep === 3 && (
                 <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="text-center mb-10">
-                    <h2 className="text-3xl font-bold tracking-tight text-white mb-2">{text.step3Title}</h2>
-                  </div>
                   <div className="flex flex-col md:flex-row gap-6 w-full">
                     {getRequiredTypes().map(type => (
                       <React.Fragment key={type}>{renderCurrentPriceInput(type)}</React.Fragment>
@@ -766,10 +730,6 @@ export default function App() {
               {/* STEP 4: Marge & Vergoeding (was step 5) */}
               {currentStep === 4 && (
                 <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="text-center mb-10">
-                    <h2 className="text-3xl font-bold tracking-tight text-white mb-2">{text.step5Title}</h2>
-                    <p className="text-white/80 font-medium">{text.step5Desc} {totalConsumption} MWh.</p>
-                  </div>
                   <div className="bg-white rounded-[2.5rem] p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-6">
                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
                       <div className="flex justify-between items-end mb-4">
@@ -796,11 +756,6 @@ export default function App() {
               {/* STEP 5: Vergelijking & Afronden (was step 4) */}
               {currentStep === 5 && (
                 <motion.div key="step5" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="text-center mb-10">
-                    <h2 className="text-3xl font-bold tracking-tight text-white mb-2">{text.step4Title}</h2>
-                    <p className="text-white/80 font-medium">{text.basedOn} {totalConsumption} MWh</p>
-                  </div>
-
                   <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-6">
                     {outcomes.map(({ type, cons, showEneco, showElindus, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage }) => (
                       <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative">
@@ -874,15 +829,15 @@ export default function App() {
           </div>
 
           {/* Navigation Controls */}
-          <div className="fixed bottom-6 left-0 right-0 w-full max-w-3xl mx-auto px-4 sm:px-6 z-50">
-            <div className="bg-white/80 backdrop-blur-xl border border-white shadow-2xl p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
+          <div className="fixed bottom-[5.5rem] sm:bottom-[6rem] left-0 right-0 w-full max-w-3xl mx-auto px-4 sm:px-6 z-50">
+            <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
               <button onClick={prevStep} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${currentStep === 1 ? 'opacity-0 pointer-events-none' : 'text-slate-500 hover:bg-slate-100'}`}><ChevronLeft className="w-5 h-5" /><span className="hidden sm:inline">{text.back}</span></button>
               <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-[#E74B4D] w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
               <div className="flex flex-col items-end relative">
                 <AnimatePresence>
                   {validationError && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full mb-4 right-0 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm border border-rose-100 whitespace-nowrap">{validationError}</motion.div>)}
                 </AnimatePresence>
-                <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#E74B4D] text-white hover:bg-[#E5384C] shadow-lg shadow-[#E74B4D]/30')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#E74B4D] text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
               </div>
             </div>
           </div>

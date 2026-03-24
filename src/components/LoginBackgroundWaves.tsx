@@ -17,6 +17,73 @@ export interface WaveConfig {
   visible?: boolean;
 }
 
+export const GREY_WAVES: WaveConfig[] = [
+  {
+    "color": "#cbd5e1",
+    "glow": "rgba(203, 213, 225, 0.5)",
+    "amplitude1": 31,
+    "frequency1": 0.011,
+    "speed1": 0.00036,
+    "amplitude2": 41,
+    "frequency2": 0.0056,
+    "speed2": 0.00049,
+    "verticalOffset": -2,
+    "lineWidth": 5.5,
+    "glowWidth": 6,
+    "phase": 180,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#e2e8f0",
+    "glow": "rgba(226, 232, 240, 0.5)",
+    "amplitude1": 20,
+    "frequency1": 0.011,
+    "speed1": 0.00036,
+    "amplitude2": 20,
+    "frequency2": 0.0056,
+    "speed2": 0.00049,
+    "verticalOffset": -6,
+    "lineWidth": 6,
+    "glowWidth": 6,
+    "phase": 0,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#f1f5f9",
+    "glow": "rgba(241, 245, 249, 0.5)",
+    "amplitude1": 35,
+    "frequency1": 0.0117,
+    "speed1": 0.00036,
+    "amplitude2": 45,
+    "frequency2": 0.0056,
+    "speed2": 0.00049,
+    "verticalOffset": -4,
+    "lineWidth": 7,
+    "glowWidth": 8,
+    "phase": 90,
+    "highlightOffset": -4,
+    "visible": true
+  },
+  {
+    "color": "#f8fafc",
+    "glow": "rgba(248, 250, 252, 0.5)",
+    "amplitude1": 25,
+    "frequency1": 0.010,
+    "speed1": 0.00028,
+    "amplitude2": 35,
+    "frequency2": 0.0045,
+    "speed2": 0.00045,
+    "verticalOffset": -8,
+    "lineWidth": 6.5,
+    "glowWidth": 7,
+    "phase": 270,
+    "highlightOffset": -3,
+    "visible": true
+  }
+];
+
 export const DESKTOP_WAVES: WaveConfig[] = [
   {
     "color": "#0ea5e9",

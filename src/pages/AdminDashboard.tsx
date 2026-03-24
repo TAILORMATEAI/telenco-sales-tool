@@ -5,20 +5,22 @@ import { supabase } from '../supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import axios from 'axios';
 import LiveSyncTerminal from '../components/LiveSyncTerminal';
+import AdminUsers from '../components/AdminUsers';
+import DottedSurface from '../components/DottedSurface';
 import {
-  ArrowPathIcon as RefreshCw,
-  ArrowRightStartOnRectangleIcon as LogOut,
+  RefreshCwIcon as RefreshCw,
+  LogoutIcon as LogOut,
   CalculatorIcon as Calculator,
   ChartBarIcon,
-  UsersIcon,
+  UserIcon as UsersIcon,
   CurrencyEuroIcon,
   ClockIcon,
   TrashIcon,
-  BoltIcon as Zap,
-  FireIcon as Flame,
+  ZapIcon as Zap,
+  FlameIcon as Flame,
   HomeIcon,
   TrophyIcon
-} from '@heroicons/react/24/outline';
+} from '../components/Icons';
 
 interface MarketData {
   epexSpot: number;
@@ -86,8 +88,14 @@ export default function AdminDashboard() {
     margin30to80: 15, margin80to100: 15
   });
   const [overrideData, setOverrideData] = useState<MarketData>({ ...marketData });
+  const [inputStrings, setInputStrings] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const hasChanges = Object.keys(marketData).some(key => {
+    if (key === 'lastUpdated') return false;
+    return marketData[key as keyof MarketData] !== overrideData[key as keyof MarketData];
+  });
 
   // Activity Logs
   const [logs, setLogs] = useState<ActivityLog[]>([]);
@@ -100,17 +108,35 @@ export default function AdminDashboard() {
   const fetchMarketData = async () => {
     const { data, error } = await supabase.from('market_prices').select('*');
     if (!error && data && data.length > 0) {
+      const epex = data.find(p => p.indicator_name === 'EPEX_SPOT');
+      const endex = data.find(p => p.indicator_name === 'ENDEX');
+      const ttfEndex = data.find(p => p.indicator_name === 'TTF_ENDEX');
+      const ttfDam = data.find(p => p.indicator_name === 'TTF_DAM');
+      const margin30to80 = data.find(m => m.indicator_name === 'MARGIN_30_80');
+      const margin80to100 = data.find(m => m.indicator_name === 'MARGIN_80_100');
+
+      const roundPrice = (val: number | undefined, fallback: number) => Number(Number(val ?? fallback).toFixed(2));
+
       const fetched: MarketData = {
-        epexSpot: data.find(p => p.indicator_name === 'EPEX_SPOT')?.value || 65.40,
-        endex: data.find(p => p.indicator_name === 'ENDEX')?.value || 72.10,
-        ttfEndex: data.find(p => p.indicator_name === 'TTF_ENDEX')?.value || 35.20,
-        ttfDam: data.find(p => p.indicator_name === 'TTF_DAM')?.value || 32.50,
-        margin30to80: data.find(p => p.indicator_name === 'MARGIN_30_80')?.value || 15,
-        margin80to100: data.find(p => p.indicator_name === 'MARGIN_80_100')?.value || 15,
+        epexSpot: roundPrice(epex?.value, 65.40),
+        endex: roundPrice(endex?.value, 72.10),
+        ttfEndex: roundPrice(ttfEndex?.value, 35.20),
+        ttfDam: roundPrice(ttfDam?.value, 32.50),
+        margin30to80: roundPrice(margin30to80?.value, 15),
+        margin80to100: roundPrice(margin80to100?.value, 15),
         lastUpdated: data[0].last_updated
       };
       setMarketData(fetched);
       setOverrideData(fetched);
+      // Sync input strings when fresh data loads
+      setInputStrings({
+        epexSpot: String(fetched.epexSpot),
+        endex: String(fetched.endex),
+        ttfEndex: String(fetched.ttfEndex),
+        ttfDam: String(fetched.ttfDam),
+        margin30to80: String(fetched.margin30to80),
+        margin80to100: String(fetched.margin80to100),
+      });
     }
   };
 
@@ -165,14 +191,19 @@ export default function AdminDashboard() {
       { indicator_name: 'ENDEX', value: overrideData.endex, unit: 'MWh', last_updated: nowIso },
       { indicator_name: 'TTF_ENDEX', value: overrideData.ttfEndex, unit: 'MWh', last_updated: nowIso },
       { indicator_name: 'TTF_DAM', value: overrideData.ttfDam, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'MARGIN_30_80', value: overrideData.margin30to80, unit: '€/MWh', last_updated: nowIso },
-      { indicator_name: 'MARGIN_80_100', value: overrideData.margin80to100, unit: '€/MWh', last_updated: nowIso }
+      { indicator_name: 'MARGIN_30_80', value: overrideData.margin30to80, unit: '\u20ac/MWh', last_updated: nowIso },
+      { indicator_name: 'MARGIN_80_100', value: overrideData.margin80to100, unit: '\u20ac/MWh', last_updated: nowIso }
     ];
-    await supabase.from('market_prices').upsert(updates, { onConflict: 'indicator_name' });
-    await fetchMarketData();
+    const { error } = await supabase.from('market_prices').upsert(updates, { onConflict: 'indicator_name' });
+    if (error) {
+      console.error('Save error:', error);
+      showToast('error', 'Opslaan mislukt.', error.message);
+    } else {
+      await fetchMarketData();
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    }
     setIsSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
   };
 
   // Toast notification state
@@ -216,7 +247,7 @@ export default function AdminDashboard() {
   return (
     <div className="flex flex-col sm:flex-row h-screen bg-slate-50 overflow-hidden w-full">
       {/* SaaS Sidebar (Hidden on mobile by default or stacked if needed. We'll make it fixed on desktop and scrollable if needed) */}
-      <aside className="w-full sm:w-64 bg-white border-b sm:border-r border-slate-200 flex flex-col justify-between shrink-0 sm:h-full relative z-30 shadow-2xl sm:overflow-y-auto">
+      <aside className="w-full sm:w-64 bg-white border-b sm:border-r border-slate-200 flex flex-col justify-between shrink-0 sm:h-full relative z-30 shadow-sm sm:shadow-none sm:overflow-y-auto">
         <div className="flex flex-col h-full">
           {/* Logo & Header */}
           <div className="p-5 sm:p-6 sm:h-20 border-b border-slate-100 flex items-center justify-center sm:justify-start shrink-0">
@@ -230,27 +261,46 @@ export default function AdminDashboard() {
           {/* Navigation Links */}
           <nav className="p-3 sm:p-4 flex sm:flex-col flex-row gap-1.5 overflow-x-auto sm:overflow-visible flex-1">
             <p className="hidden sm:block px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-2">Menu</p>
-            {tabs.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 sm:gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shrink-0 sm:w-full ${activeTab === tab.key
-                    ? 'bg-slate-100 text-slate-800 shadow-sm border border-slate-200/50'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+            
+            {/* Mobile "Naar Portaal" button injected directly into the swipable row */}
+            <button onClick={() => navigate('/home')} className="sm:hidden flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shrink-0 text-slate-500 hover:text-slate-900 hover:bg-slate-50">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="m15 18-6-6 6-6" /></svg>
+              <span>Portaal</span>
+            </button>
+
+            {tabs.map(tab => {
+              const isActive = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`relative flex items-center px-3 py-2.5 rounded-xl font-bold text-sm transition-colors whitespace-nowrap shrink-0 sm:w-full ${
+                      isActive ? 'text-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                   }`}
-              >
-                <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === tab.key ? 'text-slate-800' : 'text-slate-400'}`} />
-                <span className={activeTab !== tab.key ? 'hidden sm:inline' : 'inline'}>{tab.label}</span>
-              </button>
-            ))}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="adminTabHighlight"
+                      className="absolute inset-0 bg-slate-100 rounded-xl shadow-sm border border-slate-200/50 z-0"
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-2 sm:gap-3 w-full">
+                    <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${isActive ? 'text-slate-800' : 'text-slate-400'}`} />
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </span>
+                </button>
+              );
+            })}
           </nav>
 
           {/* Bottom Profile & Actions */}
           <div className="flex flex-col border-t border-slate-100 bg-slate-50/50 shrink-0">
-            <div className="p-3 sm:p-4 pb-0">
-              <button onClick={() => navigate('/home')} className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold text-sm transition-all shrink-0 w-full mb-2 border border-slate-200/50 bg-white shadow-sm">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 sm:w-5 sm:h-5"><path d="m15 18-6-6 6-6" /></svg>
-                <span className="hidden sm:inline">Naar Portaal</span>
+            {/* Desktop "Naar Portaal" button only */}
+            <div className="hidden sm:block p-4 pb-0">
+              <button onClick={() => navigate('/home')} className="flex items-center justify-start gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold text-sm transition-all shrink-0 w-full mb-2 border border-slate-200/50 bg-white shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m15 18-6-6 6-6" /></svg>
+                <span>Naar Portaal</span>
               </button>
             </div>
             
@@ -279,9 +329,15 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-full overflow-y-auto relative bg-slate-50 w-full">
-        {/* Soft elegant top background without distracting lines */}
-        <div className="absolute top-0 left-0 w-full h-[25vh] bg-gradient-to-b from-white to-slate-50 z-0 pointer-events-none"></div>
+      <main className="flex-1 h-full overflow-y-auto relative bg-slate-50 w-full overflow-x-hidden">
+        {/* Homepage Global Foundation Gradient & Waves (Re-styled to Admin Greyscale) */}
+        <div className="absolute top-0 left-0 w-full h-[60vh] sm:h-[50vh] bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 z-0 overflow-hidden pointer-events-none">
+          <svg className="absolute bottom-0 w-full min-w-[1200px]" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ transform: 'translateY(2px)' }}>
+            <path fill="#cbd5e1" fillOpacity="1" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,224C960,245,1056,235,1152,213.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            <path fill="#e2e8f0" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,186.7C672,171,768,117,864,117.3C960,117,1056,171,1152,192C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+            <path fill="#f8fafc" d="M0,288L48,272C96,256,192,224,288,218.7C384,213,480,235,576,229.3C672,224,768,192,864,192C960,192,1056,224,1152,240C1248,256,1344,256,1392,256L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+          </svg>
+        </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-10 sm:py-12 relative z-20">
           {/* Dashboard Header removed because Navbar acts as context */}
@@ -308,17 +364,6 @@ export default function AdminDashboard() {
                 return (
                   <div className="space-y-6">
                     <div className="bg-white rounded-[2rem] p-8 sm:p-10 border border-slate-100 shadow-sm relative overflow-hidden">
-                      {/* Abstract colorful SVG Waves */}
-                      <svg className="absolute top-0 right-0 w-[800px] h-[150%] opacity-[0.15] pointer-events-none origin-right translate-x-1/4 -translate-y-1/4 scale-125" viewBox="0 0 1440 600" preserveAspectRatio="none">
-                        <path fill="none" stroke="#0ea5e9" strokeWidth="6" strokeOpacity="1" d="M0,400 C280,300 560,500 840,400 C1120,300 1300,450 1440,350" />
-                        <path fill="none" stroke="#FFC421" strokeWidth="6" strokeOpacity="1" d="M0,450 C240,350 480,550 720,450 C960,350 1200,550 1440,450" />
-                        <path fill="none" stroke="#91C848" strokeWidth="6" strokeOpacity="1" d="M0,300 C360,400 720,100 1080,300 C1260,400 1350,450 1440,400" />
-                        <path fill="none" stroke="#E74B4D" strokeWidth="6" strokeOpacity="1" d="M0,550 C300,550 400,200 720,350 C1040,500 1140,250 1440,350" />
-                      </svg>
-                      
-                      {/* Gradient Masks for readability */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent pointer-events-none"></div>
-                      
                       <h2 className="text-3xl font-black text-slate-800 tracking-tight relative z-10">Welkom, {getDisplayName()}</h2>
                       <p className="text-slate-500 mt-2 text-lg relative z-10">Dit is het strakke overzicht van het Telenco Sales Portaal.</p>
 
@@ -326,8 +371,8 @@ export default function AdminDashboard() {
                         {/* Light, Non-dark Card 1 */}
                         <div className="bg-white border border-rose-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center">
-                              <Zap className="w-6 h-6 text-[#E74B4D]" />
+                            <div className="flex items-center justify-center">
+                              <Zap className="w-7 h-7 text-[#E74B4D]" />
                             </div>
                             <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Totaal Volume</p>
                           </div>
@@ -340,8 +385,8 @@ export default function AdminDashboard() {
                         {/* Light, Non-dark Card 2 */}
                         <div className="bg-white border border-amber-100 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
                           <div className="flex items-center gap-3 mb-4">
-                            <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
-                              <Calculator className="w-6 h-6 text-amber-500" />
+                            <div className="flex items-center justify-center">
+                              <Calculator className="w-7 h-7 text-amber-500" />
                             </div>
                             <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Berekeningen</p>
                           </div>
@@ -355,8 +400,8 @@ export default function AdminDashboard() {
 
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
                       <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                          <TrophyIcon className="w-5 h-5 text-amber-500" />
+                        <div className="flex items-center justify-center">
+                          <TrophyIcon className="w-7 h-7 text-amber-500" />
                         </div>
                         <div>
                           <h3 className="text-xl font-black text-slate-900 tracking-tight">Topverkopers Scoreboard</h3>
@@ -405,31 +450,35 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={handleSave} disabled={isSaving} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${saveSuccess ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c] shadow-lg shadow-[#E74B4D]/20'} disabled:opacity-50`}>
+                  <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${saveSuccess ? 'bg-emerald-500 text-white' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c]'} disabled:opacity-50`}>
                     {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
                   </button>
                 </div>
               </div>
 
-              {/* Live Sync Terminal Box at the top */}
-              <LiveSyncTerminal onSyncComplete={fetchMarketData} />
 
-              <h3 className="text-lg font-black text-slate-900 mb-4">Huidige Marktprijzen</h3>
+              <h3 className="text-lg font-black text-slate-900 mb-4 mt-8">Huidige Marktprijzen</h3>
               {/* Market Price Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-8">
                 {priceFields.map(field => (
-                  <div key={field.key} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${field.color} flex items-center justify-center mb-4`}>
-                      {field.desc.includes('Elek') ? <Zap className="w-5 h-5 text-white" /> : <Flame className="w-5 h-5 text-white" />}
+                  <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                    <div className="flex items-center mb-4">
+                      {field.desc.includes('Elek') ? <Zap className="w-6 h-6 text-[#E74B4D]" /> : <Flame className="w-6 h-6 text-[#E74B4D]" />}
                     </div>
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{field.label}</p>
                     <p className="text-[10px] text-slate-300 mb-3">{field.desc}</p>
                     <input
                       type="number"
                       step="0.01"
-                      value={overrideData[field.key] as number}
-                      onChange={e => setOverrideData({ ...overrideData, [field.key]: Number(e.target.value) })}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
+                      value={inputStrings[field.key] ?? String(overrideData[field.key] ?? '')}
+                      onChange={e => setInputStrings(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      onBlur={e => {
+                        const parsed = parseFloat(e.target.value);
+                        const val = isNaN(parsed) ? 0 : parsed;
+                        setOverrideData(prev => ({ ...prev, [field.key]: val }));
+                        setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-800 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
                     />
                     <p className="text-[10px] text-slate-300 mt-2 text-right">€/MWh</p>
                   </div>
@@ -438,24 +487,33 @@ export default function AdminDashboard() {
 
               {/* Margin Cards */}
               <h3 className="text-lg font-black text-slate-900 mb-4">Vaste Marges per Categorie</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
                 {marginFields.map(field => (
-                  <div key={field.key} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                    <p className="text-sm font-bold text-slate-700 mb-1">{field.label}</p>
-                    <p className="text-xs text-slate-400 mb-4">{field.desc}</p>
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-400 font-bold text-lg">€</span>
+                  <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
+                    <p className="text-xs sm:text-sm font-bold text-slate-700 mb-1 leading-tight">{field.label}</p>
+                    <p className="text-[10px] sm:text-xs text-slate-400 mb-3 sm:mb-4 leading-tight">{field.desc}</p>
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="text-slate-400 font-bold text-base sm:text-lg">€</span>
                       <input
                         type="number"
                         step="0.5"
-                        value={overrideData[field.key] as number}
-                        onChange={e => setOverrideData({ ...overrideData, [field.key]: Number(e.target.value) })}
-                        className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
+                        value={inputStrings[field.key] ?? String(overrideData[field.key] ?? '')}
+                        onChange={e => setInputStrings(prev => ({ ...prev, [field.key]: e.target.value }))}
+                        onBlur={e => {
+                          const parsed = parseFloat(e.target.value);
+                          const val = isNaN(parsed) ? 0 : parsed;
+                          setOverrideData(prev => ({ ...prev, [field.key]: val }));
+                          setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
+                        }}
+                        className="flex-1 w-full min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-800 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
                       />
-                      <span className="text-slate-400 text-xs font-bold">/MWh</span>
+                      <span className="text-slate-400 text-[10px] sm:text-xs font-bold">/MWh</span>
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="mt-8 pt-8 border-t border-slate-200 relative z-20">
+                <LiveSyncTerminal onSyncComplete={fetchMarketData} />
               </div>
             </motion.div>
           )}
@@ -525,67 +583,12 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
+
+
           {/* USERS TAB */}
           {activeTab === 'users' && (
             <motion.div key="users" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-2xl font-black text-slate-900">Gebruikers</h2>
-                  <p className="text-sm text-slate-400 mt-1">{users.length} geregistreerde gebruikers</p>
-                </div>
-                <button onClick={fetchUsers} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition-all">
-                  <RefreshCw className="w-4 h-4" /> Vernieuwen
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {usersLoading ? (
-                  <div className="col-span-full p-12 text-center">
-                    <div className="w-8 h-8 border-4 border-slate-200 border-t-[#E74B4D] rounded-full animate-spin mx-auto" />
-                  </div>
-                ) : users.length === 0 ? (
-                  <div className="col-span-full bg-white rounded-2xl p-12 text-center border border-slate-100">
-                    <UsersIcon className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                    <p className="text-slate-400 font-bold">Nog geen gebruikers</p>
-                  </div>
-                ) : users.map(u => {
-                  const name = u.first_name || u.last_name
-                    ? `${u.first_name || ''} ${u.last_name || ''}`.trim()
-                    : u.email;
-                  const initial = u.first_name ? u.first_name[0].toUpperCase() : u.email ? u.email[0].toUpperCase() : '?';
-
-                  return (
-                    <div key={u.id} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white text-sm ${u.role === 'admin' ? 'bg-gradient-to-br from-[#E74B4D] to-[#c73a3c]' : 'bg-gradient-to-br from-slate-400 to-slate-500'
-                          }`}>
-                          {initial}
-                        </div>
-                        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${u.role === 'admin' ? 'bg-[#E74B4D]/10 text-[#E74B4D]' : 'bg-slate-100 text-slate-500'
-                          }`}>
-                          {u.role === 'admin' ? 'Admin' : 'Verkoper'}
-                        </span>
-                      </div>
-                      <p className="text-sm font-bold text-slate-800 truncate" title={u.email}>{name}</p>
-                      <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-                        <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                          <ClockIcon className="w-3.5 h-3.5" />
-                          {u.last_login ? `Laatst actief: ${formatDate(u.last_login)}` : 'Nog niet ingelogd'}
-                        </p>
-                        {u.id !== profile?.id && (
-                          <button
-                            onClick={() => handleDeleteUser(u.id, u.email)}
-                            className="p-1.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                            title="Gebruiker verwijderen"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <AdminUsers currentUserEmail={user?.email || ''} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -619,7 +622,7 @@ export default function AdminDashboard() {
                     <path d="M0,80 C50,60 100,100 150,80 C200,60 250,100 300,80 C350,60 400,100 450,80" fill="none" stroke="#0ea5e9" strokeWidth="3" />
                     <path d="M0,95 C60,75 120,115 180,95 C240,75 300,115 360,95 C420,75 450,100 450,95" fill="none" stroke="#E74B4D" strokeWidth="3" />
                     <path d="M0,110 C45,90 90,130 135,110 C180,90 225,130 270,110 C315,90 360,130 405,110" fill="none" stroke="#FFC421" strokeWidth="3" />
-                    <path d="M0,125 C55,105 110,145 165,125 C220,105 275,145 330,125 C385,105 440,145 450,125" fill="none" stroke="#91C848" strokeWidth="3" />
+                    <path d="M0,125 C30,105 60,145 90,125 C120,105 150,145 180,125 C210,105 240,145 270,125 C300,105 330,145 360,125 C390,105 420,145 450,125" fill="none" stroke="#91C848" strokeWidth="3" />
                   </svg>
                 </div>
 

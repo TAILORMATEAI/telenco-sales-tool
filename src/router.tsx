@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
+import TelenetWizard from './pages/TelenetWizard';
 import App from './App';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -62,6 +63,7 @@ export default function AppRouter() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/calculator" element={<ProtectedRoute><App /></ProtectedRoute>} />
+            <Route path="/telenet" element={<ProtectedRoute><TelenetWizard /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="*" element={<Navigate to="/home" replace />} />
           </Routes>

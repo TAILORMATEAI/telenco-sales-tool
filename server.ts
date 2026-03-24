@@ -1,4 +1,5 @@
 import express from 'express';
+import 'dotenv/config';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import puppeteer from 'puppeteer';
@@ -286,6 +287,7 @@ let syncIntervalId: NodeJS.Timeout | null = null;
 let lastSyncResult: any = null;
 let lastSyncTime: string | null = null;
 let isSyncing = false;
+let activeSyncProcess: any = null;
 let lastScrapedMarkets: ScrapedMarket[] = []; // In-memory cache of last scrape
 
 function startAutoSync() {
@@ -422,25 +424,6 @@ async function startServer() {
     }
   });
 
-  // New Trigger Endpoint (Async, matches Vercel serverless / GitHub Actions trigger)
-  app.post('/api/trigger-sync', (req, res) => {
-    console.log('Handmatige sync live-trigger aangevraagd lokaal...');
-
-    try {
-      // Start scraper in background using npx tsx natively on Windows
-      const child = spawn('cmd.exe', ['/c', 'npx', 'tsx', 'scripts/scrape-elindus.ts'], {
-        detached: true,
-        stdio: 'ignore'
-      });
-
-      child.unref(); // Detach completely so Node doesn't wait for it
-
-      res.status(200).json({ success: true, message: 'Lokale scraper succesvol gestart op de achtergrond.' });
-    } catch (error: any) {
-      res.status(500).json({ error: 'Fout bij starten lokaal scraper script', details: error.message });
-    }
-  });
-
   // ── Day prices (today + tomorrow) from last scrape ──
   // GET /api/day-prices  →  serves from in-memory cache
   app.get('/api/day-prices', (_req, res) => {
@@ -477,37 +460,133 @@ async function startServer() {
 
   // ── Manual sync trigger (with cooldown protection) ──
   // POST /api/sync-prices  →  scrape + save immediately
-  app.post('/api/sync-prices', async (_req, res) => {
-    // Guard: cooldown check
-    const cooldown = canManualSync();
-    if (!cooldown.allowed) {
-      return res.status(429).json({
-        success: false,
-        error: `Cooldown actief — probeer opnieuw over ${cooldown.waitSeconds} seconden.`,
-        retryAfterSeconds: cooldown.waitSeconds,
-      });
-    }
+  app.post(['/api/sync-prices', '/api/trigger-sync'], async (_req, res) => {
+    // Guard: cooldown check (DISABLED FOR DEVELOPMENT TESTING)
+    // const cooldown = canManualSync();
+    // if (!cooldown.allowed) {
+    //   return res.status(429).json({
+    //     success: false,
+    //     error: `Cooldown actief — probeer opnieuw over ${cooldown.waitSeconds} seconden.`,
+    //     retryAfterSeconds: cooldown.waitSeconds,
+    //   });
+    // }
 
     // Guard: prevent overlapping syncs
     if (isSyncing) {
       return res.status(409).json({
         success: false,
-        error: 'Er loopt al een sync. Even geduld.',
+        error: 'Er loopt al een scan. Even geduld.',
       });
     }
 
     try {
       isSyncing = true;
       console.log('\n🔧 Manual sync requested...');
-      const result = await runFullSync();
-      lastSyncResult = result;
-      lastSyncTime = new Date().toISOString();
-      res.json(result);
-    } catch (error) {
+
+      // Hybrid Architecture: We universally trigger the dedicated GitHub Action CI Pipeline via REST API.
+      // This enforces parity between local testing and Vercel production.
+      if (true) {
+        if (!process.env.GITHUB_PAT) {
+          throw new Error('Geen GITHUB_PAT gevonden in environment variabelen. Voeg deze toe in Vercel om productie syncs te activeren.');
+        }
+
+        const response = await fetch('https://api.github.com/repos/TAILORMATEAI/telenco-sales-tool/actions/workflows/scrape-elindus.yml/dispatches', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': `token ${process.env.GITHUB_PAT}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ ref: 'main' })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`GitHub API Error: ${response.status} ${response.statusText}`);
+        }
+
+        console.log('GitHub Action workflow dispatch succesvol.');
+        // We render success early; Supabase Realtime via the Action will populate the actual end-result.
+        lastSyncTime = new Date().toISOString();
+        res.json({ success: true, message: 'GitHub Action pipeline gestart. Check terminal logs.' });
+      } else {
+        // Local desktop mode: Run the explicit scraper script via child process 
+        // to ensure Supabase sync_logs get populated for the UI terminal.
+        activeSyncProcess = spawn(/^win/.test(process.platform) ? 'npx.cmd' : 'npx', ['tsx', 'scripts/scrape-elindus.ts'], {
+          detached: true,
+          stdio: 'ignore',
+          windowsHide: true
+        });
+        
+        activeSyncProcess.unref();
+        
+        res.status(200).json({ success: true, message: 'Lokale scraper succesvol gestart op de achtergrond. Check de terminal logs.' });
+      }
+      
+    } catch (error: any) {
       console.error('Manual sync error:', error);
-      res.status(500).json({ success: false, error: 'Failed to sync market data.' });
+      res.status(500).json({ success: false, error: 'Failed to sync market data.', details: error?.message || String(error) });
     } finally {
+      // Unconditionally release the lock immediately to allow uninhibited testing
       isSyncing = false;
+    }
+  });
+
+  // ── Manual sync cancellation ──
+  app.post('/api/cancel-sync', async (_req, res) => {
+    isSyncing = false;
+    try {
+      if (!process.env.GITHUB_PAT) {
+        return res.json({ success: false, message: 'Geen GITHUB_PAT gevonden voor annulatie.'});
+      }
+
+      const runsRes = await fetch('https://api.github.com/repos/TAILORMATEAI/telenco-sales-tool/actions/runs?event=workflow_dispatch&status=in_progress', {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `token ${process.env.GITHUB_PAT}`
+        }
+      });
+      const runsData = await runsRes.json();
+      const runs = runsData.workflow_runs || [];
+
+      if (runs.length > 0) {
+        for (const run of runs) {
+          console.log(`🛑 Cancelling GitHub Action Run ID: ${run.id}`);
+          await fetch(`https://api.github.com/repos/TAILORMATEAI/telenco-sales-tool/actions/runs/${run.id}/cancel`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/vnd.github.v3+json',
+              'Authorization': `token ${process.env.GITHUB_PAT}`
+            }
+          });
+        }
+        return res.json({ success: true, message: 'Cloud Scan succesvol gestopt.' });
+      }
+      res.json({ success: false, message: 'Geen actieve acties gevonden.' });
+    } catch(err) {
+      res.json({ success: false, message: 'Fout bij annuleren actie.' });
+    }
+  });
+
+  // ── Scan status: polls GitHub Actions for most recent run status ──
+  app.get('/api/scan-status', async (_req, res) => {
+    try {
+      if (!process.env.GITHUB_PAT) {
+        return res.json({ status: 'unknown' });
+      }
+      const runsRes = await fetch('https://api.github.com/repos/TAILORMATEAI/telenco-sales-tool/actions/workflows/scrape-elindus.yml/runs?per_page=1', {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+          'Authorization': `token ${process.env.GITHUB_PAT}`
+        }
+      });
+      const runsData = await runsRes.json();
+      const latestRun = runsData.workflow_runs?.[0];
+      if (!latestRun) return res.json({ status: 'unknown' });
+      // conclusion is null while in_progress, then 'success'/'failure'/'cancelled'
+      const status = latestRun.conclusion || latestRun.status; // 'queued','in_progress','completed'
+      res.json({ status, run_id: latestRun.id, updated_at: latestRun.updated_at });
+    } catch (err) {
+      res.json({ status: 'unknown' });
     }
   });
 
@@ -552,6 +631,103 @@ async function startServer() {
       isSyncing,
       lastResult: lastSyncResult,
     });
+  });
+
+  // ── Admin User Management ──
+  app.post('/api/admin/create-user', express.json(), async (req, res) => {
+    const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden in de server omgeving.' });
+    
+    const adminClient = createClient(supabaseUrl, serviceKey);
+    const { email, password, firstName, lastName, role, avatarId } = req.body;
+    
+    try {
+      const { data: user, error: authError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+        data: { first_name: firstName, last_name: lastName, role: role || 'user' }
+      });
+
+      if (authError) throw authError;
+      
+      if (user?.user?.id) {
+        await adminClient.from('profiles').insert({ 
+          id: user.user.id,
+          email: email,
+          role: role || 'user',
+          first_name: firstName,
+          last_name: lastName,
+          avatar_id: avatarId || 'gradient-1',
+          is_active: true,
+          is_archived: false
+        });
+      }
+      res.json({ success: true, user: user.user });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/toggle-user-status', express.json(), async (req, res) => {
+    const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
+    const adminClient = createClient(supabaseUrl, serviceKey);
+    
+    const { id, is_active, is_archived } = req.body;
+    try {
+      const { error } = await adminClient.from('profiles').update({ is_active, is_archived }).eq('id', id);
+      if (error) throw error;
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/hard-delete-user', express.json(), async (req, res) => {
+    const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
+    const adminClient = createClient(supabaseUrl, serviceKey);
+    
+    const { id } = req.body;
+    try {
+      const { error } = await adminClient.auth.admin.deleteUser(id);
+      if (error) throw error;
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/admin/update-user', express.json(), async (req, res) => {
+    const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
+    const adminClient = createClient(supabaseUrl, serviceKey);
+    
+    const { id, firstName, lastName, avatarId } = req.body;
+    try {
+      // Check if user exists in Auth system to derive email for new records
+      const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(id);
+      if (userError || !userData?.user) throw new Error('Gebruiker niet gevonden in Auth backend.');
+      
+      const userEmail = userData.user.email;
+      
+      // Pull current permissions if they exist
+      const { data: existingProfile } = await adminClient.from('profiles').select('*').eq('id', id).single();
+      
+      const { error } = await adminClient.from('profiles').upsert({
+        id: id,
+        email: existingProfile?.email || userEmail,
+        first_name: firstName,
+        last_name: lastName,
+        avatar_id: avatarId,
+        role: existingProfile?.role || (userData.user.user_metadata?.role || 'user'),
+        is_active: existingProfile?.is_active ?? true,
+        is_archived: existingProfile?.is_archived ?? false,
+      }, { onConflict: 'id' });
+      
+      if (error) throw error;
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
   });
 
   // ── Vite dev middleware ──

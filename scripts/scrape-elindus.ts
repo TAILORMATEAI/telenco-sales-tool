@@ -69,7 +69,7 @@ function delay(ms: number) {
 async function logProgress(message: string) {
   console.log(message);
   await supabase.from('sync_logs').insert({
-    run_id: RUN_ID,
+    status: 'info',
     message
   });
 }
@@ -82,8 +82,22 @@ function humanDelay() {
 // ─────────────────────────────────────────────
 // Scraper
 // ─────────────────────────────────────────────
+
+// Rotating pool of realistic Chrome/Firefox/Safari user agents
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+];
+
 async function scrapeElindusData(): Promise<ScrapedMarket[]> {
   await logProgress(`[${new Date().toISOString()}] 🔄 Start iteratie: Browser opstarten...`);
+
+  const selectedUA = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+  const viewportWidth = 1280 + Math.floor(Math.random() * 400);
+  const viewportHeight = 800 + Math.floor(Math.random() * 200);
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -91,18 +105,28 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
+      '--disable-blink-features=AutomationControlled',
+      `--window-size=${viewportWidth},${viewportHeight}`,
+      '--disable-infobars',
     ],
   });
 
   const page = await browser.newPage();
 
-  // Anti-detection
-  const viewportWidth = 1280 + Math.floor(Math.random() * 400);
-  const viewportHeight = 800 + Math.floor(Math.random() * 200);
+  // Mask WebDriver fingerprint (prevents bot detection via navigator.webdriver)
+  await page.evaluateOnNewDocument(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    (window as any).chrome = { runtime: {} };
+  });
+
   await page.setViewport({ width: viewportWidth, height: viewportHeight });
-  await page.setUserAgent(
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
-  );
+  await page.setUserAgent(selectedUA);
+
+  // Realistic browser headers
+  await page.setExtraHTTPHeaders({
+    'Accept-Language': 'nl-BE,nl;q=0.9,en-US;q=0.8,en;q=0.7',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+  });
 
   // Storage for intercepted API data
   const intercepted: Record<string, MarketApiResponse> = {};
@@ -141,7 +165,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
   });
   await humanDelay();
 
-  // Navigate to each remaining market page
+  // Navigate to each remaining market page with wider random delays (6–12s)
   const marketPages = [
     { url: 'https://klant.elindus.be/s/marktinformatie/endex', key: 'ENDEX', label: 'ENDEX' },
     { url: 'https://klant.elindus.be/s/marktinformatie/ttf-dam', key: 'TTF_DAM', label: 'TTF DAM' },
@@ -150,11 +174,11 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
 
   for (const market of marketPages) {
     if (intercepted[market.key]) {
-      console.log(`  ⏩ ${market.label} already intercepted, skipping`);
+      await logProgress(`⏩ ${market.label} reeds opgehaald, volgende pagina...`);
       continue;
     }
 
-    await delay(5000 + Math.floor(Math.random() * 5000));
+    await delay(6000 + Math.floor(Math.random() * 6000));
 
     try {
       await logProgress(`📍 Navigeren naar tabblad ${market.label}...`);
@@ -162,12 +186,12 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
       await humanDelay();
 
       if (intercepted[market.key]) {
-        console.log(`  ✅ ${market.label} captured`);
+        await logProgress(`✅ ${market.label} succesvol onderschept.`);
       } else {
-        console.log(`  ⚠️ No data for ${market.label}`);
+        await logProgress(`⚠️ Geen data ontvangen voor ${market.label}.`);
       }
-    } catch {
-      console.log(`  ⚠️ Failed to navigate to ${market.label}`);
+    } catch (err: any) {
+      await logProgress(`⚠️ Fout bij navigeren naar ${market.label}: ${err.message}`);
     }
   }
 
