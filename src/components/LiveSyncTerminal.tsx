@@ -16,6 +16,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
   const [historyLogs, setHistoryLogs] = useState<SyncLog[]>([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const fetchRecentLogs = async () => {
     const { data, error } = await supabase
@@ -282,11 +283,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
             <p className="text-xs text-slate-500">Historische weergave van alle netwerk- en applicatie-interacties.</p>
           </div>
           <button
-            onClick={async () => {
-              if (!window.confirm('Weet je zeker dat je alle logs wilt wissen?')) return;
-              await fetch('/api/clear-sync-logs', { method: 'DELETE' });
-              setHistoryLogs([]);
-            }}
+            onClick={() => setShowClearConfirm(true)}
             className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
             title="Wis alle logs"
           >
@@ -309,6 +306,60 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
           )}
         </div>
       </div>
+
+      {/* Custom confirm modal */}
+      <AnimatePresence>
+        {showClearConfirm && (
+          <motion.div
+            key="confirm-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center"
+            style={{ background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowClearConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2 }}
+              className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-sm w-full mx-4"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#E74B4D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </div>
+                <h3 className="font-black text-slate-900 text-base">Systeem Logboek wissen</h3>
+              </div>
+              <p className="text-sm text-slate-500 mb-5">
+                Dit verwijdert alle logboek-records permanent uit de database. Deze actie kan niet ongedaan worden gemaakt.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+                >
+                  Annuleren
+                </button>
+                <button
+                  onClick={async () => {
+                    const res = await fetch('/api/clear-sync-logs', { method: 'DELETE' });
+                    if (res.ok) {
+                      setHistoryLogs([]);
+                      setShowClearConfirm(false);
+                    }
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#E74B4D] text-white font-bold text-sm hover:bg-[#c73a3c] transition-colors"
+                >
+                  Wis Alles
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
