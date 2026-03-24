@@ -36,6 +36,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     if (isSignUp) {
+      if (!email.toLowerCase().endsWith('@telenco.be')) {
+        setError('Oeps! Zelf registreren kan enkel met een @telenco.be e-mailadres. Werk je voor Telenco of ben je partner? Vraag dan hieronder snel je account aan!');
+        setIsLoading(false);
+        return;
+      }
       if (!firstName.trim() || !lastName.trim()) {
         setError('Vul je voor- en achternaam in.');
         setIsLoading(false);
@@ -146,6 +151,22 @@ export default function LoginPage() {
                   className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
                   placeholder="naam@telenco.be"
                 />
+                
+                <AnimatePresence>
+                  {isSignUp && email.includes('@') && email.split('@')[1].length > 0 && !email.toLowerCase().endsWith('@telenco.be') && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-amber-500 text-xs font-medium px-2 flex items-start gap-1.5 overflow-hidden"
+                    >
+                      <div className="pt-1 flex gap-1.5 items-start">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0"><path fillRule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" /></svg>
+                        <span>Zelf registreren is enkel mogelijk met een <strong>@telenco.be</strong> adres.</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               <div className="space-y-2">
@@ -180,9 +201,22 @@ export default function LoginPage() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-xl text-sm font-medium"
+                    className="flex flex-col gap-3"
                   >
-                    {error}
+                    <div className="bg-rose-50 border border-rose-200 text-rose-600 px-4 py-3 rounded-xl text-sm font-medium">
+                      {error}
+                    </div>
+                    {isSignUp && error.includes('@telenco.be') && (
+                      <a
+                        href="https://wa.me/32476612473?text=Hallo%20Jens,%20ik%20wil%20graag%20een%20Telenco%20account%20aanvragen%20voor%20mijn%20e-mailadres."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 w-full bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/30 font-bold py-3 rounded-xl hover:bg-[#25D366]/20 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.305-.88-.653-1.473-1.46-1.646-1.757-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>
+                        Aanvragen via WhatsApp
+                      </a>
+                    )}
                   </motion.div>
                 )}
                 {success && (
