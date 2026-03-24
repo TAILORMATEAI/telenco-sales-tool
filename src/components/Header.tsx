@@ -82,7 +82,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
                 <span className="hidden sm:inline text-sm font-bold text-white tracking-tight pl-2 pr-3">
                   {getDisplayName().split(' ')[0]}
                 </span>
-                <ChevronDownIcon className={`w-3.5 h-3.5 text-white/80 transition-transform duration-300 ml-2 mr-2.5 sm:ml-0 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                <ChevronDownIcon className={`w-3.5 h-3.5 text-white/80 transition-transform duration-300 ml-2 mr-4 sm:ml-0 sm:mr-2.5 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>
