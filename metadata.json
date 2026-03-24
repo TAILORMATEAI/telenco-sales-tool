@@ -1,0 +1,5 @@
+{
+  "name": "Telenco Energy Calculator",
+  "description": "A professional web application to help sales agents calculate and compare energy contracts (Eneco and Elindus) on-site with customers.",
+  "requestFramePermissions": []
+}

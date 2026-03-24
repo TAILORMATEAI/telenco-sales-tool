@@ -1,0 +1,544 @@
+import express from 'express';
+import { createServer as createViteServer } from 'vite';
+import path from 'path';
+import puppeteer from 'puppeteer';
+import { createClient } from '@supabase/supabase-js';
+
+// ─────────────────────────────────────────────
+// Supabase Client
+// ─────────────────────────────────────────────
+const supabaseUrl = 'https://lksvpkoavcmlwfkonowc.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrc3Zwa29hdmNtbHdma29ub3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxODU3MzksImV4cCI6MjA4OTc2MTczOX0.s5VUHfBm7AaPxn5NwhK2LD04zJBMsy5i4ux_mF_dfAg';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
+interface MarketDataPoint {
+  x: number;       // timestamp
+  y: number;       // price
+  name?: string;   // label
+  fromUtc?: string; // ISO date
+}
+
+interface MarketStatistics {
+  averagePrice?: number;
+  averageDayPrice?: number;
+  averageNightPrice?: number;
+  maxPrice?: number;
+  minPrice?: number;
+}
+
+interface MarketApiResponse {
+  statistics?: MarketStatistics;
+  dataSeries?: {
+    data?: MarketDataPoint[];
+  };
+}
+
+interface ScrapedMarket {
+  indicator_name: string;
+  value: number | null;
+  max_price: number | null;
+  min_price: number | null;
+  avg_day_price: number | null;
+  avg_night_price: number | null;
+  unit: string;
+  hourly_data: MarketDataPoint[] | null;
+}
+
+// ─────────────────────────────────────────────
+// Core Scraper — Uses Puppeteer Network Interception
+// Navigates directly to the iframe URLs that trigger
+// each market's API call, then intercepts the JSON.
+// ─────────────────────────────────────────────
+
+// The Elindus iframe base URL that hosts all market charts
+const IFRAME_BASE = 'https://mijn.elindus.be';
+
+// Each market maps to a specific iframe path + query params
+const MARKET_PAGES: { name: string; path: string }[] = [
+  { name: 'EPEX_SPOT',  path: '/marketinfo/electricity/variable' },
+  { name: 'ENDEX',      path: '/marketinfo/electricity/fixed' },
+  { name: 'TTF_DAM',    path: '/marketinfo/gas/variable' },
+  { name: 'TTF_ENDEX',  path: '/marketinfo/gas/fixed' },
+];
+
+async function scrapeElindusData(): Promise<ScrapedMarket[]> {
+  console.log(`[${new Date().toLocaleTimeString('nl-BE')}] 🔄 Starting Elindus scrape via network interception...`);
+
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+
+  const page = await browser.newPage();
+
+  // ── Anti-detection: randomized viewport + realistic user agent ──
+  const viewportWidth = 1280 + Math.floor(Math.random() * 400);   // 1280–1680
+  const viewportHeight = 800 + Math.floor(Math.random() * 200);   // 800–1000
+  await page.setViewport({ width: viewportWidth, height: viewportHeight });
+  await page.setUserAgent(
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36'
+  );
+
+  // Storage for intercepted API data
+  const intercepted: Record<string, MarketApiResponse> = {};
+
+  // Listen to ALL responses BEFORE navigating
+  page.on('response', async (response) => {
+    const url = response.url();
+    if (response.status() !== 200) return;
+
+    try {
+      if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=ELECTRICITY')) {
+        intercepted['EPEX_SPOT'] = await response.json();
+        console.log('  ✅ Intercepted EPEX SPOT (Elektriciteit Variabel)');
+      }
+      if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=GAS')) {
+        intercepted['TTF_DAM'] = await response.json();
+        console.log('  ✅ Intercepted TTF DAM (Aardgas Variabel)');
+      }
+      if (url.includes('/marketinfo/fixed/prices') && url.includes('market=ELECTRICITY')) {
+        intercepted['ENDEX'] = await response.json();
+        console.log('  ✅ Intercepted ENDEX (Elektriciteit Vast)');
+      }
+      if (url.includes('/marketinfo/fixed/prices') && url.includes('market=GAS')) {
+        intercepted['TTF_ENDEX'] = await response.json();
+        console.log('  ✅ Intercepted TTF ENDEX (Aardgas Vast)');
+      }
+    } catch {
+      // Not all responses are JSON — silently skip
+    }
+  });
+
+  // ── Strategy: visit the main page first (sets cookies/session), ──
+  // ── then navigate to each market tab with human-like delays.    ──
+  
+  // Step 1: Load the main Elindus page — this triggers EPEX SPOT automatically
+  await page.goto('https://klant.elindus.be/s/marktinformatie?language=nl_NL', {
+    waitUntil: 'networkidle2',
+    timeout: 45000,
+  });
+  await humanDelay(); // Random 3–7 sec wait — mimic a real person reading the page
+
+  // Step 2: Navigate to each remaining market page.
+  // Each Elindus market page triggers the corresponding API call in the iframe.
+  // Our network interceptor (set up above) catches ALL API responses automatically.
+  const marketPages = [
+    { url: 'https://klant.elindus.be/s/marktinformatie/endex', key: 'ENDEX', label: 'ENDEX' },
+    { url: 'https://klant.elindus.be/s/marktinformatie/ttf-dam', key: 'TTF_DAM', label: 'TTF DAM' },
+    { url: 'https://klant.elindus.be/s/marktinformatie/ttf-endex', key: 'TTF_ENDEX', label: 'TTF ENDEX' },
+  ];
+
+  for (const market of marketPages) {
+    if (intercepted[market.key]) {
+      console.log(`  ⏩ ${market.label} already intercepted, skipping`);
+      continue;
+    }
+
+    await delay(5000 + Math.floor(Math.random() * 5000)); // 5-10s gentle delay
+
+    try {
+      console.log(`  🔄 Navigating to ${market.label} page...`);
+      await page.goto(market.url, { waitUntil: 'networkidle2', timeout: 30000 });
+      await humanDelay(); // Wait for iframe API calls to fire
+
+      if (intercepted[market.key]) {
+        console.log(`  ✅ Intercepted ${market.label}`);
+      } else {
+        console.log(`  ⚠️ No API call intercepted for ${market.label}`);
+      }
+    } catch {
+      console.log(`  ⚠️ Failed to navigate to ${market.label}`);
+    }
+  }
+
+  await browser.close();
+
+  // ── Build results from intercepted data ──
+  const results: ScrapedMarket[] = [];
+
+  for (const [name, apiData] of Object.entries(intercepted)) {
+    const stats = apiData?.statistics;
+    const series = apiData?.dataSeries?.data || null;
+
+    // For fixed/prices endpoints, statistics is null — compute from dataSeries.data
+    let avgPrice = stats?.averagePrice ?? null;
+    let maxPrice = stats?.maxPrice ?? null;
+    let minPrice = stats?.minPrice ?? null;
+
+    if (!stats && series && Array.isArray(series) && series.length > 0) {
+      const yValues = series.map((p: any) => p.y).filter((v: any) => typeof v === 'number');
+      if (yValues.length > 0) {
+        avgPrice = yValues.reduce((a: number, b: number) => a + b, 0) / yValues.length;
+        maxPrice = Math.max(...yValues);
+        minPrice = Math.min(...yValues);
+      }
+    }
+
+    results.push({
+      indicator_name: name,
+      value: avgPrice,
+      max_price: maxPrice,
+      min_price: minPrice,
+      avg_day_price: stats?.averageDayPrice ?? null,
+      avg_night_price: stats?.averageNightPrice ?? null,
+      unit: 'MWh',
+      hourly_data: series,
+    });
+  }
+
+  console.log(`[${new Date().toLocaleTimeString('nl-BE')}] ✅ Scrape complete — ${results.length} markets captured`);
+  return results;
+}
+
+// ─────────────────────────────────────────────
+// Save to Supabase
+// ─────────────────────────────────────────────
+async function saveToSupabase(markets: ScrapedMarket[]) {
+  const nowIso = new Date().toISOString();
+
+  // 1. Upsert current prices (only columns that exist in market_prices table)
+  const upsertData = markets.map((m) => ({
+    indicator_name: m.indicator_name,
+    value: m.value,
+    unit: m.unit,
+    last_updated: nowIso,
+  }));
+
+  const { error: upsertError } = await supabase
+    .from('market_prices')
+    .upsert(upsertData, { onConflict: 'indicator_name' });
+
+  if (upsertError) {
+    console.error('❌ Failed to upsert market_prices:', upsertError);
+    return { success: false, error: upsertError };
+  }
+
+  // 2. Append to history log
+  const historyLog = markets.map((m) => ({
+    indicator_name: m.indicator_name,
+    value: m.value,
+    unit: m.unit,
+    scraped_at: nowIso,
+  }));
+
+  const { error: historyError } = await supabase
+    .from('price_history')
+    .insert(historyLog);
+
+  if (historyError) {
+    console.error('⚠️ Failed to log to price_history:', historyError);
+  }
+
+  return { success: true, historyLogged: !historyError };
+}
+
+// ─────────────────────────────────────────────
+// Full Sync (Scrape + Save)
+// ─────────────────────────────────────────────
+async function runFullSync() {
+  try {
+    const markets = await scrapeElindusData();
+
+    if (markets.length === 0) {
+      console.log('⚠️ No market data intercepted — page structure might have changed.');
+      return { success: false, error: 'No data intercepted' };
+    }
+
+    const dbResult = await saveToSupabase(markets);
+
+    // Store in memory for the /api/day-prices endpoint
+    lastScrapedMarkets = markets;
+
+    const summary = markets.map((m) => ({
+      indicator: m.indicator_name,
+      avg: m.value,
+      max: m.max_price,
+      min: m.min_price,
+      dataPoints: m.hourly_data?.length ?? 0,
+    }));
+
+    console.log('📊 Sync summary:', JSON.stringify(summary, null, 2));
+
+    return {
+      success: dbResult.success,
+      source: 'puppeteer_network_interception',
+      markets: summary,
+      historyLogged: dbResult.historyLogged,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('❌ Full sync failed:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
+// ─────────────────────────────────────────────
+// Auto-Sync Scheduler — 2x per dag (elke 12 uur)
+// EPEX SPOT day-ahead prijzen worden typisch
+// rond 13:00 CET gepubliceerd, dus 2x is genoeg.
+// ─────────────────────────────────────────────
+const AUTO_SYNC_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours
+const MANUAL_COOLDOWN_MS = 30 * 60 * 1000;          // 30 minutes
+let syncIntervalId: NodeJS.Timeout | null = null;
+let lastSyncResult: any = null;
+let lastSyncTime: string | null = null;
+let isSyncing = false;
+let lastScrapedMarkets: ScrapedMarket[] = []; // In-memory cache of last scrape
+
+function startAutoSync() {
+  console.log(`⏰ Auto-sync enabled — running every ${AUTO_SYNC_INTERVAL_MS / (60 * 60 * 1000)} hours`);
+  console.log(`🛡️ Manual sync cooldown: ${MANUAL_COOLDOWN_MS / (60 * 1000)} minutes`);
+
+  // Run once on startup
+  runFullSync().then((result) => {
+    lastSyncResult = result;
+    lastSyncTime = new Date().toISOString();
+  });
+
+  // Then repeat on interval
+  syncIntervalId = setInterval(async () => {
+    console.log('\n⏰ Auto-sync triggered...');
+    const result = await runFullSync();
+    lastSyncResult = result;
+    lastSyncTime = new Date().toISOString();
+  }, AUTO_SYNC_INTERVAL_MS);
+}
+
+// ─────────────────────────────────────────────
+// Utilities
+// ─────────────────────────────────────────────
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Random delay between 3–7 seconds to mimic human browsing */
+function humanDelay() {
+  const ms = 3000 + Math.floor(Math.random() * 4000);
+  return delay(ms);
+}
+
+/** Check if the manual cooldown period has passed */
+function canManualSync(): { allowed: boolean; waitSeconds?: number } {
+  if (!lastSyncTime) return { allowed: true };
+  const elapsed = Date.now() - new Date(lastSyncTime).getTime();
+  if (elapsed < MANUAL_COOLDOWN_MS) {
+    const waitSeconds = Math.ceil((MANUAL_COOLDOWN_MS - elapsed) / 1000);
+    return { allowed: false, waitSeconds };
+  }
+  return { allowed: true };
+}
+
+/** Format a Date to YYYY-MM-DD in local timezone */
+function formatDateLocal(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** Convert a UTC date to Belgian local date string (YYYY-MM-DD) */
+function toBelgianDateStr(d: Date): string {
+  return d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Brussels' }); // sv-SE gives YYYY-MM-DD
+}
+
+/** Get Belgian hour (0-23) from a UTC date */
+function toBelgianHour(d: Date): number {
+  return parseInt(d.toLocaleString('en-GB', { timeZone: 'Europe/Brussels', hour: '2-digit', hour12: false }));
+}
+
+/** Extract hourly prices for a specific date (Belgian time) + compute daily stats */
+function extractDayPrices(hourlyData: MarketDataPoint[], dateStr: string) {
+  // Filter data points matching the target date in Belgian timezone
+  const dayPoints = hourlyData.filter(p => {
+    const d = p.fromUtc ? new Date(p.fromUtc) : new Date(p.x);
+    return toBelgianDateStr(d) === dateStr;
+  });
+
+  if (dayPoints.length === 0) {
+    return { date: dateStr, available: false, avgPrice: null, maxPrice: null, minPrice: null, hours: [] };
+  }
+
+  const prices = dayPoints.map(p => p.y);
+  const avgPrice = Math.round((prices.reduce((a, b) => a + b, 0) / prices.length) * 100) / 100;
+  const maxPrice = Math.round(Math.max(...prices) * 100) / 100;
+  const minPrice = Math.round(Math.min(...prices) * 100) / 100;
+
+  // Sort by Belgian hour and format
+  const hours = dayPoints
+    .map(p => {
+      const d = p.fromUtc ? new Date(p.fromUtc) : new Date(p.x);
+      const belgianHour = toBelgianHour(d);
+      return {
+        hour: `${String(belgianHour).padStart(2, '0')}:00`,
+        price: Math.round(p.y * 100) / 100,
+        _sortKey: belgianHour,
+      };
+    })
+    .sort((a, b) => a._sortKey - b._sortKey)
+    .map(({ hour, price }) => ({ hour, price }));
+
+  return {
+    date: dateStr,
+    available: true,
+    avgPrice,
+    maxPrice,
+    minPrice,
+    hours,
+  };
+}
+
+// ─────────────────────────────────────────────
+// Express Server
+// ─────────────────────────────────────────────
+async function startServer() {
+  const app = express();
+  const PORT = 3000;
+
+  app.use(express.json());
+
+  // Health check
+  app.get('/api/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      lastSync: lastSyncTime,
+      autoSyncIntervalHours: AUTO_SYNC_INTERVAL_MS / (60 * 60 * 1000),
+    });
+  });
+
+  // ── Day prices (today + tomorrow) from last scrape ──
+  // GET /api/day-prices  →  serves from in-memory cache
+  app.get('/api/day-prices', (_req, res) => {
+    const epex = lastScrapedMarkets.find(m => m.indicator_name === 'EPEX_SPOT');
+
+    if (!epex || !epex.hourly_data || epex.hourly_data.length === 0) {
+      return res.json({
+        success: false,
+        error: 'Nog geen data beschikbaar. Wacht op de eerste sync.',
+        lastSync: lastSyncTime,
+      });
+    }
+
+    // Build day summaries
+    const today = new Date();
+    const todayStr = formatDateLocal(today);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = formatDateLocal(tomorrow);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = formatDateLocal(yesterday);
+
+    const result = {
+      success: true,
+      lastSync: lastSyncTime,
+      yesterday: extractDayPrices(epex.hourly_data, yesterdayStr),
+      today: extractDayPrices(epex.hourly_data, todayStr),
+      tomorrow: extractDayPrices(epex.hourly_data, tomorrowStr),
+    };
+
+    res.json(result);
+  });
+
+  // ── Manual sync trigger (with cooldown protection) ──
+  // POST /api/sync-prices  →  scrape + save immediately
+  app.post('/api/sync-prices', async (_req, res) => {
+    // Guard: cooldown check
+    const cooldown = canManualSync();
+    if (!cooldown.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: `Cooldown actief — probeer opnieuw over ${cooldown.waitSeconds} seconden.`,
+        retryAfterSeconds: cooldown.waitSeconds,
+      });
+    }
+
+    // Guard: prevent overlapping syncs
+    if (isSyncing) {
+      return res.status(409).json({
+        success: false,
+        error: 'Er loopt al een sync. Even geduld.',
+      });
+    }
+
+    try {
+      isSyncing = true;
+      console.log('\n🔧 Manual sync requested...');
+      const result = await runFullSync();
+      lastSyncResult = result;
+      lastSyncTime = new Date().toISOString();
+      res.json(result);
+    } catch (error) {
+      console.error('Manual sync error:', error);
+      res.status(500).json({ success: false, error: 'Failed to sync market data.' });
+    } finally {
+      isSyncing = false;
+    }
+  });
+
+  // ── Get latest synced data ──
+  // GET /api/market-prices  →  read from Supabase
+  app.get('/api/market-prices', async (_req, res) => {
+    try {
+      const { data, error } = await supabase
+        .from('market_prices')
+        .select('*')
+        .order('indicator_name');
+
+      if (error) {
+        return res.status(500).json({ success: false, error: error.message });
+      }
+
+      res.json({
+        success: true,
+        lastSync: lastSyncTime,
+        data,
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: 'Failed to fetch market prices.' });
+    }
+  });
+
+  // ── Get sync status ──
+  // GET /api/sync-status  →  see last result + next scheduled run
+  app.get('/api/sync-status', (_req, res) => {
+    const nextSync = lastSyncTime
+      ? new Date(new Date(lastSyncTime).getTime() + AUTO_SYNC_INTERVAL_MS).toISOString()
+      : null;
+
+    const cooldown = canManualSync();
+
+    res.json({
+      lastSyncTime,
+      nextScheduledSync: nextSync,
+      intervalHours: AUTO_SYNC_INTERVAL_MS / (60 * 60 * 1000),
+      manualSyncAvailable: cooldown.allowed,
+      manualCooldownSeconds: cooldown.waitSeconds ?? 0,
+      isSyncing,
+      lastResult: lastSyncResult,
+    });
+  });
+
+  // ── Vite dev middleware ──
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+
+  // Start the auto-sync scheduler
+  startAutoSync();
+}
+
+startServer();

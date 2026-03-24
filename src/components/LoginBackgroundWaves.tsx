@@ -1,0 +1,265 @@
+import React, { useEffect, useRef } from 'react';
+
+export interface WaveConfig {
+  color: string;
+  glow: string;
+  amplitude1: number;
+  frequency1: number;
+  speed1: number;
+  amplitude2: number;
+  frequency2: number;
+  speed2: number;
+  verticalOffset: number;
+  lineWidth: number;
+  glowWidth: number;
+  phase: number;
+  highlightOffset: number;
+  visible?: boolean;
+}
+
+export const DESKTOP_WAVES: WaveConfig[] = [
+  {
+    "color": "#0ea5e9",
+    "glow": "rgba(14, 165, 233, 0.4)",
+    "amplitude1": 31,
+    "frequency1": 0.011,
+    "speed1": 0.00036,
+    "amplitude2": 41,
+    "frequency2": 0.0056,
+    "speed2": 0.00049,
+    "verticalOffset": -2,
+    "lineWidth": 5.5,
+    "glowWidth": 6,
+    "phase": 180,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#E74B4D",
+    "glow": "rgba(231, 75, 77, 0.4)",
+    "amplitude1": 20,
+    "frequency1": 0.011,
+    "speed1": 0.00036,
+    "amplitude2": 20,
+    "frequency2": 0.0056,
+    "speed2": 0.00049,
+    "verticalOffset": -6,
+    "lineWidth": 6,
+    "glowWidth": 6,
+    "phase": 0,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#FFC421",
+    "glow": "rgba(255, 196, 33, 0.4)",
+    "amplitude1": 35,
+    "frequency1": 0.0117,
+    "speed1": 0.00036,
+    "amplitude2": 45,
+    "frequency2": 0.0056,
+    "speed2": 0.00049,
+    "verticalOffset": -2,
+    "lineWidth": 6.5,
+    "glowWidth": 6,
+    "phase": 250,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#91C848",
+    "glow": "rgba(145, 200, 72, 0.4)",
+    "amplitude1": 39,
+    "frequency1": 0.0094,
+    "speed1": 0.0004,
+    "amplitude2": 23,
+    "frequency2": 0.0094,
+    "speed2": 0.00046,
+    "verticalOffset": 0,
+    "lineWidth": 6.5,
+    "glowWidth": 6,
+    "phase": 100,
+    "highlightOffset": -3,
+    "visible": true
+  }
+];
+
+export const MOBILE_WAVES: WaveConfig[] = [
+  {
+    "color": "#0ea5e9",
+    "glow": "rgba(14, 165, 233, 0.4)",
+    "amplitude1": 3,
+    "frequency1": 0.004,
+    "speed1": 0.00033,
+    "amplitude2": 10,
+    "frequency2": 0.0085,
+    "speed2": 0.00017,
+    "verticalOffset": 21,
+    "lineWidth": 5.5,
+    "glowWidth": 6,
+    "phase": 180,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#E74B4D",
+    "glow": "rgba(231, 75, 77, 0.4)",
+    "amplitude1": 5,
+    "frequency1": 0.0159,
+    "speed1": 0.00027,
+    "amplitude2": 13,
+    "frequency2": 0.0075,
+    "speed2": 0.00036,
+    "verticalOffset": 18,
+    "lineWidth": 6,
+    "glowWidth": 6,
+    "phase": 0,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#FFC421",
+    "glow": "rgba(255, 196, 33, 0.4)",
+    "amplitude1": 21,
+    "frequency1": 0.0014,
+    "speed1": 0.00059,
+    "amplitude2": 41,
+    "frequency2": 0.004,
+    "speed2": 0.00043,
+    "verticalOffset": 27,
+    "lineWidth": 6.5,
+    "glowWidth": 6,
+    "phase": 250,
+    "highlightOffset": -3,
+    "visible": true
+  },
+  {
+    "color": "#91C848",
+    "glow": "rgba(145, 200, 72, 0.4)",
+    "amplitude1": 41,
+    "frequency1": 0.0036,
+    "speed1": 0.0002,
+    "amplitude2": 8,
+    "frequency2": 0.0123,
+    "speed2": 0.00072,
+    "verticalOffset": 21,
+    "lineWidth": 6.5,
+    "glowWidth": 6,
+    "phase": 100,
+    "highlightOffset": -3,
+    "visible": true
+  }
+];
+
+export const DEFAULT_WAVES = window.innerWidth < 768 ? MOBILE_WAVES : DESKTOP_WAVES;
+
+interface Props {
+  config?: WaveConfig[];
+}
+
+export default function LoginBackgroundWaves({ config }: Props) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const configRef = useRef(config || DEFAULT_WAVES);
+
+  useEffect(() => {
+    if (config) {
+      configRef.current = config;
+    }
+  }, [config]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+
+    const resize = () => {
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * ratio;
+      canvas.height = 300 * ratio;
+      ctx.scale(ratio, ratio);
+
+      // Auto-switch to mobile/desktop preset on resize if strictly relying on defaults
+      if (!config) {
+        configRef.current = window.innerWidth < 768 ? MOBILE_WAVES : DESKTOP_WAVES;
+      }
+    };
+    window.addEventListener('resize', resize);
+    resize();
+
+    const render = () => {
+      const time = Date.now();
+      const logicalWidth = window.innerWidth;
+      const logicalHeight = 300;
+      ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+
+      const centerY = logicalHeight / 2;
+
+      const midX = logicalWidth / 2;
+
+      const drawSegment = (waveIndices: number[], startX: number, endX: number) => {
+        waveIndices.forEach(index => {
+          const wave = configRef.current[index];
+          if (!wave || wave.visible === false) return;
+
+          const points = [];
+          for (let x = startX; x <= endX; x += 3) {
+            const envelope = Math.sin((x / logicalWidth) * Math.PI);
+            const y = centerY + wave.verticalOffset +
+              (Math.sin(x * wave.frequency1 + time * wave.speed1 + wave.phase) * wave.amplitude1 +
+                Math.sin(x * wave.frequency2 + time * wave.speed2) * wave.amplitude2) * envelope;
+            points.push({ x, y });
+          }
+
+          if (points.length === 0 || points[points.length - 1].x < endX) {
+            const envelope = Math.sin((endX / logicalWidth) * Math.PI);
+            const y = centerY + wave.verticalOffset +
+              (Math.sin(endX * wave.frequency1 + time * wave.speed1 + wave.phase) * wave.amplitude1 +
+                Math.sin(endX * wave.frequency2 + time * wave.speed2) * wave.amplitude2) * envelope;
+            points.push({ x: endX, y });
+          }
+
+          ctx.beginPath();
+          points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+          ctx.shadowBlur = 0;
+          ctx.strokeStyle = wave.color;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.lineWidth = wave.lineWidth;
+          ctx.stroke();
+
+          ctx.beginPath();
+          points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y + wave.highlightOffset) : ctx.lineTo(p.x, p.y + wave.highlightOffset));
+          ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+      };
+
+      // Left Hemishpere: Yellow (2) is below Green (3)
+      drawSegment([0, 1, 2, 3], 0, midX);
+
+      // Right Hemisphere: Green (3) is below Yellow (2)
+      drawSegment([0, 1, 3, 2], midX, logicalWidth);
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute left-0 w-full top-[75%] sm:top-1/2 -translate-y-1/2 pointer-events-none z-0"
+      style={{ height: '300px' }}
+    />
+  );
+}

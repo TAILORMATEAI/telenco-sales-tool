@@ -1,0 +1,35 @@
+name: Scrape Elindus Market Data
+
+on:
+  # Runs twice daily: 7:00 and 14:00 UTC (8:00 and 15:00 CET)
+  # EPEX SPOT day-ahead prices are published around 13:00 CET
+  schedule:
+    - cron: '0 7 * * *'    # 08:00 CET — morning update
+    - cron: '0 13 * * *'   # 14:00 CET — after day-ahead publication
+  
+  # Allow manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Elindus scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: npx tsx scripts/scrape-elindus.ts
