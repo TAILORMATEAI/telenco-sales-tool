@@ -55,10 +55,10 @@ export default function HomePage() {
   const getDisplayName = () => {
     let first = '';
     let last = '';
-    
+
     if (profile?.first_name) first = profile.first_name;
     else if (user?.user_metadata?.first_name) first = user.user_metadata.first_name;
-    
+
     if (profile?.last_name) last = profile.last_name;
     else if (user?.user_metadata?.last_name) last = user.user_metadata.last_name;
 
@@ -67,7 +67,7 @@ export default function HomePage() {
     }
 
     if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
-    
+
     if (user?.email) {
       const emailName = user.email.split('@')[0];
       return emailName.charAt(0).toUpperCase() + emailName.slice(1).toLowerCase();
@@ -170,7 +170,7 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col justify-center w-full relative z-10 pb-20">
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={lang}
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,169 +178,169 @@ export default function HomePage() {
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8"
           >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-3xl sm:text-4xl font-black text-white mb-3">
-            {t.welcome}{getDisplayName() ? `, ${getDisplayName()}` : ''}!
-          </h1>
-          <p className="text-white/60 font-medium text-lg mb-4">{t.subtitle}</p>
-        </motion.div>
-
-        {/* Tool Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-          {tools.map((tool, i) => (
-            <motion.button
-              key={tool.id}
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * i, duration: 0.5, ease: 'easeOut' }}
-              onClick={() => tool.available && navigate(tool.route)}
-              disabled={!tool.available}
-              className={`group flex flex-col relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 text-left transition-all ${tool.available
-                ? 'hover:shadow-2xl hover:scale-[1.03] hover:border-slate-200 cursor-pointer active:scale-[0.98]'
-                : 'opacity-60 cursor-not-allowed'
-                } ${tool.id === 'webdesign' ? 'col-span-2 md:col-span-1' : 'col-span-1'}`}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-12"
             >
-              {/* Main Card Content (Logos) */}
-              <div className="p-4 pb-6 sm:p-8 sm:pb-10 min-h-[120px] sm:min-h-[180px] flex flex-col items-center justify-center flex-1 w-full relative">
-                {/* Status badge */}
-                {!tool.available && (
-                  <div className="absolute top-3 right-3 sm:top-6 sm:right-6">
-                    <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-slate-100 text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider">{t.soon}</span>
+              <h1 className="text-3xl sm:text-4xl font-black text-white mb-3">
+                {t.welcome}{getDisplayName() ? `, ${getDisplayName()}` : ''}!
+              </h1>
+              <p className="text-white/60 font-medium text-lg mb-4">{t.subtitle}</p>
+            </motion.div>
+
+            {/* Tool Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
+              {tools.map((tool, i) => (
+                <motion.button
+                  key={tool.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * i, duration: 0.5, ease: 'easeOut' }}
+                  onClick={() => tool.available && navigate(tool.route)}
+                  disabled={!tool.available}
+                  className={`group flex flex-col relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 text-left transition-all ${tool.available
+                    ? 'hover:shadow-2xl hover:scale-[1.03] hover:border-slate-200 cursor-pointer active:scale-[0.98]'
+                    : 'opacity-60 cursor-not-allowed'
+                    } ${tool.id === 'webdesign' ? 'col-span-2 md:col-span-1' : 'col-span-1'}`}
+                >
+                  {/* Main Card Content (Logos) */}
+                  <div className="p-4 pb-6 sm:p-8 sm:pb-10 min-h-[120px] sm:min-h-[180px] flex flex-col items-center justify-center flex-1 w-full relative">
+                    {/* Status badge */}
+                    {!tool.available && (
+                      <div className="absolute top-3 right-3 sm:top-6 sm:right-6">
+                        <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full bg-slate-100 text-slate-400 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider">{t.soon}</span>
+                      </div>
+                    )}
+
+                    {/* Logos */}
+                    <div className="flex flex-col items-center justify-center gap-4 sm:gap-8 w-full mt-2">
+                      {tool.logos?.map((logo: string, idx: number) => (
+                        <img key={idx} src={logo} alt="Partner Logo" className={`${idx === 1 && tool.id === 'energie' ? 'h-3 sm:h-6 opacity-90' : 'h-8 sm:h-14'} object-contain object-center transition-transform group-hover:scale-110 origin-center`} />
+                      ))}
+                    </div>
                   </div>
-                )}
 
-                {/* Logos */}
-                <div className="flex flex-col items-center justify-center gap-4 sm:gap-8 w-full mt-2">
-                  {tool.logos?.map((logo: string, idx: number) => (
-                    <img key={idx} src={logo} alt="Partner Logo" className={`${idx === 1 && tool.id === 'energie' ? 'h-3 sm:h-6 opacity-90' : 'h-8 sm:h-14'} object-contain object-center transition-transform group-hover:scale-110 origin-center`} />
-                  ))}
-                </div>
-              </div>
+                  {/* Card Footer (Title + Extension) separated by color */}
+                  <div className={`w-full py-3 px-4 sm:py-5 sm:px-8 bg-gradient-to-r ${tool.gradient} flex items-center justify-between`}>
+                    <h3 className={`text-sm sm:text-lg font-black tracking-wide text-white`}>{tool.title}</h3>
 
-              {/* Card Footer (Title + Extension) separated by color */}
-              <div className={`w-full py-3 px-4 sm:py-5 sm:px-8 bg-gradient-to-r ${tool.gradient} flex items-center justify-between`}>
-                <h3 className={`text-sm sm:text-lg font-black tracking-wide text-white`}>{tool.title}</h3>
-
-                {/* Arrow */}
-                {tool.available && (
-                  <div className={`flex items-center gap-1 sm:gap-2 font-bold text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-all text-white`}>
-                    <span className="hidden sm:inline">{t.open}</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                    {/* Arrow */}
+                    {tool.available && (
+                      <div className={`flex items-center gap-1 sm:gap-2 font-bold text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-all text-white`}>
+                        <span className="hidden sm:inline">{t.open}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </motion.button>
-          ))}
-        </div>
-
-        {/* Dashboard Widgets */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Widget 1: Top Verkopers (Leaderboard) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
-            className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden group"
-          >
-            {/* Luxury Fluid Background */}
-            <div className="absolute top-0 left-[-50vw] w-[200vw] h-full z-0 opacity-[0.12] pointer-events-none scale-125 origin-center translate-y-4 group-hover:scale-[1.3] transition-transform duration-[1.5s] ease-out">
-              <LoginBackgroundWaves />
+                </motion.button>
+              ))}
             </div>
 
-            <div className="relative z-10 mb-6 flex items-center justify-between">
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight">{t.topSellers}</h3>
-              <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent ml-4"></div>
-            </div>
-            
-            <div className="relative z-10 flex-1 flex flex-col justify-center divide-y divide-slate-100">
-              {/* Rank 1 */}
-              <div className="group/item flex items-center justify-between py-3 px-1 hover:pl-3 transition-all cursor-pointer">
-                <div className="flex items-center gap-5">
-                  <span className="text-2xl font-black text-[#FFC421] w-4 text-center">1</span>
-                  <div>
-                    <p className="text-base font-bold text-slate-800 group-hover/item:text-[#FFC421] transition-colors">Sarah Dubois</p>
-                  </div>
+            {/* Dashboard Widgets */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Widget 1: Top Verkopers (Leaderboard) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
+                className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden group"
+              >
+                {/* Luxury Fluid Background */}
+                <div className="absolute top-0 left-[-50vw] w-[200vw] h-full z-0 opacity-[0.12] pointer-events-none scale-125 origin-center translate-y-4 group-hover:scale-[1.3] transition-transform duration-[1.5s] ease-out">
+                  <LoginBackgroundWaves />
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-black text-slate-800">14</p>
-                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
-                </div>
-              </div>
 
-              {/* Rank 2 */}
-              <div className="group/item flex items-center justify-between py-3 px-1 hover:pl-3 transition-all cursor-pointer">
-                <div className="flex items-center gap-5">
-                  <span className="text-2xl font-black text-slate-400 w-4 text-center opacity-80">2</span>
-                  <div>
-                    <p className="text-base font-bold text-slate-800 group-hover/item:text-slate-500 transition-colors">Jan Peeters</p>
-                  </div>
+                <div className="relative z-10 mb-6 flex items-center justify-between">
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">{t.topSellers}</h3>
+                  <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent ml-4"></div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-black text-slate-800">9</p>
-                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
-                </div>
-              </div>
 
-              {/* Rank 3 */}
-              <div className="group/item flex items-center justify-between py-3 px-1 hover:pl-3 transition-all cursor-pointer">
-                <div className="flex items-center gap-5">
-                  <span className="text-2xl font-black text-slate-300 w-4 text-center opacity-60">3</span>
-                  <div>
-                    <p className="text-base font-bold text-slate-800 group-hover/item:text-slate-400 transition-colors">Jens V.</p>
+                <div className="relative z-10 flex-1 flex flex-col justify-center divide-y divide-slate-100">
+                  {/* Rank 1 */}
+                  <div className="group/item flex items-center justify-between py-3 px-1 hover:pl-3 transition-all cursor-pointer">
+                    <div className="flex items-center gap-5">
+                      <span className="text-2xl font-black text-[#FFC421] w-4 text-center">1</span>
+                      <div>
+                        <p className="text-base font-bold text-slate-800 group-hover/item:text-[#FFC421] transition-colors">Sarah Dubois</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-black text-slate-800">14</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
+                    </div>
+                  </div>
+
+                  {/* Rank 2 */}
+                  <div className="group/item flex items-center justify-between py-3 px-1 hover:pl-3 transition-all cursor-pointer">
+                    <div className="flex items-center gap-5">
+                      <span className="text-2xl font-black text-slate-400 w-4 text-center opacity-80">2</span>
+                      <div>
+                        <p className="text-base font-bold text-slate-800 group-hover/item:text-slate-500 transition-colors">Jan Peeters</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-black text-slate-800">9</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
+                    </div>
+                  </div>
+
+                  {/* Rank 3 */}
+                  <div className="group/item flex items-center justify-between py-3 px-1 hover:pl-3 transition-all cursor-pointer">
+                    <div className="flex items-center gap-5">
+                      <span className="text-2xl font-black text-slate-300 w-4 text-center opacity-60">3</span>
+                      <div>
+                        <p className="text-base font-bold text-slate-800 group-hover/item:text-slate-400 transition-colors">Jens V.</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-black text-slate-800">5</p>
+                      <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-black text-slate-800">5</p>
-                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
+              </motion.div>
+
+              {/* Widget 2: Recente Activiteit */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.5, ease: 'easeOut' }}
+                className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden group"
+              >
+                {/* Luxury Fluid Background */}
+                <div className="absolute top-0 left-[-50vw] w-[200vw] h-full z-0 opacity-[0.12] pointer-events-none scale-125 origin-center translate-y-4 group-hover:scale-[1.3] transition-transform duration-[1.5s] ease-out">
+                  <LoginBackgroundWaves />
                 </div>
-              </div>
+
+                <div className="relative z-10 mb-6 flex items-center gap-4">
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">{t.recentActivity}</h3>
+                  <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
+                  <span className="text-[10px] font-bold text-slate-400 hover:text-[#E74B4D] uppercase tracking-wider cursor-pointer transition-colors">{t.viewAll}</span>
+                </div>
+
+                <div className="relative z-10 flex-1 flex flex-col justify-center divide-y divide-slate-100">
+                  <div className="group/item py-3 px-1 hover:pl-3 transition-all cursor-pointer">
+                    <div className="flex items-end justify-between mb-1">
+                      <p className="text-base font-bold text-slate-800 group-hover/item:text-[#91C848] transition-colors">{t.energyCalc}</p>
+                      <p className="text-base font-black text-[#91C848]">15 MWh</p>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-400">{t.today}, 10:42 <span className="mx-2 opacity-30">•</span> Sarah Dubois</p>
+                  </div>
+
+                  <div className="group/item py-3 px-1 hover:pl-3 transition-all cursor-pointer">
+                    <div className="flex items-end justify-between mb-1">
+                      <p className="text-base font-bold text-slate-800 group-hover/item:text-[#FFC421] transition-colors">{t.titleTelenet}</p>
+                      <p className="text-base font-black text-[#FFC421]">AFA Config</p>
+                    </div>
+                    <p className="text-xs font-semibold text-slate-400">{t.yesterday}, 14:15 <span className="mx-2 opacity-30">•</span> Jan Peeters</p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
-
-          {/* Widget 2: Recente Activiteit */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5, ease: 'easeOut' }}
-            className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden group"
-          >
-            {/* Luxury Fluid Background */}
-            <div className="absolute top-0 left-[-50vw] w-[200vw] h-full z-0 opacity-[0.12] pointer-events-none scale-125 origin-center translate-y-4 group-hover:scale-[1.3] transition-transform duration-[1.5s] ease-out">
-              <LoginBackgroundWaves />
-            </div>
-
-            <div className="relative z-10 mb-6 flex items-center gap-4">
-              <h3 className="text-2xl font-black text-slate-800 tracking-tight">{t.recentActivity}</h3>
-              <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
-              <span className="text-[10px] font-bold text-slate-400 hover:text-[#E74B4D] uppercase tracking-wider cursor-pointer transition-colors">{t.viewAll}</span>
-            </div>
-
-            <div className="relative z-10 flex-1 flex flex-col justify-center divide-y divide-slate-100">
-              <div className="group/item py-3 px-1 hover:pl-3 transition-all cursor-pointer">
-                <div className="flex items-end justify-between mb-1">
-                  <p className="text-base font-bold text-slate-800 group-hover/item:text-[#91C848] transition-colors">{t.energyCalc}</p>
-                  <p className="text-base font-black text-[#91C848]">15 MWh</p>
-                </div>
-                <p className="text-xs font-semibold text-slate-400">{t.today}, 10:42 <span className="mx-2 opacity-30">•</span> Sarah Dubois</p>
-              </div>
-              
-              <div className="group/item py-3 px-1 hover:pl-3 transition-all cursor-pointer">
-                <div className="flex items-end justify-between mb-1">
-                  <p className="text-base font-bold text-slate-800 group-hover/item:text-[#FFC421] transition-colors">{t.titleTelenet}</p>
-                  <p className="text-base font-black text-[#FFC421]">AFA Config</p>
-                </div>
-                <p className="text-xs font-semibold text-slate-400">{t.yesterday}, 14:15 <span className="mx-2 opacity-30">•</span> Jan Peeters</p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-        </motion.div>
-      </AnimatePresence>
+        </AnimatePresence>
       </main>
 
       {/* Partner Logos */}
