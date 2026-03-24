@@ -223,14 +223,11 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         <button onClick={fetchUsers} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-700 shadow-sm transition-colors">
           <RefreshCwIcon className="w-5 h-5" />
         </button>
-        <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-700 shadow-sm transition-colors">
-          <CurrencyEuroIcon className="w-5 h-5" />
-        </button>
         <button
           onClick={openCreateModal}
           className="flex items-center gap-2 px-6 py-3 bg-[#91C848] hover:bg-[#7fae3d] text-white rounded-xl font-black shadow-sm transition-colors shrink-0"
         >
-          + Uitnodigen
+          + Toevoegen
         </button>
       </div>
 
@@ -362,80 +359,86 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         {showModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative z-10 overflow-hidden">
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 className="font-black text-xl text-slate-900">{editingUser ? 'Gebruiker Bewerken' : 'Gebruiker Uitnodigen'}</h3>
-                <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-600"><XIcon className="w-5 h-5" /></button>
+            <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 16 }} transition={{ duration: 0.2 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden">
+
+              {/* Dark header with live avatar */}
+              <div className="bg-slate-900 px-6 py-5 flex items-center gap-4 relative overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 90% 50%, rgba(145,200,72,0.15) 0%, transparent 65%)' }} />
+                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10 bg-slate-700 shrink-0 relative z-10">
+                  {formAvatar && (formAvatar.startsWith('http') || formAvatar.includes('/')) ? (
+                    <img src={formAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-2xl font-black text-white/20">{(formFirst || '?').charAt(0).toUpperCase()}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 relative z-10">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{editingUser ? 'Gebruiker bewerken' : 'Nieuw account'}</p>
+                  <h3 className="font-black text-white text-base leading-tight truncate">{formFirst || formLast ? `${formFirst} ${formLast}`.trim() : 'Nieuwe gebruiker'}</h3>
+                  {editingUser && <p className="text-xs text-slate-500 mt-0.5 truncate">{formEmail}</p>}
+                </div>
+                <button onClick={() => setShowModal(false)} className="p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition-colors relative z-10 shrink-0">
+                  <XIcon className="w-4 h-4" />
+                </button>
               </div>
-              <form onSubmit={handleSubmitForm} className="p-6 space-y-5">
+
+              <form onSubmit={handleSubmitForm} className="p-5 space-y-4">
                 {errorError && <div className="p-3 bg-rose-50 text-rose-600 text-sm font-bold rounded-xl border border-rose-100">{errorError}</div>}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Voornaam</label>
-                    <input type="text" required value={formFirst} onChange={e => setFormFirst(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Voornaam</label>
+                    <input type="text" required value={formFirst} onChange={e => setFormFirst(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Achternaam</label>
-                    <input type="text" required value={formLast} onChange={e => setFormLast(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Achternaam</label>
+                    <input type="text" required value={formLast} onChange={e => setFormLast(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">E-mailadres</label>
-                  <input type="email" required disabled={!!editingUser} value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] disabled:opacity-50 transition-all" placeholder="naam@telenco.be" />
-                  {editingUser && <p className="text-[10px] text-slate-400 mt-1">E-mailadres kan niet zomaar worden overschreven om veiligheidsredenen.</p>}
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">E-mailadres</label>
+                  <input type="email" required disabled={!!editingUser} value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] disabled:opacity-40 transition-all" placeholder="naam@telenco.be" />
+                  {editingUser && <p className="text-[10px] text-slate-400 mt-1">E-mailadres kan niet worden gewijzigd.</p>}
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block">Kies Profiel Avatar Of Upload</label>
-
-                  {/* WebP Uploader Interface */}
-                  <div className="flex items-center gap-4 mb-4">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Profiel foto</label>
+                  <div className="flex items-center gap-3">
                     <div className="relative flex-1">
                       <input type="file" id="avatarUpload" accept="image/webp" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
-                      <label htmlFor="avatarUpload" className={`flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-xs uppercase tracking-wider cursor-pointer border-2 border-dashed transition-all ${isUploading ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-600 hover:border-[#91C848] hover:text-[#91C848]'}`}>
+                      <label htmlFor="avatarUpload" className={`flex w-full items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs cursor-pointer border transition-all ${isUploading ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-slate-50 hover:bg-white border-slate-200 hover:border-[#91C848] text-slate-500 hover:text-[#91C848]'}`}>
                         {isUploading ? <RefreshCwIcon className="w-4 h-4 animate-spin" /> : (
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
                         )}
-                        {isUploading ? 'Uploaden...' : 'Upload Foto (.webp)'}
+                        {isUploading ? 'Uploaden...' : 'Upload .webp'}
                       </label>
                     </div>
-
-                    {/* Preview Sphere if URL matched or Blank Telenco Logo */}
                     {formAvatar && (formAvatar.startsWith('http') || formAvatar.includes('/')) ? (
-                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-[#91C848] shadow-md relative group bg-slate-50">
-                        <img src={formAvatar} alt="Upload Preview" className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => setFormAvatar('')} className="absolute inset-0 bg-rose-500/80 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex"><XIcon className="w-4 h-4 text-white" /></button>
+                      <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 border border-[#91C848] relative group bg-slate-50">
+                        <img src={formAvatar} alt="Preview" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => setFormAvatar('')} className="absolute inset-0 bg-rose-500/80 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex"><XIcon className="w-3.5 h-3.5 text-white" /></button>
                       </div>
                     ) : (
-                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-slate-200 shadow-md relative bg-white flex items-center justify-center">
-                        <img src={TELENCO_LOGO} alt="Telenco" className="w-full h-full object-contain p-2 opacity-40 grayscale brightness-0" />
+                      <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-50 flex items-center justify-center">
+                        <img src={TELENCO_LOGO} alt="Telenco" className="w-full h-full object-contain p-2 opacity-20 grayscale brightness-0" />
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Toggle access — only visible when editing */}
                 {editingUser && (
-                  <div className="pt-1 pb-1">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        await handleToggleStatus(editingUser.id, !editingUser.is_active, false);
-                        setShowModal(false);
-                      }}
-                      className="w-full py-2 rounded-xl text-xs font-bold text-rose-500 bg-slate-100 hover:bg-slate-200 transition-all"
-                    >
-                      {editingUser.is_active ? 'Blokkeer toegang' : 'Deblokkeer toegang'}
-                    </button>
-                  </div>
+                  <button type="button" onClick={async () => { await handleToggleStatus(editingUser.id, !editingUser.is_active, false); setShowModal(false); }}
+                    className="w-full py-2 rounded-xl text-xs font-bold text-rose-400 bg-slate-50 hover:bg-rose-50 hover:text-rose-500 transition-all border border-slate-100">
+                    {editingUser.is_active ? 'Blokkeer toegang' : 'Deblokkeer toegang'}
+                  </button>
                 )}
 
-                <div className="pt-4 flex gap-3">
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all">Annuleren</button>
-                  <button type="submit" disabled={isSubmitting || isUploading} className="flex-[2] py-3 rounded-xl font-black text-white bg-[#91C848] hover:bg-[#7fae3d] shadow-lg shadow-[#91C848]/30 transition-all disabled:opacity-50">
-                    {isSubmitting ? 'Bezig met opslaan...' : editingUser ? 'Wijzigingen Opslaan' : 'Account Definitief Aanmaken'}
+                <div className="flex gap-3 pt-1">
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 text-sm transition-all">Annuleren</button>
+                  <button type="submit" disabled={isSubmitting || isUploading} className="flex-[2] py-2.5 rounded-xl font-black text-white text-sm bg-[#91C848] hover:bg-[#7fae3d] shadow-md shadow-[#91C848]/20 transition-all disabled:opacity-50">
+                    {isSubmitting ? 'Bezig...' : editingUser ? 'Opslaan' : 'Uitnodiging versturen'}
                   </button>
                 </div>
               </form>
