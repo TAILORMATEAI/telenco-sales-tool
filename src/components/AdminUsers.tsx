@@ -23,7 +23,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'active' | 'archived'>('active');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
@@ -38,9 +38,9 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
   const fetchUsers = async () => {
     setLoading(true);
     const { data, error } = await supabase.from('profiles').select('*');
-    
+
     let fetched: Profile[] = (data as Profile[]) || [];
-    
+
     // Failsafe: Als het ingelogde profiel (jijzelf) verborgen wordt door database-rechten (RLS) of query-fout, injecteer het dan handmatig in de UI.
     const { data: { user } } = await supabase.auth.getUser();
     if (user && !fetched.find(u => u.email === user.email)) {
@@ -56,7 +56,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         created_at: new Date().toISOString()
       }, ...fetched];
     }
-    
+
     setUsers(fetched);
     setLoading(false);
   };
@@ -113,7 +113,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
       if (error) throw error;
 
       const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
-      
+
       setFormAvatar(publicUrl);
     } catch (err: any) {
       setErrorError('Error bij het uploaden van de afbeelding: ' + err.message);
@@ -158,7 +158,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Server error bij het uitnodigen.');
       }
-      
+
       setShowModal(false);
       setEditingUser(null);
       fetchUsers();
@@ -212,9 +212,9 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
-          <input 
-            type="text" 
-            placeholder="Zoeken..." 
+          <input
+            type="text"
+            placeholder="Zoeken..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all shadow-sm"
@@ -226,7 +226,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-700 shadow-sm transition-colors">
           <CurrencyEuroIcon className="w-5 h-5" />
         </button>
-        <button 
+        <button
           onClick={openCreateModal}
           className="flex items-center gap-2 px-6 py-3 bg-[#91C848] hover:bg-[#7fae3d] text-white rounded-xl font-black shadow-sm transition-colors shrink-0"
         >
@@ -255,23 +255,23 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
       {/* Grid Content */}
       <div className="flex-1">
         {loading ? (
-          <div className="p-20 flex justify-center"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#91C848] rounded-full animate-spin"/></div>
+          <div className="p-20 flex justify-center"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#91C848] rounded-full animate-spin" /></div>
         ) : (tab === 'active' ? activeUsers : archivedUsers).length === 0 ? (
           <div className="flex flex-col items-center justify-center p-20 text-slate-400">
             <UserIcon className="w-12 h-12 mb-4 opacity-50" />
             <p className="font-bold text-lg">Geen accounts gevonden in deze weergave.</p>
           </div>
         ) : (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 pb-20"
           >
             {(tab === 'active' ? activeUsers : archivedUsers).map(user => {
               const isImage = user.avatar_id && (user.avatar_id.startsWith('http') || user.avatar_id.includes('/'));
               const avatarSrc = isImage ? user.avatar_id : TELENCO_LOGO;
               const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email.split('@')[0];
-              
+
               // Seed pseudo-random stats based on user ID for visual mockup matching screenshot
               const charSum = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
               const stat1 = Math.floor((charSum * 13) % 400);   // Green stat
@@ -369,7 +369,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
               </div>
               <form onSubmit={handleSubmitForm} className="p-6 space-y-5">
                 {errorError && <div className="p-3 bg-rose-50 text-rose-600 text-sm font-bold rounded-xl border border-rose-100">{errorError}</div>}
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Voornaam</label>
@@ -382,38 +382,38 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                 </div>
 
                 <div>
-                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">E-mailadres</label>
-                   <input type="email" required disabled={!!editingUser} value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] disabled:opacity-50 transition-all" placeholder="naam@telenco.be" />
-                   {editingUser && <p className="text-[10px] text-slate-400 mt-1">E-mailadres kan niet zomaar worden overschreven om veiligheidsredenen.</p>}
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">E-mailadres</label>
+                  <input type="email" required disabled={!!editingUser} value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] disabled:opacity-50 transition-all" placeholder="naam@telenco.be" />
+                  {editingUser && <p className="text-[10px] text-slate-400 mt-1">E-mailadres kan niet zomaar worden overschreven om veiligheidsredenen.</p>}
                 </div>
 
                 <div>
-                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block">Kies Profiel Avatar Of Upload</label>
-                   
-                   {/* WebP Uploader Interface */}
-                   <div className="flex items-center gap-4 mb-4">
-                     <div className="relative flex-1">
-                       <input type="file" id="avatarUpload" accept="image/webp" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
-                       <label htmlFor="avatarUpload" className={`flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-xs uppercase tracking-wider cursor-pointer border-2 border-dashed transition-all ${isUploading ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-600 hover:border-[#91C848] hover:text-[#91C848]'}`}>
-                         {isUploading ? <RefreshCwIcon className="w-4 h-4 animate-spin" /> : (
-                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
-                         )}
-                         {isUploading ? 'Uploaden...' : 'Upload Foto (.webp)'}
-                       </label>
-                     </div>
-                     
-                     {/* Preview Sphere if URL matched or Blank Telenco Logo */}
-                     {formAvatar && (formAvatar.startsWith('http') || formAvatar.includes('/')) ? (
-                       <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-[#91C848] shadow-md relative group bg-slate-50">
-                         <img src={formAvatar} alt="Upload Preview" className="w-full h-full object-cover" />
-                         <button type="button" onClick={() => setFormAvatar('')} className="absolute inset-0 bg-rose-500/80 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex"><XIcon className="w-4 h-4 text-white" /></button>
-                       </div>
-                     ) : (
-                       <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-slate-200 shadow-md relative bg-white flex items-center justify-center">
-                         <img src={TELENCO_LOGO} alt="Telenco" className="w-full h-full object-contain p-2 opacity-40 grayscale brightness-0" />
-                       </div>
-                     )}
-                   </div>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 block">Kies Profiel Avatar Of Upload</label>
+
+                  {/* WebP Uploader Interface */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="relative flex-1">
+                      <input type="file" id="avatarUpload" accept="image/webp" className="hidden" onChange={handleFileUpload} disabled={isUploading} />
+                      <label htmlFor="avatarUpload" className={`flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-xs uppercase tracking-wider cursor-pointer border-2 border-dashed transition-all ${isUploading ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-600 hover:border-[#91C848] hover:text-[#91C848]'}`}>
+                        {isUploading ? <RefreshCwIcon className="w-4 h-4 animate-spin" /> : (
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+                        )}
+                        {isUploading ? 'Uploaden...' : 'Upload Foto (.webp)'}
+                      </label>
+                    </div>
+
+                    {/* Preview Sphere if URL matched or Blank Telenco Logo */}
+                    {formAvatar && (formAvatar.startsWith('http') || formAvatar.includes('/')) ? (
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-[#91C848] shadow-md relative group bg-slate-50">
+                        <img src={formAvatar} alt="Upload Preview" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => setFormAvatar('')} className="absolute inset-0 bg-rose-500/80 items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity flex"><XIcon className="w-4 h-4 text-white" /></button>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-slate-200 shadow-md relative bg-white flex items-center justify-center">
+                        <img src={TELENCO_LOGO} alt="Telenco" className="w-full h-full object-contain p-2 opacity-40 grayscale brightness-0" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Toggle access — only visible when editing */}
