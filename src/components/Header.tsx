@@ -69,15 +69,20 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
             <div className="relative">
               <button 
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-2 bg-slate-200/50 border border-slate-300/50 backdrop-blur-md pl-1.5 pr-2 sm:pr-4 py-1.5 rounded-full shadow-sm mr-1 hover:bg-slate-300/50 cursor-pointer transition-all"
+                className="flex items-center gap-0 bg-slate-200/50 border border-slate-300/50 backdrop-blur-md rounded-full shadow-sm mr-1 hover:bg-slate-300/50 cursor-pointer transition-all overflow-hidden"
               >
-                <div className="w-7 h-7 rounded-full bg-[#E74B4D] text-white flex items-center justify-center text-xs font-bold shadow-inner shrink-0">
-                  {getDisplayName().charAt(0).toUpperCase()}
+                {/* Avatar fills the full button height */}
+                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-[#E74B4D] flex items-center justify-center">
+                  {profile?.avatar_id ? (
+                    <img src={profile.avatar_id} alt={getDisplayName()} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-white text-xs font-bold">{getDisplayName().charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
-                <span className="hidden sm:inline text-sm font-bold text-white tracking-tight">
-                  Hey, {getDisplayName().split(' ')[0]}
+                <span className="hidden sm:inline text-sm font-bold text-white tracking-tight pl-2 pr-3">
+                  {getDisplayName().split(' ')[0]}
                 </span>
-                <ChevronDownIcon className={`w-3.5 h-3.5 text-white/80 transition-transform duration-300 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                <ChevronDownIcon className={`w-3.5 h-3.5 text-white/80 transition-transform duration-300 mr-2.5 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
               </button>
 
               <AnimatePresence>

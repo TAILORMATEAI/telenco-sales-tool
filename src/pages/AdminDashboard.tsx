@@ -306,10 +306,14 @@ export default function AdminDashboard() {
             
             <div className="p-3 sm:p-4 pt-2 flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center shrink-0">
-                  <span className="font-bold text-slate-600 text-xs uppercase">
-                    {getDisplayName() ? getDisplayName().charAt(0) : '?'}
-                  </span>
+              <div className="w-9 h-9 rounded-full border border-slate-300 overflow-hidden shrink-0 bg-slate-200">
+                  {profile?.avatar_id ? (
+                    <img src={profile.avatar_id} alt={getDisplayName()} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="font-bold text-slate-600 text-xs uppercase">{getDisplayName() ? getDisplayName().charAt(0) : '?'}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col hidden sm:flex min-w-0">
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-3">Ingelogd als</p>
