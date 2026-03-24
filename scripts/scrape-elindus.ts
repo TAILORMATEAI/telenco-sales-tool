@@ -93,7 +93,7 @@ const USER_AGENTS = [
 ];
 
 async function scrapeElindusData(): Promise<ScrapedMarket[]> {
-  await logProgress(`[${new Date().toISOString()}] 🔄 Start iteratie: Browser opstarten...`);
+  await logProgress(`[${new Date().toISOString()}] > Start iteratie: Browser opstarten...`);
 
   const selectedUA = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
   const viewportWidth = 1280 + Math.floor(Math.random() * 400);
@@ -138,19 +138,19 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
     try {
       if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=ELECTRICITY')) {
         intercepted['EPEX_SPOT'] = await response.json();
-        await logProgress('✅ Data voor EPEX SPOT (Elektriciteit Variabel) ontvangen.');
+        await logProgress('\u2713 Data voor EPEX SPOT (Elektriciteit Variabel) ontvangen.');
       }
       if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=GAS')) {
         intercepted['TTF_DAM'] = await response.json();
-        await logProgress('✅ Data voor TTF DAM (Aardgas Variabel) ontvangen.');
+        await logProgress('\u2713 Data voor TTF DAM (Aardgas Variabel) ontvangen.');
       }
       if (url.includes('/marketinfo/fixed/prices') && url.includes('market=ELECTRICITY')) {
         intercepted['ENDEX'] = await response.json();
-        await logProgress('✅ Data voor ENDEX (Elektriciteit Vast) ontvangen.');
+        await logProgress('\u2713 Data voor ENDEX (Elektriciteit Vast) ontvangen.');
       }
       if (url.includes('/marketinfo/fixed/prices') && url.includes('market=GAS')) {
         intercepted['TTF_ENDEX'] = await response.json();
-        await logProgress('✅ Data voor TTF ENDEX (Aardgas Vast) ontvangen.');
+        await logProgress('\u2713 Data voor TTF ENDEX (Aardgas Vast) ontvangen.');
       }
     } catch {
       // Not JSON — skip
@@ -158,7 +158,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
   });
 
   // Navigate to main page (triggers EPEX SPOT)
-  await logProgress('🌐 Navigeren naar hoofdpagina Elindus Marktinformatie...');
+  await logProgress('> Navigeren naar hoofdpagina Elindus Marktinformatie...');
   await page.goto('https://klant.elindus.be/s/marktinformatie?language=nl_NL', {
     waitUntil: 'networkidle2',
     timeout: 45000,
@@ -174,24 +174,24 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
 
   for (const market of marketPages) {
     if (intercepted[market.key]) {
-      await logProgress(`⏩ ${market.label} reeds opgehaald, volgende pagina...`);
+      await logProgress(`> ${market.label} reeds opgehaald, volgende pagina...`);
       continue;
     }
 
     await delay(6000 + Math.floor(Math.random() * 6000));
 
     try {
-      await logProgress(`📍 Navigeren naar tabblad ${market.label}...`);
+      await logProgress(`> Navigeren naar tabblad ${market.label}...`);
       await page.goto(market.url, { waitUntil: 'networkidle2', timeout: 30000 });
       await humanDelay();
 
       if (intercepted[market.key]) {
-        await logProgress(`✅ ${market.label} succesvol onderschept.`);
+        await logProgress(`\u2713 ${market.label} succesvol onderschept.`);
       } else {
-        await logProgress(`⚠️ Geen data ontvangen voor ${market.label}.`);
+        await logProgress(`! Geen data ontvangen voor ${market.label}.`);
       }
     } catch (err: any) {
-      await logProgress(`⚠️ Fout bij navigeren naar ${market.label}: ${err.message}`);
+      await logProgress(`! Fout bij navigeren naar ${market.label}: ${err.message}`);
     }
   }
 
@@ -229,7 +229,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
     });
   }
 
-  await logProgress(`✅ Scrape iteratie voltooid — ${results.length}/4 markten succesvol uitgelezen.`);
+  await logProgress(`✓ Scrape iteratie voltooid — ${results.length}/4 markten succesvol uitgelezen.`);
   return results;
 }
 
@@ -238,7 +238,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
 // ─────────────────────────────────────────────
 async function saveToSupabase(markets: ScrapedMarket[]) {
   const nowIso = new Date().toISOString();
-  await logProgress('💾 Data voorbereiden voor opslag in Supabase database...');
+  await logProgress('> Data voorbereiden voor opslag in Supabase database...');
 
   // 1. Upsert current prices
   const upsertData = markets.map((m) => ({
@@ -253,7 +253,7 @@ async function saveToSupabase(markets: ScrapedMarket[]) {
     .upsert(upsertData, { onConflict: 'indicator_name' });
 
   if (upsertError) {
-    await logProgress(`❌ Fout bij updaten van huidige prijzen: ${upsertError.message}`);
+    await logProgress(`x Fout bij updaten van huidige prijzen: ${upsertError.message}`);
     return { success: false, error: upsertError };
   }
 
@@ -270,10 +270,10 @@ async function saveToSupabase(markets: ScrapedMarket[]) {
     .insert(historyLog);
 
   if (historyError) {
-    await logProgress(`⚠️ Fout bij schrijven naar geschiedenis log: ${historyError.message}`);
+    await logProgress(`! Fout bij schrijven naar geschiedenis log: ${historyError.message}`);
   }
 
-  await logProgress('✅ Alle marktdata succesvol opgeslagen in database.');
+  await logProgress('✓ Alle marktdata succesvol opgeslagen in database.');
   return { success: true, historyLogged: !historyError };
 }
 
@@ -286,33 +286,33 @@ async function main() {
   console.log(`  ${new Date().toISOString()}`);
   console.log('═══════════════════════════════════════');
   
-  await logProgress('🚀 Start: GitHub Actions Script geïnitialiseerd.');
+  await logProgress('> Start: GitHub Actions Script geinitialiseerd.');
 
   try {
     const markets = await scrapeElindusData();
 
     if (markets.length === 0) {
-      console.error('❌ No markets captured — exiting with error');
+      console.error('x No markets captured — exiting with error');
       process.exit(1);
     }
 
     const result = await saveToSupabase(markets);
 
     // Print summary
-    console.log('\n📊 Summary:');
+    console.log('\nSummary:');
     for (const m of markets) {
-      console.log(`  ${m.indicator_name}: ${m.value?.toFixed(2) ?? 'N/A'} €/MWh (${m.hourly_data?.length ?? 0} data points)`);
+      console.log(`  ${m.indicator_name}: ${m.value?.toFixed(2) ?? 'N/A'} euro/MWh (${m.hourly_data?.length ?? 0} data points)`);
     }
 
     if (!result.success) {
-      await logProgress('❌ Fatale fout tijdens database operations.');
+      await logProgress('x Fatale fout tijdens database operations.');
       process.exit(1);
     }
 
-    await logProgress('🏁 Scraper succesvol afgerond! Proces wordt afgesloten.');
+    await logProgress('Scraper succesvol afgerond! Proces wordt afgesloten.');
     process.exit(0);
   } catch (error: any) {
-    await logProgress(`❌ Onverwachte fout: ${error.message}`);
+    await logProgress(`x Onverwachte fout: ${error.message}`);
     process.exit(1);
   }
 }

@@ -590,6 +590,19 @@ async function startServer() {
     }
   });
 
+  // ── Clear sync logs ──
+  app.delete('/api/clear-sync-logs', async (_req, res) => {
+    try {
+      const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const client = serviceKey ? createClient(supabaseUrl, serviceKey) : supabase;
+      const { error } = await client.from('sync_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      if (error) return res.status(500).json({ success: false, error: error.message });
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // ── Get latest synced data ──
   // GET /api/market-prices  →  read from Supabase
   app.get('/api/market-prices', async (_req, res) => {

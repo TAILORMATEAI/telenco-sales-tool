@@ -176,9 +176,9 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
           {isSyncing && (
             <button
               onClick={async () => { 
-                setIsSyncing(false); 
-                setError('Scan handmatig geannuleerd.'); 
-                try { await fetch('/api/cancel-sync', { method: 'POST' }); } catch(err) {} 
+                setIsSyncing(false);
+                setLiveLogs([]);
+                try { await fetch('/api/cancel-sync', { method: 'POST' }); } catch(_) {}
               }}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-rose-500 font-bold text-sm hover:bg-slate-100 hover:border-slate-300 transition-all"
             >
@@ -226,11 +226,13 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
           )}
         </div>
 
-        {/* Wave background always visible */}
-        <div className="relative flex-1 overflow-hidden">
-          <div className="absolute inset-0 z-0 grayscale opacity-30">
-            <LoginBackgroundWaves config={DEFAULT_WAVES} />
-          </div>
+        {/* Wave background — only visible when scanning */}
+        <div className="relative flex-1 overflow-hidden bg-white">
+          {isSyncing && (
+            <div className="absolute inset-0 z-0 grayscale opacity-30">
+              <LoginBackgroundWaves config={DEFAULT_WAVES} />
+            </div>
+          )}
 
           {/* Current task title */}
           <div className="relative z-10 flex items-center justify-center h-full px-8 text-center">
@@ -274,17 +276,30 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
 
       {/* Historical Logs List */}
       <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h4 className="font-bold text-slate-800">Systeem Logboek</h4>
-          <p className="text-xs text-slate-500">Historische weergave van alle netwerk- en applicatie-interacties.</p>
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h4 className="font-bold text-slate-800">Systeem Logboek</h4>
+            <p className="text-xs text-slate-500">Historische weergave van alle netwerk- en applicatie-interacties.</p>
+          </div>
+          <button
+            onClick={async () => {
+              if (!window.confirm('Weet je zeker dat je alle logs wilt wissen?')) return;
+              await fetch('/api/clear-sync-logs', { method: 'DELETE' });
+              setHistoryLogs([]);
+            }}
+            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-colors"
+            title="Wis alle logs"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
         </div>
         <div className="h-64 overflow-y-auto p-5 space-y-3 bg-slate-50/50">
           {historyLogs.map(log => (
             <div key={log.id} className="flex gap-3 text-xs">
               <span className="text-slate-400 shrink-0">[{new Date(log.created_at).toLocaleString('nl-BE')}]</span>
               <span className={`break-words ${
-                log.message.includes('✅') || log.message.includes('🏁') ? 'text-emerald-600 font-medium' : 
-                log.message.includes('❌') || log.message.includes('Fatale fout') ? 'text-rose-600 font-medium' : 
+                log.message.includes('succesvol') || log.message.includes('afgerond') || log.message.includes('✓') ? 'text-emerald-600 font-medium' : 
+                log.message.includes('Fout') || log.message.includes('mislukt') || log.message.includes('fout') ? 'text-rose-600 font-medium' : 
                 'text-slate-600'
               }`}>{log.message}</span>
             </div>
