@@ -300,17 +300,17 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                   {/* Middle: 3 Stat Blocks imitating screenshot */}
                   {user.is_active || tab === 'archived' ? (
                     <div className="grid grid-cols-3 gap-2 mb-6">
-                      <div className="bg-emerald-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
-                        <ZapIcon className="w-4 h-4 text-emerald-600 mb-1" />
-                        <span className="font-black text-emerald-600 text-sm leading-none">{stat1}</span>
+                      <div className="bg-slate-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
+                        <ZapIcon className="w-4 h-4 text-slate-300 mb-1" />
+                        <span className="font-black text-slate-400 text-sm leading-none">{stat1}</span>
                       </div>
-                      <div className="bg-orange-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
-                        <FlameIcon className="w-4 h-4 text-orange-600 mb-1" />
-                        <span className="font-black text-orange-600 text-sm leading-none">{stat2}</span>
+                      <div className="bg-slate-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
+                        <FlameIcon className="w-4 h-4 text-slate-300 mb-1" />
+                        <span className="font-black text-slate-400 text-sm leading-none">{stat2}</span>
                       </div>
-                      <div className="bg-purple-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
-                        <TrophyIcon className="w-4 h-4 text-purple-600 mb-1" />
-                        <span className="font-black text-purple-600 text-sm leading-none">{stat3}</span>
+                      <div className="bg-slate-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
+                        <TrophyIcon className="w-4 h-4 text-slate-300 mb-1" />
+                        <span className="font-black text-slate-400 text-sm leading-none">{stat3}</span>
                       </div>
                     </div>
                   ) : (
