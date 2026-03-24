@@ -138,6 +138,16 @@ export default function HomePage() {
           <img src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png" alt="Telenco Logo" className="h-7 sm:h-8 object-contain opacity-90 transition-opacity hover:opacity-100" style={{ filter: 'brightness(0) invert(1)' }} />
         </div>
         <div className="flex items-center gap-3">
+          {getDisplayName() && (
+            <div className="hidden sm:flex items-center gap-3 bg-white/60 border border-slate-200 backdrop-blur-md pl-1.5 pr-4 py-1.5 rounded-full shadow-sm mr-1 transition-all">
+              <div className="w-7 h-7 rounded-full bg-[#E74B4D] text-white flex items-center justify-center text-xs font-bold shadow-inner">
+                {getDisplayName().charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm font-bold text-slate-800 tracking-tight">
+                Hey, {getDisplayName().split(' ')[0]}
+              </span>
+            </div>
+          )}
           {isAdmin && (
             <button onClick={() => navigate('/admin')} className="p-2 rounded-full transition-colors bg-white/20 border border-white/30 text-white hover:bg-white hover:text-[#E74B4D]">
               <Settings className="w-5 h-5" />
@@ -178,17 +188,7 @@ export default function HomePage() {
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center mb-12"
-            >
-              <h1 className="text-3xl sm:text-4xl font-black text-white mb-3">
-                {t.welcome}{getDisplayName() ? `, ${getDisplayName()}` : ''}!
-              </h1>
-              <p className="text-white/60 font-medium text-lg mb-4">{t.subtitle}</p>
-            </motion.div>
+
 
             {/* Tool Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
@@ -347,9 +347,10 @@ export default function HomePage() {
       <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 flex items-end gap-5 sm:gap-8 pointer-events-none">
         <img src="https://tailormate.ai/telencotool/images/logos/telenetlogo.webp" alt="Telenet" className="h-7 sm:h-8 object-contain mb-0.5 scale-[1.02] origin-bottom" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
         <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Eneco_logo.svg/1280px-Eneco_logo.svg.png" alt="Eneco" className="h-8 sm:h-10 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <div className="h-6 w-px bg-slate-300 hidden sm:block mb-1.5"></div>
-        <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
+        <div className="flex items-end gap-2">
+          <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
+          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
+        </div>
       </div>
     </div>
   );
