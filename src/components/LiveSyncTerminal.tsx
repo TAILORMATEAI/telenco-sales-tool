@@ -28,6 +28,8 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
 
   // Track the latest log ID we've already shown to avoid duplicates during polling
   const lastLogIdRef = React.useRef<string | null>(null);
+  // Track when the current scan started to filter out old logs
+  const scanStartedAtRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     fetchRecentLogs();
@@ -46,6 +48,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
 
           if (newLog.message.includes('succesvol afgerond') || newLog.message.includes('Fatale fout') || newLog.message.includes('Scrape complete') || newLog.message.includes('🏁')) {
             setIsSyncing(false);
+            setTimeout(() => setLiveLogs([]), 3000); // Clear live terminal 3s after done
             onSyncComplete();
           }
         }
@@ -67,6 +70,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
         .from('sync_logs')
         .select('*')
         .order('created_at', { ascending: true })
+        .gte('created_at', scanStartedAtRef.current || new Date(Date.now() - 600000).toISOString())
         .limit(50);
 
       const { data } = await query;
@@ -96,6 +100,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
       );
       if (doneLog) {
         setIsSyncing(false);
+        setTimeout(() => setLiveLogs([]), 3000); // Clear live terminal 3s after done
         onSyncComplete();
       }
     }, 3000);
@@ -108,6 +113,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
     setIsSyncing(true);
     setError(null);
     setLiveLogs([]); // Clear live logs for new run
+    scanStartedAtRef.current = new Date().toISOString(); // Mark scan start time
 
     try {
       const response = await fetch('/api/trigger-sync', { method: 'POST' });
@@ -201,9 +207,9 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
         </div>
       )}
 
-      {/* Terminal UI */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-64">
-        <div className="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-100">
+      {/* Terminal UI — shows only current active task */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-48">
+        <div className="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-100 shrink-0">
           <div className="flex items-center gap-2">
             <div className="flex gap-1.5">
               <div className="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
@@ -220,84 +226,51 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
           )}
         </div>
 
-        <div className="p-0 font-mono text-sm overflow-hidden flex-1 flex flex-col bg-slate-50 relative z-0">
-          <AnimatePresence mode="wait">
-            {liveLogs.length === 0 ? (
-              <motion.div
-                key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, backgroundColor: isSyncing ? "#ffffff" : "rgba(255, 255, 255, 0)" }}
-                exit={{ opacity: 0, filter: "brightness(2) blur(10px)", backgroundColor: "#ffffff" }}
-                transition={{ duration: 0.8, ease: "easeInOut" }}
-                className="absolute inset-0 z-10 flex flex-col items-center justify-center overflow-hidden bg-slate-50/50"
-              >
-                <AnimatePresence>
-                  {isSyncing && (
-                    <motion.div
-                      key="waves"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.4 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="absolute inset-0 z-0 bg-white grayscale"
-                    >
-                      <LoginBackgroundWaves config={DEFAULT_WAVES} />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+        {/* Wave background always visible */}
+        <div className="relative flex-1 overflow-hidden">
+          <div className="absolute inset-0 z-0 grayscale opacity-30">
+            <LoginBackgroundWaves config={DEFAULT_WAVES} />
+          </div>
 
-                <div className="relative z-10 flex flex-col items-center text-center px-4">
-                  {isSyncing ? (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-                      <div className="w-8 h-8 border-4 border-slate-200 border-t-[#E74B4D] rounded-full animate-spin mx-auto mb-3" />
-                      <h4 className="font-bold text-slate-800">Start Market Scan...</h4>
-                      <p className="text-xs text-slate-500 mt-1 max-w-[250px]">Marktgegevens ophalen en synchroniseren. Een ogenblik geduld aub.</p>
-                    </motion.div>
-                  ) : (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                      <h4 className="font-bold text-slate-400">Marktprijzen Systeem</h4>
-                      <p className="text-xs text-slate-400/70 mt-1">Druk op Start om de scan uit te voeren</p>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="live-logs"
-                initial={{ opacity: 0, filter: "brightness(2) blur(5px)" }}
-                animate={{ opacity: 1, filter: "brightness(1) blur(0px)" }}
-                transition={{ duration: 0.6 }}
-                className="space-y-2 relative z-20 w-full h-full p-4 overflow-y-auto bg-slate-50/50"
-              >
-                <AnimatePresence>
-                  {liveLogs.map((log) => (
-                    <motion.div
-                      key={log.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={`flex gap-3 text-xs ${log.message.includes('❌') || log.message.includes('Fatale fout') ? 'text-rose-600 font-medium' :
-                          log.message.includes('✅') || log.message.includes('🏁') ? 'text-emerald-600 font-medium' :
-                            log.message.includes('🚀') ? 'text-blue-600 font-bold' :
-                              'text-slate-600'
-                        }`}
-                    >
-                      <span className="text-slate-400 shrink-0 select-none">[{new Date(log.created_at).toLocaleTimeString('nl-BE')}]</span>
-                      <span className="break-words">{log.message}</span>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {isSyncing && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3 text-slate-400 mt-4 animate-pulse text-xs">
-                    <span className="shrink-0">[{new Date().toLocaleTimeString('nl-BE')}]</span>
-                    <span>Wachten op scraper componenten...</span>
-                  </motion.div>
-                )}
-                <div style={{ float: "left", clear: "both" }} ref={(el) => { el?.scrollIntoView({ behavior: 'smooth' }) }}></div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Current task title */}
+          <div className="relative z-10 flex items-center justify-center h-full px-8 text-center">
+            <AnimatePresence mode="wait">
+              {liveLogs.length > 0 ? (
+                <motion.p
+                  key={liveLogs[liveLogs.length - 1].id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.3 }}
+                  className="font-bold text-slate-800 text-base leading-snug max-w-md"
+                >
+                  {liveLogs[liveLogs.length - 1].message}
+                </motion.p>
+              ) : isSyncing ? (
+                <motion.p
+                  key="starting"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="font-bold text-slate-500 text-sm"
+                >
+                  Scan opstarten via GitHub Actions...
+                </motion.p>
+              ) : (
+                <motion.p
+                  key="idle"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="font-medium text-slate-400 text-sm"
+                >
+                  Klaar voor de volgende scan
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
+
+
 
       {/* Historical Logs List */}
       <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
