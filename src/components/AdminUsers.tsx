@@ -420,6 +420,26 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                    </div>
                 </div>
 
+                {/* Toggle access — only visible when editing */}
+                {editingUser && (
+                  <div className="pt-2 pb-1">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await handleToggleStatus(editingUser.id, !editingUser.is_active, false);
+                        setShowModal(false);
+                      }}
+                      className={`w-full py-3 rounded-xl font-bold text-sm transition-all border ${
+                        editingUser.is_active
+                          ? 'border-amber-200 bg-amber-50 text-amber-600 hover:bg-amber-100'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                      }`}
+                    >
+                      {editingUser.is_active ? 'Blokkeer toegang' : 'Deblokkeer toegang'}
+                    </button>
+                  </div>
+                )}
+
                 <div className="pt-4 flex gap-3">
                   <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all">Annuleren</button>
                   <button type="submit" disabled={isSubmitting || isUploading} className="flex-[2] py-3 rounded-xl font-black text-white bg-[#91C848] hover:bg-[#7fae3d] shadow-lg shadow-[#91C848]/30 transition-all disabled:opacity-50">

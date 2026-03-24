@@ -69,7 +69,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
             <div className="relative">
               <button 
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="flex items-center gap-0 bg-slate-200/50 border border-slate-300/50 backdrop-blur-md rounded-full shadow-sm mr-1 hover:bg-slate-300/50 cursor-pointer transition-all overflow-hidden"
+                className="flex items-center gap-0 bg-slate-200/50 border border-slate-300/50 backdrop-blur-md rounded-full shadow-sm mr-1 hover:bg-slate-300/50 cursor-pointer transition-all overflow-hidden pr-2.5 sm:pr-0"
               >
                 {/* Avatar fills the full button height */}
                 <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 bg-[#E74B4D] flex items-center justify-center">
