@@ -645,7 +645,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden relative flex flex-col">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      exit={{ opacity: 0 }} 
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden relative flex flex-col"
+    >
       <div className="fixed top-0 left-0 w-full h-1.5 bg-white/20 z-50 overflow-hidden">
         <motion.div className="h-full bg-white" initial={{ width: '0%' }} animate={{ width: `${(currentStep / totalSteps) * 100}%` }} transition={{ duration: 0.3, ease: 'easeInOut' }} />
       </div>
@@ -891,6 +897,6 @@ export default function App() {
         <div className="h-6 w-px bg-slate-300 hidden sm:block mb-1.5"></div>
         <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
       </div>
-    </div>
+    </motion.div>
   );
 }

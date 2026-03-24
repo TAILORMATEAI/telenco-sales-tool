@@ -102,8 +102,8 @@ export default function LoginPage() {
           className="w-full max-w-md relative z-10"
         >
           <div className="flex flex-col items-center justify-center mb-8">
-            <img src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png" alt="Telenco Logo" className="w-[180px] object-contain mb-3" style={{ filter: 'grayscale(1) brightness(0) opacity(0.2)' }} />
-            <h2 className="text-sm font-bold tracking-[0.2em] uppercase" style={{ color: 'rgba(0,0,0,0.2)' }}>Sales tool</h2>
+            <img src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png" alt="Telenco Logo" className="w-[180px] object-contain mb-3" style={{ filter: 'grayscale(1) brightness(0) opacity(0.5)' }} />
+            <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-slate-400">Sales tool</h2>
           </div>
 
           <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-8 sm:p-10 border border-slate-100/50 relative overflow-hidden">

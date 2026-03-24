@@ -13,6 +13,7 @@
 
 import puppeteer from 'puppeteer';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 // ─────────────────────────────────────────────
 // Config — from env vars or fallback defaults
@@ -20,6 +21,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.SUPABASE_URL || 'https://lksvpkoavcmlwfkonowc.supabase.co';
 const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrc3Zwa29hdmNtbHdma29ub3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxODU3MzksImV4cCI6MjA4OTc2MTczOX0.s5VUHfBm7AaPxn5NwhK2LD04zJBMsy5i4ux_mF_dfAg';
 const supabase = createClient(supabaseUrl, supabaseKey);
+const RUN_ID = crypto.randomUUID();
 
 // ─────────────────────────────────────────────
 // Types
@@ -64,6 +66,14 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function logProgress(message: string) {
+  console.log(message);
+  await supabase.from('sync_logs').insert({
+    run_id: RUN_ID,
+    message
+  });
+}
+
 function humanDelay() {
   const ms = 3000 + Math.floor(Math.random() * 4000);
   return delay(ms);
@@ -73,7 +83,7 @@ function humanDelay() {
 // Scraper
 // ─────────────────────────────────────────────
 async function scrapeElindusData(): Promise<ScrapedMarket[]> {
-  console.log(`[${new Date().toISOString()}] 🔄 Starting Elindus scrape...`);
+  await logProgress(`[${new Date().toISOString()}] 🔄 Start iteratie: Browser opstarten...`);
 
   const browser = await puppeteer.launch({
     headless: true,
@@ -104,19 +114,19 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
     try {
       if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=ELECTRICITY')) {
         intercepted['EPEX_SPOT'] = await response.json();
-        console.log('  ✅ Intercepted EPEX SPOT');
+        await logProgress('✅ Data voor EPEX SPOT (Elektriciteit Variabel) ontvangen.');
       }
       if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=GAS')) {
         intercepted['TTF_DAM'] = await response.json();
-        console.log('  ✅ Intercepted TTF DAM');
+        await logProgress('✅ Data voor TTF DAM (Aardgas Variabel) ontvangen.');
       }
       if (url.includes('/marketinfo/fixed/prices') && url.includes('market=ELECTRICITY')) {
         intercepted['ENDEX'] = await response.json();
-        console.log('  ✅ Intercepted ENDEX');
+        await logProgress('✅ Data voor ENDEX (Elektriciteit Vast) ontvangen.');
       }
       if (url.includes('/marketinfo/fixed/prices') && url.includes('market=GAS')) {
         intercepted['TTF_ENDEX'] = await response.json();
-        console.log('  ✅ Intercepted TTF ENDEX');
+        await logProgress('✅ Data voor TTF ENDEX (Aardgas Vast) ontvangen.');
       }
     } catch {
       // Not JSON — skip
@@ -124,6 +134,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
   });
 
   // Navigate to main page (triggers EPEX SPOT)
+  await logProgress('🌐 Navigeren naar hoofdpagina Elindus Marktinformatie...');
   await page.goto('https://klant.elindus.be/s/marktinformatie?language=nl_NL', {
     waitUntil: 'networkidle2',
     timeout: 45000,
@@ -146,7 +157,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
     await delay(5000 + Math.floor(Math.random() * 5000));
 
     try {
-      console.log(`  🔄 Navigating to ${market.label}...`);
+      await logProgress(`📍 Navigeren naar tabblad ${market.label}...`);
       await page.goto(market.url, { waitUntil: 'networkidle2', timeout: 30000 });
       await humanDelay();
 
@@ -194,7 +205,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
     });
   }
 
-  console.log(`✅ Scrape complete — ${results.length}/4 markets captured`);
+  await logProgress(`✅ Scrape iteratie voltooid — ${results.length}/4 markten succesvol uitgelezen.`);
   return results;
 }
 
@@ -203,6 +214,7 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
 // ─────────────────────────────────────────────
 async function saveToSupabase(markets: ScrapedMarket[]) {
   const nowIso = new Date().toISOString();
+  await logProgress('💾 Data voorbereiden voor opslag in Supabase database...');
 
   // 1. Upsert current prices
   const upsertData = markets.map((m) => ({
@@ -217,7 +229,7 @@ async function saveToSupabase(markets: ScrapedMarket[]) {
     .upsert(upsertData, { onConflict: 'indicator_name' });
 
   if (upsertError) {
-    console.error('❌ Failed to upsert market_prices:', upsertError);
+    await logProgress(`❌ Fout bij updaten van huidige prijzen: ${upsertError.message}`);
     return { success: false, error: upsertError };
   }
 
@@ -234,10 +246,10 @@ async function saveToSupabase(markets: ScrapedMarket[]) {
     .insert(historyLog);
 
   if (historyError) {
-    console.error('⚠️ Failed to log to price_history:', historyError);
+    await logProgress(`⚠️ Fout bij schrijven naar geschiedenis log: ${historyError.message}`);
   }
 
-  console.log('✅ Saved to Supabase');
+  await logProgress('✅ Alle marktdata succesvol opgeslagen in database.');
   return { success: true, historyLogged: !historyError };
 }
 
@@ -249,6 +261,8 @@ async function main() {
   console.log(' Elindus Market Scraper — GitHub Action');
   console.log(`  ${new Date().toISOString()}`);
   console.log('═══════════════════════════════════════');
+  
+  await logProgress('🚀 Start: GitHub Actions Script geïnitialiseerd.');
 
   try {
     const markets = await scrapeElindusData();
@@ -267,14 +281,14 @@ async function main() {
     }
 
     if (!result.success) {
-      console.error('❌ Database save failed');
+      await logProgress('❌ Fatale fout tijdens database operations.');
       process.exit(1);
     }
 
-    console.log('\n✅ All done!');
+    await logProgress('🏁 Scraper succesvol afgerond! Proces wordt afgesloten.');
     process.exit(0);
-  } catch (error) {
-    console.error('❌ Fatal error:', error);
+  } catch (error: any) {
+    await logProgress(`❌ Onverwachte fout: ${error.message}`);
     process.exit(1);
   }
 }

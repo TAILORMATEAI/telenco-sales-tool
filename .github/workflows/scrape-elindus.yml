@@ -4,8 +4,7 @@ on:
   # Runs twice daily: 7:00 and 14:00 UTC (8:00 and 15:00 CET)
   # EPEX SPOT day-ahead prices are published around 13:00 CET
   schedule:
-    - cron: '0 7 * * *'    # 08:00 CET — morning update
-    - cron: '0 13 * * *'   # 14:00 CET — after day-ahead publication
+    - cron: '0 19 * * *'    # 20:00 CET — daily update
   
   # Allow manual trigger from GitHub Actions tab
   workflow_dispatch:

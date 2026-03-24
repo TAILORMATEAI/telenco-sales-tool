@@ -3,7 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import puppeteer from 'puppeteer';
 import { createClient } from '@supabase/supabase-js';
-
+import { spawn } from 'child_process';
 // ─────────────────────────────────────────────
 // Supabase Client
 // ─────────────────────────────────────────────
@@ -403,6 +403,42 @@ async function startServer() {
       lastSync: lastSyncTime,
       autoSyncIntervalHours: AUTO_SYNC_INTERVAL_MS / (60 * 60 * 1000),
     });
+  });
+
+  // ─────────────────────────────────────────────
+  // API Endpoints
+  // ─────────────────────────────────────────────
+
+  // Legacy Sync Endpoint (Wait for result, old method)
+  app.post('/api/sync-prices', async (req, res) => {
+    console.log('Handmatige sync aangevraagd via oud endpoint...');
+    try {
+      const markets = await scrapeElindusData();
+      const result = await saveToSupabase(markets);
+      if (!result.success) throw new Error('Database save failed');
+      res.json({ success: true, markets });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // New Trigger Endpoint (Async, matches Vercel serverless / GitHub Actions trigger)
+  app.post('/api/trigger-sync', (req, res) => {
+    console.log('Handmatige sync live-trigger aangevraagd lokaal...');
+
+    try {
+      // Start scraper in background using npx tsx natively on Windows
+      const child = spawn('cmd.exe', ['/c', 'npx', 'tsx', 'scripts/scrape-elindus.ts'], {
+        detached: true,
+        stdio: 'ignore'
+      });
+
+      child.unref(); // Detach completely so Node doesn't wait for it
+
+      res.status(200).json({ success: true, message: 'Lokale scraper succesvol gestart op de achtergrond.' });
+    } catch (error: any) {
+      res.status(500).json({ error: 'Fout bij starten lokaal scraper script', details: error.message });
+    }
   });
 
   // ── Day prices (today + tomorrow) from last scrape ──

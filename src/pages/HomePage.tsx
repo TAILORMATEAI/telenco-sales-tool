@@ -123,7 +123,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-slate-50 relative overflow-hidden flex flex-col">
       <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-br from-[#E5384C] via-[#E74B4D] to-[#EA704F] z-0 overflow-hidden pointer-events-none">
         <svg className="absolute bottom-0 w-full min-w-[1200px]" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ transform: 'translateY(2px)' }}>
           <path fill="#91C848" fillOpacity="1" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,224C960,245,1056,235,1152,213.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
@@ -168,15 +168,16 @@ export default function HomePage() {
       </header>
 
       {/* Main Content */}
-      <AnimatePresence mode="wait">
-        <motion.div 
-          key={lang}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -15 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-20"
-        >
+      <main className="flex-1 flex flex-col justify-center w-full relative z-10 pb-20">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={lang}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-8"
+          >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -194,9 +195,9 @@ export default function HomePage() {
           {tools.map((tool, i) => (
             <motion.button
               key={tool.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 * i, type: 'spring', bounce: 0, duration: 0.7 }}
+              transition={{ delay: 0.1 * i, duration: 0.5, ease: 'easeOut' }}
               onClick={() => tool.available && navigate(tool.route)}
               disabled={!tool.available}
               className={`group flex flex-col relative bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-lg border border-slate-100 text-left transition-all ${tool.available
@@ -223,11 +224,11 @@ export default function HomePage() {
 
               {/* Card Footer (Title + Extension) separated by color */}
               <div className={`w-full py-3 px-4 sm:py-5 sm:px-8 bg-gradient-to-r ${tool.gradient} flex items-center justify-between`}>
-                <h3 className={`text-sm sm:text-lg font-black tracking-wide ${tool.id === 'telenet' ? 'text-slate-900' : 'text-white'}`}>{tool.title}</h3>
+                <h3 className={`text-sm sm:text-lg font-black tracking-wide text-white`}>{tool.title}</h3>
 
                 {/* Arrow */}
                 {tool.available && (
-                  <div className={`flex items-center gap-1 sm:gap-2 font-bold text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-all ${tool.id === 'telenet' ? 'text-slate-900' : 'text-white'}`}>
+                  <div className={`flex items-center gap-1 sm:gap-2 font-bold text-xs sm:text-sm opacity-0 group-hover:opacity-100 transition-all text-white`}>
                     <span className="hidden sm:inline">{t.open}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
                   </div>
@@ -243,7 +244,7 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
+            transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
             className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden group"
           >
             {/* Luxury Fluid Background */}
@@ -305,7 +306,7 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
+            transition={{ delay: 0.4, duration: 0.5, ease: 'easeOut' }}
             className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 flex flex-col relative overflow-hidden group"
           >
             {/* Luxury Fluid Background */}
@@ -340,6 +341,7 @@ export default function HomePage() {
         </div>
         </motion.div>
       </AnimatePresence>
+      </main>
 
       {/* Partner Logos */}
       <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 flex items-end gap-5 sm:gap-8 pointer-events-none">
