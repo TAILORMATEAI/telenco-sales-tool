@@ -16,6 +16,7 @@ import {
   ChevronRightIcon as ChevronRight,
   ChevronLeftIcon as ChevronLeft
 } from './components/Icons';
+import LiquidGlassSlider from './components/LiquidGlassSlider';
 import axios from 'axios';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { supabase } from './supabase';
@@ -406,48 +407,33 @@ export default function App() {
     return true;
   };
 
+  const [isTranslating, setIsTranslating] = useState(false);
+
   const nextStep = () => {
+    if (isTranslating) return;
     if (!validateStep()) return;
     if (currentStep < totalSteps) {
+      setIsTranslating(true);
       setDirection(1);
       setCurrentStep(prev => prev + 1);
+      setTimeout(() => setIsTranslating(false), 800);
     }
   };
 
   const prevStep = () => {
+    if (isTranslating) return;
     if (currentStep > 1) {
+      setIsTranslating(true);
       setDirection(-1);
       setCurrentStep(prev => prev - 1);
+      setTimeout(() => setIsTranslating(false), 800);
     }
   };
 
   const variants = {
-    enter: {
-      opacity: 0,
-      height: 0,
-      y: -20,
-      scale: 0.95,
-      filter: "blur(4px)",
-      originY: 0
-    },
-    center: {
-      zIndex: 1,
-      opacity: 1,
-      height: "auto",
-      y: 0,
-      scale: 1,
-      filter: "blur(0px)",
-      originY: 0
-    },
-    exit: {
-      zIndex: 0,
-      opacity: 0,
-      height: 0,
-      y: -20,
-      scale: 0.95,
-      filter: "blur(4px)",
-      originY: 0
-    }
+    enter: { opacity: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+    center: { zIndex: 1, opacity: 1, transition: { duration: 0.35, ease: 'easeOut' } },
+    exit: { zIndex: 0, opacity: 0, transition: { duration: 0.45, ease: 'easeIn' } }
   };
 
   const handleSendEmail = async () => {
@@ -511,7 +497,7 @@ export default function App() {
       <div className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-0 flex-1">
         <div className="flex items-center gap-3 border-b border-slate-100 pb-6 mb-8">
           <Icon className="w-6 h-6 text-[#E74B4D]" />
-          <h3 className="text-xl font-bold text-slate-800">{label}</h3>
+          <h3 className="text-xl font-bold text-slate-600">{label}</h3>
         </div>
 
         {/* Question 1: Knows consumption? */}
@@ -571,12 +557,12 @@ export default function App() {
                         if (raw === '') { setConsMWh(0); return; }
                         const val = Number(raw);
                         setConsMWh(inputUnit === 'kWh' ? val / 1000 : val);
-                      }} className="block w-full pr-16 py-4 text-3xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:ring-4 focus:ring-[#E74B4D]/10 focus:border-[#E74B4D] transition-all text-[#E74B4D] outline-none" />
+                      }} className="block w-full pr-16 py-4 text-3xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-[#E74B4D]/5 focus:ring-4 focus:ring-[#E74B4D]/10 focus:border-[#E74B4D] transition-all text-[#E74B4D] outline-none" />
                       <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#E74B4D]/50 font-bold text-lg pointer-events-none">{inputUnit}</span>
                     </div>
                   </div>
                   {inputUnit === 'MWh' && (
-                    <input type="range" min="1" max="250" value={consMWh} onChange={(e) => setConsMWh(Number(e.target.value))} className="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#E74B4D] mb-2" />
+                    <LiquidGlassSlider min={1} max={250} value={consMWh} onChange={(val) => setConsMWh(val)} color="#E74B4D" className="w-full mb-2" />
                   )}
                 </div>
               </div>
@@ -637,7 +623,7 @@ export default function App() {
               const val = Number(raw);
               setCons(showInMWh ? val : val * 1000);
             }}
-            className="block w-full pl-16 pr-24 py-8 text-4xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[2rem] focus:ring-4 focus:ring-[#E74B4D]/10 focus:border-[#E74B4D] transition-all text-slate-800 outline-none"
+            className="block w-full pl-16 pr-24 py-8 text-4xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[2rem] focus:bg-[#E74B4D]/5 focus:ring-4 focus:ring-[#E74B4D]/10 focus:border-[#E74B4D] transition-all text-slate-600 outline-none"
           />
           <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-xl hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
         </div>
@@ -651,7 +637,7 @@ export default function App() {
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }} 
       transition={{ duration: 0.4, ease: 'easeOut' }}
-      className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden relative flex flex-col"
+      className="min-h-screen bg-slate-50 text-slate-500 font-sans overflow-x-hidden relative flex flex-col"
     >
       <div className="fixed top-0 left-0 w-full h-1.5 bg-white/20 z-50 overflow-hidden">
         <motion.div className="h-full bg-white" initial={{ width: '0%' }} animate={{ width: `${(currentStep / totalSteps) * 100}%` }} transition={{ duration: 0.3, ease: 'easeInOut' }} />
@@ -681,7 +667,7 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -15 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-12 pb-32"
+          className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-12 pb-24"
         >
           <div className="w-full relative flex items-center justify-center min-h-[400px]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
@@ -696,7 +682,7 @@ export default function App() {
                       const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
                       return (
                         <button key={type} onClick={() => { setEnergyType(type); nextStep(); }} className={`flex-1 flex flex-col items-center justify-center gap-4 p-8 rounded-3xl border-2 transition-all ${isSelected ? 'bg-[#E74B4D]/5 border-[#E74B4D] text-[#E74B4D]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
-                          <Icon className="w-10 h-10" />
+                          <Icon className={`h-10 ${type === 'BOTH' ? 'w-auto' : 'w-10'}`} />
                           <span className="font-bold text-lg">{label}</span>
                         </button>
                       );
@@ -739,7 +725,7 @@ export default function App() {
                       {totalConsumption <= 100 ? (
                         <div className="text-xs font-bold text-[#E74B4D] bg-[#E74B4D]/10 px-3 py-2 rounded-lg text-center">{text.marginLocked} €{effectiveElindusMargin}.</div>
                       ) : (
-                        <input type="range" min="10" max="31" step="0.5" value={elindusMargin} onChange={(e) => setElindusMargin(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#E74B4D]" />
+                        <LiquidGlassSlider min={10} max={31} step={0.5} value={elindusMargin} onChange={(val) => setElindusMargin(val)} color="#E74B4D" className="w-full" />
                       )}
                     </div>
                     <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
@@ -747,7 +733,7 @@ export default function App() {
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{text.fixedFee}</label>
                         <div className="text-2xl font-black text-[#E74B4D]">€{totalConsumption <= 100 ? Math.max(50, elindusFixedFee) : elindusFixedFee}</div>
                       </div>
-                      <input type="range" min={totalConsumption <= 100 ? 50 : 0} max="250" step="10" value={elindusFixedFee} onChange={(e) => setElindusFixedFee(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#E74B4D]" />
+                      <LiquidGlassSlider min={totalConsumption <= 100 ? 50 : 0} max={250} step={10} value={elindusFixedFee} onChange={(val) => setElindusFixedFee(val)} color="#E74B4D" className="w-full" />
                     </div>
                   </div>
                 </motion.div>
@@ -760,18 +746,18 @@ export default function App() {
                     {outcomes.map(({ type, cons, showEneco, showElindus, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage }) => (
                       <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative">
                         <div className="absolute top-0 left-0 w-2 h-full bg-slate-300" />
-                        <h4 className="font-bold text-slate-800 mb-4 pl-4 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
+                        <h4 className="font-bold text-slate-600 mb-4 pl-4 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
 
                         <div className="grid md:grid-cols-2 gap-4 pl-4">
                           {/* Eneco */}
                           <div className={`p-4 rounded-xl border-2 ${showEneco ? 'border-slate-200 bg-white' : 'border-slate-100 bg-white opacity-50'}`}>
                             <div className="flex justify-between items-center mb-2">
-                              <span className="font-bold text-slate-700">Eneco</span>
+                              <span className="font-bold text-slate-500">Eneco</span>
                               {!showEneco && <span className="text-[10px] uppercase font-bold text-slate-400">&gt; 100 MWh</span>}
                             </div>
                             {showEneco ? (
                               <>
-                                <input type="number" step="0.01" value={showInMWh ? (enecoPrice === 0 ? '' : enecoPrice) : (enecoPrice === 0 ? '' : enecoPrice / 1000)} onChange={(e) => { const raw = e.target.value; const val = raw === '' ? 0 : Number(raw); type === 'ELEC' ? setElecEnecoOfferPriceMWh(showInMWh ? val : val * 1000) : setGasEnecoOfferPriceMWh(showInMWh ? val : val * 1000); }} className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-slate-300 font-bold mb-2 text-sm" />
+                                <input type="number" step="0.01" value={showInMWh ? (enecoPrice === 0 ? '' : enecoPrice) : (enecoPrice === 0 ? '' : enecoPrice / 1000)} onChange={(e) => { const raw = e.target.value; const val = raw === '' ? 0 : Number(raw); type === 'ELEC' ? setElecEnecoOfferPriceMWh(showInMWh ? val : val * 1000) : setGasEnecoOfferPriceMWh(showInMWh ? val : val * 1000); }} className="w-full bg-slate-50 focus:bg-[#E74B4D]/5 border border-slate-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] font-bold mb-2 text-sm outline-none" />
                                 <div className="text-right flex items-center justify-end gap-2 mt-2">
                                   <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
@@ -784,7 +770,7 @@ export default function App() {
                           {/* Elindus */}
                           <div className={`p-4 rounded-xl border-2 ${showElindus ? 'border-slate-200 bg-white' : 'border-slate-100 bg-white opacity-50'}`}>
                             <div className="flex justify-between items-center mb-2">
-                              <span className="font-bold text-slate-700">Elindus</span>
+                              <span className="font-bold text-slate-500">Elindus</span>
                               {!showElindus && <span className="text-[10px] uppercase font-bold text-slate-400">&lt; 30 MWh</span>}
                             </div>
                             {showElindus ? (
@@ -829,28 +815,37 @@ export default function App() {
           </div>
 
           {/* Navigation Controls */}
-          <div className="fixed bottom-[5.5rem] sm:bottom-[6rem] left-0 right-0 w-full max-w-3xl mx-auto px-4 sm:px-6 z-50">
-            <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
-              <button onClick={prevStep} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${currentStep === 1 ? 'opacity-0 pointer-events-none' : 'text-slate-500 hover:bg-slate-100'}`}><ChevronLeft className="w-5 h-5" /><span className="hidden sm:inline">{text.back}</span></button>
-              <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-[#E74B4D] w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
-              <div className="flex flex-col items-end relative">
-                <AnimatePresence>
-                  {validationError && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full mb-4 right-0 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm border border-rose-100 whitespace-nowrap">{validationError}</motion.div>)}
-                </AnimatePresence>
-                <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#E74B4D] text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
-              </div>
-            </div>
+          <div className="w-full relative flex items-center justify-center mt-8">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              {currentStep === 1 ? (
+                <motion.div key="nav-1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="opacity-0 pointer-events-none h-0" />
+              ) : (
+                <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-50">
+                  <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
+                    <button onClick={prevStep} className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5" /><span className="hidden sm:inline">{text.back}</span></button>
+                    <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-[#E74B4D] w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
+                    <div className="flex flex-col items-end relative">
+                      <AnimatePresence>
+                        {validationError && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full mb-4 right-0 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm border border-rose-100 whitespace-nowrap">{validationError}</motion.div>)}
+                      </AnimatePresence>
+                      <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#E74B4D] text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.main>
       </AnimatePresence>
 
-      {/* Partner Logos */}
-      <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 flex items-end gap-5 sm:gap-8 pointer-events-none">
-        <img src="https://tailormate.ai/telencotool/images/logos/telenetlogo.webp" alt="Telenet" className="h-7 sm:h-8 object-contain mb-0.5 scale-[1.02] origin-bottom" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Eneco_logo.svg/1280px-Eneco_logo.svg.png?_=20251027055729" alt="Eneco" className="h-8 sm:h-10 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <div className="h-6 w-px bg-slate-300 hidden sm:block mb-1.5"></div>
-        <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
+
+
+      {/* Copyright Footer */}
+      <div className="w-full mt-auto pb-8 sm:pb-10 pt-4 z-40 flex justify-center items-center pointer-events-none">
+        <p className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-slate-400/80">
+          © 2026 Telenco <span className="mx-0.5 opacity-40">·</span> Powered by
+          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3 sm:h-3.5 opacity-50 ml-0.5 object-contain" style={{ filter: 'grayscale(1) brightness(0)' }} />
+        </p>
       </div>
     </motion.div>
   );

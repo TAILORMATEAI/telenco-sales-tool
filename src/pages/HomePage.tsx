@@ -87,7 +87,7 @@ export default function HomePage() {
       gradient: 'from-[#FFC421] to-[#FFC421]',
       shadow: 'shadow-[#FFC421]/20',
       route: '/telenet',
-      available: false,
+      available: true,
       mode: 'titleAndLogo'
     },
     {
@@ -197,7 +197,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="relative z-10 mb-6 flex items-center justify-between">
-                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">{t.topSellers}</h3>
+                  <h3 className="text-2xl font-black text-slate-600 tracking-tight">{t.topSellers}</h3>
                   <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent ml-4"></div>
                 </div>
 
@@ -207,11 +207,11 @@ export default function HomePage() {
                     <div className="flex items-center gap-5">
                       <span className="text-2xl font-black text-[#FFC421] w-4 text-center">1</span>
                       <div>
-                        <p className="text-base font-bold text-slate-800 group-hover/item:text-[#FFC421] transition-colors">Sarah Dubois</p>
+                        <p className="text-base font-bold text-slate-600 group-hover/item:text-[#FFC421] transition-colors">Sarah Dubois</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-black text-slate-800">14</p>
+                      <p className="text-lg font-black text-slate-600">14</p>
                       <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
                     </div>
                   </div>
@@ -221,11 +221,11 @@ export default function HomePage() {
                     <div className="flex items-center gap-5">
                       <span className="text-2xl font-black text-slate-400 w-4 text-center opacity-80">2</span>
                       <div>
-                        <p className="text-base font-bold text-slate-800 group-hover/item:text-slate-500 transition-colors">Jan Peeters</p>
+                        <p className="text-base font-bold text-slate-600 group-hover/item:text-slate-500 transition-colors">Jan Peeters</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-black text-slate-800">9</p>
+                      <p className="text-lg font-black text-slate-600">9</p>
                       <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
                     </div>
                   </div>
@@ -235,11 +235,11 @@ export default function HomePage() {
                     <div className="flex items-center gap-5">
                       <span className="text-2xl font-black text-slate-300 w-4 text-center opacity-60">3</span>
                       <div>
-                        <p className="text-base font-bold text-slate-800 group-hover/item:text-slate-400 transition-colors">Jens V.</p>
+                        <p className="text-base font-bold text-slate-600 group-hover/item:text-slate-400 transition-colors">Jens V.</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-black text-slate-800">5</p>
+                      <p className="text-lg font-black text-slate-600">5</p>
                       <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider leading-none m-0">{t.sales}</p>
                     </div>
                   </div>
@@ -256,7 +256,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="relative z-10 mb-6 flex items-center gap-4">
-                  <h3 className="text-2xl font-black text-slate-800 tracking-tight">{t.recentActivity}</h3>
+                  <h3 className="text-2xl font-black text-slate-600 tracking-tight">{t.recentActivity}</h3>
                   <div className="h-px flex-1 bg-gradient-to-r from-slate-200 to-transparent"></div>
                   <span className="text-[10px] font-bold text-slate-400 hover:text-[#E74B4D] uppercase tracking-wider cursor-pointer transition-colors">{t.viewAll}</span>
                 </div>
@@ -264,7 +264,7 @@ export default function HomePage() {
                 <div className="relative z-10 flex-1 flex flex-col justify-center divide-y divide-slate-100">
                   <div className="group/item py-3 px-1 hover:pl-3 transition-all cursor-pointer">
                     <div className="flex items-end justify-between mb-1">
-                      <p className="text-base font-bold text-slate-800 group-hover/item:text-[#91C848] transition-colors">{t.energyCalc}</p>
+                      <p className="text-base font-bold text-slate-600 group-hover/item:text-[#91C848] transition-colors">{t.energyCalc}</p>
                       <p className="text-base font-black text-[#91C848]">15 MWh</p>
                     </div>
                     <p className="text-xs font-semibold text-slate-400">{t.today}, 10:42 <span className="mx-2 opacity-30">•</span> Sarah Dubois</p>
@@ -272,7 +272,7 @@ export default function HomePage() {
 
                   <div className="group/item py-3 px-1 hover:pl-3 transition-all cursor-pointer">
                     <div className="flex items-end justify-between mb-1">
-                      <p className="text-base font-bold text-slate-800 group-hover/item:text-[#FFC421] transition-colors">{t.titleTelenet}</p>
+                      <p className="text-base font-bold text-slate-600 group-hover/item:text-[#FFC421] transition-colors">{t.titleTelenet}</p>
                       <p className="text-base font-black text-[#FFC421]">AFA Config</p>
                     </div>
                     <p className="text-xs font-semibold text-slate-400">{t.yesterday}, 14:15 <span className="mx-2 opacity-30">•</span> Jan Peeters</p>
@@ -283,12 +283,14 @@ export default function HomePage() {
           </motion.div>
       </main>
 
-      {/* Partner Logos */}
-      <div className="absolute bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 flex items-end justify-end gap-5 sm:gap-8 pointer-events-none">
-        <img src="https://tailormate.ai/telencotool/images/logos/telenetlogo.webp" alt="Telenet" className="h-7 sm:h-8 object-contain mb-0.5 scale-[1.02] origin-bottom" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Eneco_logo.svg/1280px-Eneco_logo.svg.png" alt="Eneco" className="h-8 sm:h-10 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-3.5 sm:h-4 object-contain mb-2" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
-        <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-4 sm:h-5 object-contain mb-1.5" style={{ filter: 'grayscale(1) brightness(0) opacity(0.4)' }} />
+
+
+      {/* Copyright Footer */}
+      <div className="w-full mt-auto pb-8 sm:pb-10 pt-4 z-40 flex justify-center items-center pointer-events-none">
+        <p className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-slate-400/80">
+          © 2026 Telenco <span className="mx-0.5 opacity-40">·</span> Powered by
+          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3 sm:h-3.5 opacity-50 ml-0.5 object-contain" style={{ filter: 'grayscale(1) brightness(0)' }} />
+        </p>
       </div>
     </div>
   );

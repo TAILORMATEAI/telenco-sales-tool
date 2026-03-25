@@ -217,10 +217,10 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
             placeholder="Zoeken..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all shadow-sm"
+            className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-slate-600 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all shadow-sm"
           />
         </div>
-        <button onClick={fetchUsers} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-700 shadow-sm transition-colors">
+        <button onClick={fetchUsers} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-500 shadow-sm transition-colors">
           <RefreshCwIcon className="w-5 h-5" />
         </button>
         <button
@@ -288,7 +288,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                       <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-white rounded-full ${user.is_active ? 'bg-[#91C848]' : 'bg-slate-300'}`} />
                     </div>
                     <div>
-                      <h4 className="font-black text-slate-800 tracking-tight leading-tight">{fullName}</h4>
+                      <h4 className="font-black text-slate-600 tracking-tight leading-tight">{fullName}</h4>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{user.role}</p>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <div className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-[#91C848]' : 'bg-slate-300'}`} />
@@ -389,17 +389,17 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Voornaam</label>
-                    <input type="text" required value={formFirst} onChange={e => setFormFirst(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
+                    <input type="text" required value={formFirst} onChange={e => setFormFirst(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
                   </div>
                   <div>
                     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Achternaam</label>
-                    <input type="text" required value={formLast} onChange={e => setFormLast(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
+                    <input type="text" required value={formLast} onChange={e => setFormLast(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all" />
                   </div>
                 </div>
 
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">E-mailadres</label>
-                  <input type="email" required disabled={!!editingUser} value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] disabled:opacity-40 transition-all" placeholder="naam@telenco.be" />
+                  <input type="email" required disabled={!!editingUser} value={formEmail} onChange={e => setFormEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-bold text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] disabled:opacity-40 transition-all" placeholder="naam@telenco.be" />
                   {editingUser && <p className="text-[10px] text-slate-400 mt-1">E-mailadres kan niet worden gewijzigd.</p>}
                 </div>
 

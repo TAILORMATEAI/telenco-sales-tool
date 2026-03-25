@@ -123,7 +123,7 @@ export default function LoginPage() {
                       required
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
                       placeholder="Jan"
                     />
                   </div>
@@ -134,7 +134,7 @@ export default function LoginPage() {
                       required
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
                       placeholder="Peeters"
                     />
                   </div>
@@ -148,7 +148,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
                   placeholder="naam@telenco.be"
                 />
 
@@ -177,7 +177,7 @@ export default function LoginPage() {
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-800 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
                   placeholder="••••••••"
                 />
               </div>
@@ -188,7 +188,7 @@ export default function LoginPage() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-200 bg-slate-50 text-slate-800 focus:ring-slate-800/50 focus:ring-offset-0 cursor-pointer"
+                    className="w-4 h-4 rounded border-slate-200 bg-slate-50 text-slate-600 focus:ring-slate-800/50 focus:ring-offset-0 cursor-pointer"
                   />
                   <span className="text-sm text-slate-400 group-hover:text-slate-600 font-medium transition-colors">Login onthouden</span>
                 </label>
@@ -267,7 +267,7 @@ export default function LoginPage() {
                       </span>
 
                       {/* Hover State (Slides in from bottom) */}
-                      <span className="absolute inset-0 flex items-center justify-center gap-2.5 text-slate-900 translate-y-[150%] transition-transform duration-[600ms] ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:translate-y-0">
+                      <span className="absolute inset-0 flex items-center justify-center gap-2.5 text-slate-500 translate-y-[150%] transition-transform duration-[600ms] ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:translate-y-0">
                         {isSignUp ? (
                           <>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
@@ -302,9 +302,9 @@ export default function LoginPage() {
                 className="text-sm text-slate-400 hover:text-slate-600 font-medium transition-colors"
               >
                 {isSignUp ? (
-                  <>Al een account? <span className="text-slate-800 font-bold">Inloggen</span></>
+                  <>Al een account? <span className="text-slate-600 font-bold">Inloggen</span></>
                 ) : (
-                  <>Nog geen account? <span className="text-slate-800 font-bold">Registreren</span></>
+                  <>Nog geen account? <span className="text-slate-600 font-bold">Registreren</span></>
                 )}
               </button>
             </div>
@@ -315,15 +315,16 @@ export default function LoginPage() {
       {/* Footer Anchored to Bottom */}
       <div className="w-full pb-4 pt-8 z-10 flex flex-col items-center justify-center">
         {/* Partner Logos */}
-        <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6 opacity-30 px-4">
-          <img src="https://tailormate.ai/telencotool/images/logos/telenetlogo.webp" alt="Telenet" className="h-5 sm:h-6 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Eneco_logo.svg/1280px-Eneco_logo.svg.png" alt="Eneco" className="h-6 sm:h-7 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
-          <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-3.5 sm:h-4 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
-          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3.5 sm:h-4 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5 opacity-30 px-4">
+          <img src="https://tailormate.ai/telencotool/images/logos/telenetlogo.webp" alt="Telenet" className="h-4 sm:h-6 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Eneco_logo.svg/1280px-Eneco_logo.svg.png" alt="Eneco" className="h-5 sm:h-7 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+          <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-2.5 sm:h-4 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-2.5 sm:h-4 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
         </div>
 
-        <p className="text-center text-slate-300 text-xs mt-4 font-medium uppercase tracking-wider">
-          © {new Date().getFullYear()} Telenco Energy · Powered by Tailormate
+        <p className="flex justify-center items-center gap-1.5 text-center text-slate-400 text-xs sm:text-sm mt-4 pb-4 font-bold tracking-wider">
+          © 2026 Telenco <span className="mx-0.5 opacity-40">·</span> Powered by
+          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3 sm:h-3.5 opacity-50 ml-0.5 object-contain" style={{ filter: 'grayscale(1) brightness(0)' }} />
         </p>
       </div>
     </motion.div>

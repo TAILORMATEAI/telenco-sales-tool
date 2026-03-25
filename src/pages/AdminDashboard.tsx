@@ -263,7 +263,7 @@ export default function AdminDashboard() {
             <p className="hidden sm:block px-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-2">Menu</p>
             
             {/* Mobile "Naar Portaal" button injected directly into the swipable row */}
-            <button onClick={() => navigate('/home')} className="sm:hidden flex items-center gap-2 px-3 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shrink-0 text-slate-500 hover:text-slate-900 hover:bg-slate-50">
+            <button onClick={() => navigate('/home')} className="sm:hidden flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap shrink-0 text-slate-500 hover:text-slate-500 hover:bg-slate-50">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="m15 18-6-6 6-6" /></svg>
               <span>Portaal</span>
             </button>
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={`relative flex items-center px-3 py-2.5 rounded-xl font-bold text-sm transition-colors whitespace-nowrap shrink-0 sm:w-full ${
-                      isActive ? 'text-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                      isActive ? 'text-slate-600' : 'text-slate-500 hover:text-slate-500 hover:bg-slate-50'
                   }`}
                 >
                   {isActive && (
@@ -285,8 +285,8 @@ export default function AdminDashboard() {
                       transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <span className="relative z-10 flex items-center gap-2 sm:gap-3 w-full">
-                    <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${isActive ? 'text-slate-800' : 'text-slate-400'}`} />
+                  <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 w-full">
+                    <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${isActive ? 'text-slate-600' : 'text-slate-400'}`} />
                     <span className="hidden sm:inline">{tab.label}</span>
                   </span>
                 </button>
@@ -298,7 +298,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col border-t border-slate-100 bg-slate-50/50 shrink-0">
             {/* Desktop "Naar Portaal" button only */}
             <div className="hidden sm:block p-4 pb-0">
-              <button onClick={() => navigate('/home')} className="flex items-center justify-start gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 font-bold text-sm transition-all shrink-0 w-full mb-2 border border-slate-200/50 bg-white shadow-sm">
+              <button onClick={() => navigate('/home')} className="flex items-center justify-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:text-slate-500 hover:bg-slate-100 font-bold text-sm transition-all shrink-0 w-full mb-2 border border-slate-200/50 bg-white shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m15 18-6-6 6-6" /></svg>
                 <span>Naar Portaal</span>
               </button>
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex flex-col hidden sm:flex min-w-0">
                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-3">Ingelogd als</p>
-                  <p className="text-xs font-bold text-slate-800 truncate leading-4" title={getDisplayName()}>{getDisplayName()}</p>
+                  <p className="text-xs font-bold text-slate-600 truncate leading-4" title={getDisplayName()}>{getDisplayName()}</p>
                 </div>
               </div>
               <button 
@@ -368,7 +368,7 @@ export default function AdminDashboard() {
                 return (
                   <div className="space-y-6">
                     <div className="bg-white rounded-[2rem] p-8 sm:p-10 border border-slate-100 shadow-sm relative overflow-hidden">
-                      <h2 className="text-3xl font-black text-slate-800 tracking-tight relative z-10">Welkom, {getDisplayName()}</h2>
+                      <h2 className="text-3xl font-black text-slate-600 tracking-tight relative z-10">Welkom, {getDisplayName()}</h2>
                       <p className="text-slate-500 mt-2 text-lg relative z-10">Dit is het strakke overzicht van het Telenco Sales Portaal.</p>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 relative z-10">
@@ -381,7 +381,7 @@ export default function AdminDashboard() {
                             <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Totaal Volume</p>
                           </div>
                           <div>
-                            <h3 className="text-5xl font-black text-slate-800">{totalMwh.toFixed(0)} <span className="text-xl text-slate-400">MWh</span></h3>
+                            <h3 className="text-5xl font-black text-slate-600">{totalMwh.toFixed(0)} <span className="text-xl text-slate-400">MWh</span></h3>
                             <p className="text-slate-500 text-sm font-medium mt-2">Berekend over de laatste 100 sessies</p>
                           </div>
                         </div>
@@ -395,7 +395,7 @@ export default function AdminDashboard() {
                             <p className="text-slate-400 font-bold tracking-widest text-xs uppercase">Berekeningen</p>
                           </div>
                           <div>
-                            <h3 className="text-5xl font-black text-slate-800">{totalCalcs}</h3>
+                            <h3 className="text-5xl font-black text-slate-600">{totalCalcs}</h3>
                             <p className="text-slate-500 text-sm font-medium mt-2">Actieve klantvoorstellen in totaal</p>
                           </div>
                         </div>
@@ -408,7 +408,7 @@ export default function AdminDashboard() {
                           <TrophyIcon className="w-7 h-7 text-amber-500" />
                         </div>
                         <div>
-                          <h3 className="text-xl font-black text-slate-900 tracking-tight">Topverkopers Scoreboard</h3>
+                          <h3 className="text-xl font-black text-slate-500 tracking-tight">Topverkopers Scoreboard</h3>
                           <p className="text-sm text-slate-400">Gebaseerd op aangeboden MWh volume</p>
                         </div>
                       </div>
@@ -424,7 +424,7 @@ export default function AdminDashboard() {
                                   {idx + 1}
                                 </span>
                                 <div>
-                                  <p className="font-bold text-slate-800">{score.name}</p>
+                                  <p className="font-bold text-slate-600">{score.name}</p>
                                   <p className="text-xs text-slate-400">{score.count} simulaties</p>
                                 </div>
                               </div>
@@ -448,7 +448,7 @@ export default function AdminDashboard() {
               {/* Action bar */}
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900">Marktprijzen & Marges</h2>
+                  <h2 className="text-2xl font-black text-slate-500">Marktprijzen & Marges</h2>
                   <p className="text-sm text-slate-400 mt-1">
                     Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
                   </p>
@@ -461,7 +461,7 @@ export default function AdminDashboard() {
               </div>
 
 
-              <h3 className="text-lg font-black text-slate-900 mb-4 mt-8">Huidige Marktprijzen</h3>
+              <h3 className="text-lg font-black text-slate-500 mb-4 mt-8">Huidige Marktprijzen</h3>
               {/* Market Price Cards */}
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-8">
                 {priceFields.map(field => (
@@ -482,7 +482,7 @@ export default function AdminDashboard() {
                         setOverrideData(prev => ({ ...prev, [field.key]: val }));
                         setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
                       }}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-800 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
                     />
                     <p className="text-[10px] text-slate-300 mt-2 text-right">€/MWh</p>
                   </div>
@@ -490,11 +490,11 @@ export default function AdminDashboard() {
               </div>
 
               {/* Margin Cards */}
-              <h3 className="text-lg font-black text-slate-900 mb-4">Vaste Marges per Categorie</h3>
+              <h3 className="text-lg font-black text-slate-500 mb-4">Vaste Marges per Categorie</h3>
               <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4">
                 {marginFields.map(field => (
                   <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm">
-                    <p className="text-xs sm:text-sm font-bold text-slate-700 mb-1 leading-tight">{field.label}</p>
+                    <p className="text-xs sm:text-sm font-bold text-slate-500 mb-1 leading-tight">{field.label}</p>
                     <p className="text-[10px] sm:text-xs text-slate-400 mb-3 sm:mb-4 leading-tight">{field.desc}</p>
                     <div className="flex items-center gap-2 sm:gap-3">
                       <span className="text-slate-400 font-bold text-base sm:text-lg">€</span>
@@ -509,7 +509,7 @@ export default function AdminDashboard() {
                           setOverrideData(prev => ({ ...prev, [field.key]: val }));
                           setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
                         }}
-                        className="flex-1 w-full min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-800 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
+                        className="flex-1 w-full min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
                       />
                       <span className="text-slate-400 text-[10px] sm:text-xs font-bold">/MWh</span>
                     </div>
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
             <motion.div key="activity" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h2 className="text-2xl font-black text-slate-900">Activiteitenlog</h2>
+                  <h2 className="text-2xl font-black text-slate-500">Activiteitenlog</h2>
                   <p className="text-sm text-slate-400 mt-1">{logs.length} recente activiteiten</p>
                 </div>
                 <button onClick={fetchLogs} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition-all">
@@ -566,7 +566,7 @@ export default function AdminDashboard() {
                           : log.user_email;
                         return (
                           <tr key={log.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4 text-sm font-medium text-slate-700">{name}</td>
+                            <td className="px-6 py-4 text-sm font-medium text-slate-500">{name}</td>
                             <td className="px-6 py-4">
                               <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-bold ${log.action === 'CALCULATION' ? 'bg-blue-50 text-blue-600' :
                                   log.action === 'LOGIN' ? 'bg-emerald-50 text-emerald-600' :
@@ -574,7 +574,7 @@ export default function AdminDashboard() {
                                 }`}>{log.action}</span>
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-500">{log.energy_type || '-'}</td>
-                            <td className="px-6 py-4 text-sm font-bold text-slate-700">{log.consumption_mwh ? `${log.consumption_mwh} MWh` : '-'}</td>
+                            <td className="px-6 py-4 text-sm font-bold text-slate-500">{log.consumption_mwh ? `${log.consumption_mwh} MWh` : '-'}</td>
                             <td className="px-6 py-4 text-sm font-mono text-[#E74B4D] font-bold">{log.commission_code || '-'}</td>
                             <td className="px-6 py-4 text-sm text-slate-400 text-right">{formatDate(log.created_at)}</td>
                           </tr>
@@ -649,7 +649,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Message */}
-                  <h3 className="text-xl font-black text-slate-900 mb-2">{toast.message}</h3>
+                  <h3 className="text-xl font-black text-slate-500 mb-2">{toast.message}</h3>
                   {toast.detail && (
                     <p className="text-sm text-slate-400 leading-relaxed">{toast.detail}</p>
                   )}
@@ -672,6 +672,14 @@ export default function AdminDashboard() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Copyright Footer */}
+      <div className="w-full mt-auto pb-6 sm:pb-8 pt-4 z-40 flex justify-center items-center pointer-events-none">
+        <p className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-slate-400/80">
+          © 2026 Telenco <span className="mx-0.5 opacity-40">·</span> Powered by
+          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3 sm:h-3.5 opacity-50 ml-0.5 object-contain" style={{ filter: 'grayscale(1) brightness(0)' }} />
+        </p>
+      </div>
     </div>
   );
 }

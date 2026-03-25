@@ -230,18 +230,18 @@ export const ArrowRightIcon = ({ className, ...props }: IconProps) => (
 );
 
 export const DualEnergyIcon = ({ className, ...props }: IconProps) => (
-  <svg viewBox="0 0 38 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} preserveAspectRatio="xMidYMid meet" {...props}>
+  <svg viewBox="0 0 72 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className} preserveAspectRatio="xMidYMid meet" {...props}>
     {/* Left Icon (Zap) */}
-    <g transform="translate(-4, 0)">
+    <g>
       <path d="M13 2L3 14h8" />
       <path d="M11 22l10-12h-8" />
     </g>
     
-    {/* Center Division / Plus (Enlarged) */}
-    <path d="M19 8v8M15 12h8" strokeWidth="2.5" strokeOpacity="0.6" />
+    {/* Center Division / Plus */}
+    <path d="M36 7v10M31 12h10" strokeWidth="2.5" strokeOpacity="0.8" />
 
     {/* Right Icon (Flame) */}
-    <g transform="translate(18, 0)">
+    <g transform="translate(48, 0)">
       <path d="M12 2c0 0-7 8.5-7 14s3.13 6 7 6 7-2.69 7-6-7-14-7-14Z" />
       <path d="M12 12c-1.5 2-1.5 4 0 5s2-2 0-5Z" fill="currentColor" stroke="none" />
     </g>
