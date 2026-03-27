@@ -972,7 +972,8 @@ export default function App() {
                                   <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
                                 </div>
                                 <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
-                                  <span>{formatPrice(elindusEsimatedPrice)}</span>
+                                  <span>€{showInMWh ? elindusEsimatedPrice.toFixed(2) : (elindusEsimatedPrice / 1000).toFixed(4)}</span>
+                                  <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
                                 </div>
                                 <div className="mt-auto">
                                   <div className="text-right flex items-center justify-end gap-2 mt-2">
