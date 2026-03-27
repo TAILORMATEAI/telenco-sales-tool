@@ -926,9 +926,8 @@ export default function App() {
                     )}
 
                     {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, elindusSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
-                      <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-slate-300" />
-                        <h4 className="font-bold text-slate-600 mb-4 pl-4 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
+                      <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative overflow-hidden">
+                        <h4 className="font-bold text-slate-600 mb-4 pl-0 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
 
                         {showCoachMessage ? (
                           <div className="pl-4 py-6 text-center">
@@ -1062,7 +1061,7 @@ export default function App() {
                           animate={{ x: 0, opacity: 1 }}
                           exit={{ x: globalCalcOpen === 'ENECO' ? '100%' : '-100%', opacity: 0 }}
                           transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
-                          className={`absolute top-0 bottom-0 z-50 bg-white/95 backdrop-blur-md shadow-2xl flex flex-col p-6 sm:p-8 ${customerType === 'SOHO' ? 'w-1/2' : 'w-full'} ${globalCalcOpen === 'ENECO' ? 'right-0 border-l border-slate-200' : 'left-0 border-r border-slate-200'}`}
+                          className={`absolute top-0 bottom-0 z-50 bg-white/95 backdrop-blur-md shadow-md flex flex-col p-6 sm:p-8 ${customerType === 'SOHO' ? 'w-1/2' : 'w-full'} ${globalCalcOpen === 'ENECO' ? 'right-0 border-l border-slate-200' : 'left-0 border-r border-slate-200'}`}
                         >
                            <button onClick={() => setGlobalCalcOpen(null)} className="absolute top-4 right-4 text-slate-400 hover:text-[#E74B4D] transition-colors bg-white rounded-full p-1.5 shadow-sm border border-slate-200">
                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
