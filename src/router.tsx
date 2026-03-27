@@ -38,7 +38,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/wachtwoord#type=recovery" replace />;
   }
 
-  if (!isAdmin) return <Navigate to="/home" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -73,11 +73,11 @@ export default function AppRouter() {
           <Routes location={location}>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/wachtwoord" element={<ResetPasswordPage />} />
-            <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/calculator" element={<ProtectedRoute><App /></ProtectedRoute>} />
             <Route path="/telenet" element={<ProtectedRoute><TelenetWizard /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="*" element={<Navigate to="/home" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </motion.div>
       </AnimatePresence>

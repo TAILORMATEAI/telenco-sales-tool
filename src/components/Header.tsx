@@ -79,7 +79,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
           alt="Telenco Logo"
           className={`h-[clamp(1.25rem,6vw,2.25rem)] object-contain transition-all cursor-pointer ${isHome ? 'opacity-40 hover:opacity-75' : 'opacity-90 hover:opacity-100'}`}
           style={isHome ? { filter: 'grayscale(1) brightness(0)' } : { filter: 'brightness(0) invert(1)' }}
-          onClick={() => navigate('/home')}
+          onClick={() => navigate('/')}
         />
       </div>
 

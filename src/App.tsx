@@ -756,7 +756,7 @@ export default function App() {
 
       <Header 
         actionButton={
-          <button onClick={() => navigate('/home')} className="p-2 rounded-full transition-colors bg-white border border-white/80 text-slate-400 hover:text-[#E5394C] shadow-sm" title={text.backToHome}>
+          <button onClick={() => navigate('/')} className="p-2 rounded-full transition-colors bg-white border border-white/80 text-slate-400 hover:text-[#E5394C] shadow-sm" title={text.backToHome}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m15 18-6-6 6-6" /></svg>
           </button>
         }

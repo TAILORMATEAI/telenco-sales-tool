@@ -26,7 +26,7 @@ export default function LoginPage() {
       if (localStorage.getItem('mustChangePassword') === 'true') {
         navigate('/wachtwoord#type=recovery', { replace: true });
       } else {
-        navigate('/home', { replace: true });
+        navigate('/', { replace: true });
       }
     }
   }, [user, navigate]);
