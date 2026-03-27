@@ -90,8 +90,7 @@ export default function App() {
   const [gasCurrentFixedFee, setGasCurrentFixedFee] = useState<number>(100);
   const [includeFixedFeeSavings, setIncludeFixedFeeSavings] = useState<boolean>(false);
   const [comparisonView, setComparisonView] = useState<'ENECO' | 'ELINDUS'>('ENECO');
-  const [isEnecoSidebarOpen, setIsEnecoSidebarOpen] = useState(false);
-  const [isElindusSidebarOpen, setIsElindusSidebarOpen] = useState(false);
+  const [openCalculation, setOpenCalculation] = useState<Record<string, 'ENECO' | 'ELINDUS' | null>>({});
 
   // Fixed fee constants
   const ENECO_FIXED_FEE = customerType === 'PARTICULIER' ? { ELEC: 65, GAS: 65 } : { ELEC: 90, GAS: 90 };
@@ -924,10 +923,18 @@ export default function App() {
                             </div>
                           </div>
                         ) : (
-                          <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 pl-4`}>
+                          <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 pl-4 relative overflow-hidden`}>
                             {/* Eneco */}
                             {showEneco && (
-                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white">
+                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative">
+                                {showElindus && (
+                                  <button 
+                                    onClick={() => setOpenCalculation(prev => ({ ...prev, [type]: prev[type] === 'ENECO' ? null : 'ENECO' }))} 
+                                    className="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-1 h-12 w-6 bg-slate-100 hover:bg-slate-200 border-y border-l border-slate-200 rounded-l-md items-center justify-center z-10 transition-colors shadow-sm cursor-pointer"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-slate-400"><path d="m9 18 6-6-6-6"/></svg>
+                                  </button>
+                                )}
                                 <div className="flex justify-between items-center mb-2">
                                   <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
                                   <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
@@ -951,7 +958,13 @@ export default function App() {
 
                             {/* Elindus — alleen voor SOHO */}
                             {showElindus && (
-                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white">
+                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative">
+                                <button 
+                                  onClick={() => setOpenCalculation(prev => ({ ...prev, [type]: prev[type] === 'ELINDUS' ? null : 'ELINDUS' }))} 
+                                  className="hidden md:flex absolute top-1/2 -translate-y-1/2 -left-1 h-12 w-6 bg-slate-100 hover:bg-slate-200 border-y border-r border-slate-200 rounded-r-md items-center justify-center z-10 transition-colors shadow-sm cursor-pointer"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-slate-400"><path d="m15 18-6-6 6-6"/></svg>
+                                </button>
                                 <div className="flex justify-between items-center mb-2">
                                   <img src="./elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
                                   <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
@@ -971,6 +984,43 @@ export default function App() {
                                 )}
                               </div>
                             )}
+
+                            {/* Calculation Overlay */}
+                            <AnimatePresence>
+                              {openCalculation[type] && (
+                                <motion.div 
+                                  initial={{ x: openCalculation[type] === 'ELINDUS' ? '100%' : '-100%', opacity: 0 }}
+                                  animate={{ x: 0, opacity: 1 }}
+                                  exit={{ x: openCalculation[type] === 'ELINDUS' ? '100%' : '-100%', opacity: 0 }}
+                                  transition={{ type: 'spring', bounce: 0, duration: 0.4 }}
+                                  className="absolute inset-y-0 z-20 bg-white/95 backdrop-blur-md border-2 border-slate-200 rounded-xl p-4 md:p-6 shadow-2xl flex flex-col w-[calc(100%-1rem)] ml-4"
+                                >
+                                  <button onClick={() => setOpenCalculation(prev => ({ ...prev, [type]: null }))} className="absolute top-4 right-4 text-slate-400 hover:text-[#E74B4D] transition-colors bg-white rounded-full p-1 border border-slate-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                  </button>
+                                  
+                                  <h4 className="font-black text-lg text-slate-700 mb-4 flex items-center gap-2">
+                                    <img src={`./${openCalculation[type]?.toLowerCase()}-grey.png`} alt={openCalculation[type] as string} className="h-6 object-contain" />
+                                    <span className="opacity-50">/</span> Detail Berekening
+                                  </h4>
+
+                                  <div className="space-y-3 text-sm flex-1 max-w-lg">
+                                    <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(currPrice * cons).toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">{openCalculation[type]?.toLowerCase().replace(/^\w/, c => c.toUpperCase())} (Energie):</span><span className="font-bold">€{openCalculation[type] === 'ENECO' ? (enecoPrice * cons).toFixed(2) : (elindusEsimatedPrice * cons).toFixed(2)}</span></div>
+                                    {includeFixedFeeSavings && (
+                                      <>
+                                        <div className="flex justify-between text-xs mt-2 pt-2 border-t border-slate-100"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{currentFixedFee}</span></div>
+                                        <div className="flex justify-between text-xs"><span className="text-slate-400">{openCalculation[type]?.toLowerCase().replace(/^\w/, c => c.toUpperCase())} VV:</span><span className="font-bold">€{openCalculation[type] === 'ENECO' ? enecoFixedFee : elindusFeeVal}</span></div>
+                                      </>
+                                    )}
+                                    <div className="flex justify-between pt-3 mt-3 border-t-2 border-emerald-100 text-emerald-600 font-black text-base">
+                                      <span>Besparing ({type === 'ELEC' ? 'Elek' : 'Gas'}):</span>
+                                      <span>€{openCalculation[type] === 'ENECO' ? enecoSavingsTotal.toFixed(2) : elindusSavingsTotal.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
                         )}
                       </div>
@@ -1082,100 +1132,6 @@ export default function App() {
         </div>
       </div>
       </div>{/* End zoom wrapper */}
-
-      {/* Sidebars for Calculations (Desktop Only) */}
-      {currentStep === totalSteps && (
-        <>
-          {/* Left Sidebar (Eneco) */}
-          <div className={`fixed left-0 top-0 h-full max-w-sm w-full bg-white shadow-[30px_0_60px_-15px_rgba(0,0,0,0.1)] border-r border-slate-200 z-[100] transition-transform duration-500 ease-out hidden md:flex flex-col ${isEnecoSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-            {/* Toggle Button */}
-            <button 
-              onClick={() => setIsEnecoSidebarOpen(!isEnecoSidebarOpen)}
-              className="absolute left-full top-1/2 -translate-y-1/2 bg-white border border-l-0 border-slate-200 shadow-sm py-4 px-2 rounded-r-xl flex items-center justify-center text-slate-400 hover:text-[#E74B4D] transition-colors"
-            >
-              <img src="./eneco-grey.png" alt="Eneco" className={`h-5 object-contain transition-transform duration-300 opacity-60 ${isEnecoSidebarOpen ? 'rotate-[-90deg]' : 'rotate-90'}`} />
-            </button>
-            <div className="p-6 h-full overflow-y-auto w-full">
-              <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-3">
-                <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain" />
-                Berekening
-              </h3>
-              <div className="space-y-6">
-                {outcomes.map(o => o.showEneco && (
-                  <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2">{o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-400">Eneco (Energie):</span><span className="font-bold">€{(o.enecoPrice * o.cons).toFixed(2)}</span></div>
-                      {includeFixedFeeSavings && (
-                        <>
-                          <div className="flex justify-between text-xs mt-1 pt-1 border-t border-slate-200"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
-                          <div className="flex justify-between text-xs"><span className="text-slate-400">Eneco VV:</span><span className="font-bold">€{o.enecoFixedFee}</span></div>
-                        </>
-                      )}
-                      <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-600 font-bold">
-                        <span>Besparing ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span><span>€{o.enecoSavingsTotal.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
-                  <div className="flex justify-between items-center font-black">
-                    <span>Totaal Eneco:</span>
-                    <span className="text-xl">€{totalEnecoSavings.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Sidebar (Elindus) */}
-          {customerType === 'SOHO' && (
-            <div className={`fixed right-0 top-0 h-full max-w-sm w-full bg-white shadow-[-30px_0_60px_-15px_rgba(0,0,0,0.1)] border-l border-slate-200 z-[100] transition-transform duration-500 ease-out hidden md:flex flex-col ${isElindusSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-              {/* Toggle Button */}
-              <button 
-                onClick={() => setIsElindusSidebarOpen(!isElindusSidebarOpen)}
-                className="absolute right-full top-1/2 -translate-y-1/2 bg-white border border-r-0 border-slate-200 shadow-sm py-4 px-2 rounded-l-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-transform duration-300 opacity-60 ${isElindusSidebarOpen ? 'rotate-90' : '-rotate-90'}`} />
-              </button>
-              <div className="p-6 h-full overflow-y-auto w-full">
-                <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-3">
-                  <img src="./elindus-grey.png" alt="Elindus" className="h-6 object-contain" />
-                  Berekening
-                </h3>
-                <div className="space-y-6">
-                  {outcomes.map(o => o.showElindus && (
-                    <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2">{o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)</h4>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-400">Elindus (Energie):</span><span className="font-bold">€{(o.elindusEsimatedPrice * o.cons).toFixed(2)}</span></div>
-                        {includeFixedFeeSavings && (
-                          <>
-                            <div className="flex justify-between text-xs mt-1 pt-1 border-t border-slate-200"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
-                            <div className="flex justify-between text-xs"><span className="text-slate-400">Elindus VV:</span><span className="font-bold">€{o.elindusFixedFee}</span></div>
-                          </>
-                        )}
-                        <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-600 font-bold">
-                          <span>Besparing ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span><span>€{o.elindusSavingsTotal.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
-                    <div className="flex justify-between items-center font-black">
-                      <span>Totaal Elindus:</span>
-                      <span className="text-xl">€{totalElindusSavings.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-
     </motion.div>
   );
 }
