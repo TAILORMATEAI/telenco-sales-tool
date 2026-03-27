@@ -937,7 +937,7 @@ export default function App() {
                             </div>
                           </div>
                         ) : (
-                          <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 pl-4 relative`}>
+                          <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 relative`}>
                             {/* Eneco */}
                             {showEneco && (
                               <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
