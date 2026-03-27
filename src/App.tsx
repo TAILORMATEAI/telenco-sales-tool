@@ -743,10 +743,6 @@ export default function App() {
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="min-h-screen bg-slate-50 text-slate-500 font-sans overflow-x-hidden relative flex flex-col"
     >
-      <div className="fixed top-0 left-0 w-full h-1.5 bg-white/20 z-50 overflow-hidden">
-        <motion.div className="h-full bg-white" initial={{ width: '0%' }} animate={{ width: `${(currentStep / totalSteps) * 100}%` }} transition={{ duration: 0.3, ease: 'easeInOut' }} />
-      </div>
-
       <div className="absolute top-0 left-0 w-full h-[70vh] bg-gradient-to-br from-[#E5384C] via-[#E5394C] to-[#EA704F] z-0 overflow-hidden pointer-events-none">
         <svg className="absolute bottom-0 w-full min-w-[1200px]" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ transform: 'translateY(2px)' }}>
           <path fill="rgba(255,255,255,0.05)" d="M0,192L48,192C96,192,192,192,288,208C384,224,480,256,576,261.3C672,267,768,245,864,213.3C960,181,1056,139,1152,138.7C1248,139,1344,181,1392,202.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
@@ -1062,23 +1058,23 @@ export default function App() {
                     <AnimatePresence>
                       {globalCalcOpen && (
                         <motion.div
-                          initial={{ x: globalCalcOpen === 'ELINDUS' ? '100%' : '-100%', opacity: 0 }}
+                          initial={{ x: globalCalcOpen === 'ENECO' ? '100%' : '-100%', opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
-                          exit={{ x: globalCalcOpen === 'ELINDUS' ? '100%' : '-100%', opacity: 0 }}
+                          exit={{ x: globalCalcOpen === 'ENECO' ? '100%' : '-100%', opacity: 0 }}
                           transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
-                          className="absolute inset-0 z-50 bg-white/95 backdrop-blur-md p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-2xl flex flex-col"
+                          className={`absolute top-0 bottom-0 z-50 bg-white/95 backdrop-blur-md shadow-2xl flex flex-col p-6 sm:p-8 ${customerType === 'SOHO' ? 'w-1/2' : 'w-full'} ${globalCalcOpen === 'ENECO' ? 'right-0 border-l border-slate-200' : 'left-0 border-r border-slate-200'}`}
                         >
-                           <button onClick={() => setGlobalCalcOpen(null)} className="absolute top-6 right-6 text-slate-400 hover:text-[#E74B4D] transition-colors bg-white rounded-full p-2 shadow-sm border border-slate-200">
-                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                           <button onClick={() => setGlobalCalcOpen(null)} className="absolute top-4 right-4 text-slate-400 hover:text-[#E74B4D] transition-colors bg-white rounded-full p-1.5 shadow-sm border border-slate-200">
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                            </button>
 
-                           <h3 className="font-black text-2xl text-slate-700 mb-6 flex items-center gap-3">
-                             <img src={`./${globalCalcOpen.toLowerCase()}-grey.png`} alt={globalCalcOpen} className="h-8 object-contain" />
+                           <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-3">
+                             <img src={`./${globalCalcOpen.toLowerCase()}-grey.png`} alt={globalCalcOpen} className="h-6 object-contain" />
                              <span className="opacity-30 font-medium">/</span> 
                              Detail Berekening
                            </h3>
 
-                           <div className="flex-1 overflow-y-auto pr-2 space-y-6 flex flex-col sm:flex-row gap-6">
+                           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                              {outcomes.map(o => {
                                if (globalCalcOpen === 'ENECO' && !o.showEneco) return null;
                                if (globalCalcOpen === 'ELINDUS' && !o.showElindus) return null;
@@ -1088,22 +1084,22 @@ export default function App() {
                                const newFixedFee = globalCalcOpen === 'ENECO' ? o.enecoFixedFee : o.elindusFixedFee;
 
                                return (
-                                 <div key={o.type} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex-1">
-                                   <h4 className="font-bold text-slate-500 mb-3 uppercase tracking-widest text-xs border-b border-slate-200 pb-2 flex items-center gap-2">
+                                 <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                   <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2 flex items-center gap-2">
                                      {o.type === 'ELEC' ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
                                      {o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)
                                    </h4>
-                                   <div className="space-y-3 text-sm">
+                                   <div className="space-y-2 text-sm">
                                       <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
-                                      <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c=>c.toUpperCase())} (Energie):</span><span className="font-bold border-b border-slate-200 pb-2 border-dashed">€{newPrice.toFixed(2)}</span></div>
+                                      <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c=>c.toUpperCase())} (Energie):</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newPrice.toFixed(2)}</span></div>
                                       
                                       {includeFixedFeeSavings && (
                                         <>
-                                          <div className="flex justify-between mt-2"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
-                                          <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c=>c.toUpperCase())} VV:</span><span className="font-bold border-b border-slate-200 pb-2 border-dashed">€{newFixedFee}</span></div>
+                                          <div className="flex justify-between mt-1"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
+                                          <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c=>c.toUpperCase())} VV:</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newFixedFee}</span></div>
                                         </>
                                       )}
-                                      <div className="flex justify-between pt-1 text-emerald-600 font-bold text-base">
+                                      <div className="flex justify-between pt-1 text-emerald-600 font-bold">
                                         <span>Besparing ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span>
                                         <span>€{savings.toFixed(2)}</span>
                                       </div>
@@ -1113,9 +1109,9 @@ export default function App() {
                              })}
                            </div>
 
-                           <div className="mt-6 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-700">
-                             <div className="flex justify-between items-center font-black">
-                               <span>Totaal {globalCalcOpen.toLowerCase().replace(/^\w/, c=>c.toUpperCase())} Besparing:</span>
+                           <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
+                             <div className="flex flex-col gap-1 font-black">
+                               <span className="text-xs uppercase tracking-widest">Totaal Besparing:</span>
                                <span className="text-2xl">€{(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings).toFixed(2)}</span>
                              </div>
                            </div>

@@ -888,10 +888,6 @@ export default function TelenetWizard() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="min-h-screen bg-slate-50 text-slate-500 font-sans overflow-x-hidden relative flex flex-col">
-      <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-200/30 z-50 overflow-hidden backdrop-blur-sm">
-        <motion.div className="h-full bg-slate-100 shadow-sm border-r border-slate-200" initial={{ width: '0%' }} animate={{ width: `${(currentStep / totalSteps) * 100}%` }} transition={{ duration: 0.3 }} />
-      </div>
-
       <div className="absolute top-0 left-0 w-full h-[70vh] bg-gradient-to-br from-[#FFD34D] via-[#FFC421] to-[#E5B01E] z-0 overflow-hidden pointer-events-none">
         <svg className="absolute bottom-0 w-full min-w-[1200px]" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ transform: 'translateY(2px)' }}>
           <path fill="rgba(255,255,255,0.05)" d="M0,192L48,192C96,192,192,192,288,208C384,224,480,256,576,261.3C672,267,768,245,864,213.3C960,181,1056,139,1152,138.7C1248,139,1344,181,1392,202.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
