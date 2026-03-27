@@ -937,51 +937,56 @@ export default function App() {
                               </div>
                             </div>
                           ) : (
-                            <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 pl-4 relative`}>
+                            <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 relative`}>
                               {/* Eneco */}
                               {showEneco && (
-                                <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative">
-                                  <div className="flex justify-between items-center mb-2">
-                                    <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
+                                <div className="pt-2 pb-4 px-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
+                                  <div className="flex justify-between items-center mb-0">
+                                    <img src="./eneco-grey.png" alt="Eneco" className="h-[2.75rem] min-[2000px]:h-12 object-contain" />
                                     <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
                                   </div>
                                   <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
                                     <span>€{showInMWh ? enecoPrice.toFixed(2) : (enecoPrice / 1000).toFixed(4)}</span>
                                     <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
                                   </div>
-                                  <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                    <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
-                                    <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
-                                  </div>
-                                  {includeFixedFeeSavings && enecoFixedFeeSaving !== 0 && (
-                                    <div className={`text-right text-[10px] font-bold mt-1 ${enecoFixedFeeSaving > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
-                                      VV: {enecoFixedFeeSaving > 0 ? '+' : ''}€{enecoFixedFeeSaving}
+                                  <div className="mt-auto">
+                                    <div className="text-right flex items-center justify-end gap-2 mt-2">
+                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
+                                      <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
                                     </div>
-                                  )}
+                                    {includeFixedFeeSavings && (
+                                      <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${enecoFixedFeeSaving > 0 ? 'text-emerald-500' : enecoFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
+                                        VV: {enecoFixedFeeSaving > 0 ? '+' : ''}€{enecoFixedFeeSaving}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )}
 
                               {/* Elindus — alleen voor SOHO */}
                               {showElindus && (
-                                <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative">
+                                <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
                                   <div className="flex justify-between items-center mb-2">
                                     <img src="./elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
                                     <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
                                   </div>
-                                  <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
-                                    <span>{formatPrice(elindusEsimatedPrice)}</span>
+                                  <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
+                                    <span>€{showInMWh ? elindusEsimatedPrice.toFixed(2) : (elindusEsimatedPrice / 1000).toFixed(4)}</span>
+                                    <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
                                   </div>
-                                  <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                    <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
-                                    <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
-                                  </div>
-                                  {includeFixedFeeSavings && elindusFixedFeeSaving !== 0 && (
-                                    <div className={`text-right text-[10px] font-bold mt-1 ${elindusFixedFeeSaving > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
-                                      VV: {elindusFixedFeeSaving > 0 ? '+' : ''}€{elindusFixedFeeSaving}
+                                  <div className="mt-auto">
+                                    <div className="text-right flex items-center justify-end gap-2 mt-2">
+                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
+                                      <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
                                     </div>
-                                  )}
+                                    {includeFixedFeeSavings && (
+                                      <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${elindusFixedFeeSaving > 0 ? 'text-emerald-500' : elindusFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
+                                        VV: {elindusFixedFeeSaving > 0 ? '+' : ''}€{elindusFixedFeeSaving}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
