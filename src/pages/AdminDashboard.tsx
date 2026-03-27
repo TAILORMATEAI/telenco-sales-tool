@@ -575,17 +575,18 @@ export default function AdminDashboard() {
                         <input
                           type="number"
                           step="0.01"
-                          value={inputStrings[field.key] ?? String(overrideData[field.key] ?? '')}
-                          onChange={e => setInputStrings(prev => ({ ...prev, [field.key]: e.target.value }))}
+                          value={inputStrings[`${field.key}_ctkwh`] ?? String(Number(((overrideData[field.key] as number) || 0) / 10).toFixed(2))}
+                          onChange={e => setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: e.target.value }))}
                           onBlur={e => {
                             const parsed = parseFloat(e.target.value);
-                            const val = isNaN(parsed) ? 0 : parsed;
-                            setOverrideData(prev => ({ ...prev, [field.key]: val }));
-                            setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
+                            const centKwh = isNaN(parsed) ? 0 : parsed;
+                            const mwhVal = centKwh * 10;
+                            setOverrideData(prev => ({ ...prev, [field.key]: mwhVal }));
+                            setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: String(centKwh), [field.key]: String(mwhVal) }));
                           }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
                         />
-                        <p className="text-[10px] text-slate-300 mt-2 text-right">€/MWh</p>
+                        <p className="text-[10px] text-slate-300 mt-2 text-right">cent/kWh</p>
                       </div>
                     ))}
                   </div>

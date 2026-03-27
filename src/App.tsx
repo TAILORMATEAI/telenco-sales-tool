@@ -924,7 +924,10 @@ export default function App() {
                                   <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
                                   <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
                                 </div>
-                                <input type="number" step="0.01" value={showInMWh ? (enecoPrice === 0 ? '' : enecoPrice) : (enecoPrice === 0 ? '' : enecoPrice / 1000)} onChange={(e) => { const raw = e.target.value; const val = raw === '' ? 0 : Number(raw); type === 'ELEC' ? setElecEnecoOfferPriceMWh(showInMWh ? val : val * 1000) : setGasEnecoOfferPriceMWh(showInMWh ? val : val * 1000); }} className="w-full bg-slate-50 focus:bg-[#E5394C]/5 border border-slate-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-[#E5394C]/30 focus:border-[#E5394C] font-bold mb-2 text-sm outline-none" />
+                                <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
+                                  <span>€{showInMWh ? enecoPrice.toFixed(2) : (enecoPrice / 1000).toFixed(4)}</span>
+                                  <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
+                                </div>
                                 <div className="text-right flex items-center justify-end gap-2 mt-2">
                                   <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
