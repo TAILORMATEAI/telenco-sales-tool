@@ -15,7 +15,8 @@ interface Profile {
   is_archived: boolean;
   role: string;
   created_at: string;
-  last_login?: string;
+  email_confirmed_at?: string | null;
+  last_sign_in_at?: string | null;
 }
 
 export default function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
@@ -61,8 +62,20 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
     setLoading(false);
   };
 
+  const fetchAuthStatus = async () => {
+    try {
+      const res = await fetch('/api/admin/auth-users');
+      if (!res.ok) return;
+      const authUsers: { id: string; email: string; email_confirmed_at: string | null; last_sign_in_at: string | null }[] = await res.json();
+      setUsers(prev => prev.map(u => {
+        const authUser = authUsers.find(a => a.email.toLowerCase() === u.email.toLowerCase());
+        return authUser ? { ...u, email_confirmed_at: authUser.email_confirmed_at, last_sign_in_at: authUser.last_sign_in_at } : u;
+      }));
+    } catch { /* silently ignore */ }
+  };
+
   useEffect(() => {
-    fetchUsers();
+    fetchUsers().then(() => fetchAuthStatus());
   }, []);
 
   const handleToggleStatus = async (id: string, is_active: boolean, is_archived: boolean) => {
@@ -143,6 +156,9 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         if (!res.ok) throw new Error(data.error || 'Server error bij het bewerken.');
       } else {
         // Create User Account
+        const activeAdmin = users.find(u => u.email === currentUserEmail);
+        const adminName = activeAdmin ? `${activeAdmin.first_name || ''} ${activeAdmin.last_name || ''}`.trim() : 'Een beheerder';
+
         const res = await fetch('/api/admin/create-user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -152,7 +168,8 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
             firstName: formFirst,
             lastName: formLast,
             role: 'user',
-            avatarId: formAvatar
+            avatarId: formAvatar,
+            adminName: adminName || 'Een beheerder'
           })
         });
         const data = await res.json();
@@ -199,6 +216,10 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
       last.toLowerCase().includes(search) ||
       emailStr.toLowerCase().includes(search)
     );
+  }).sort((a, b) => {
+    const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim().toLowerCase() || a.email.toLowerCase();
+    const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim().toLowerCase() || b.email.toLowerCase();
+    return nameA.localeCompare(nameB);
   });
 
   const activeUsers = filteredUsers.filter(u => !u.is_archived);
@@ -262,73 +283,82 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 pb-20"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-20"
           >
             {(tab === 'active' ? activeUsers : archivedUsers).map(user => {
               const isImage = user.avatar_id && (user.avatar_id.startsWith('http') || user.avatar_id.includes('/'));
               const avatarSrc = isImage ? user.avatar_id : TELENCO_LOGO;
               const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email.split('@')[0];
 
-              // Seed pseudo-random stats based on user ID for visual mockup matching screenshot
-              const charSum = user.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-              const stat1 = Math.floor((charSum * 13) % 400);   // Green stat
-              const stat2 = Math.floor((charSum * 7) % 300);    // Orange stat
-              const stat3 = Math.floor((charSum * 19) % 500);   // Purple stat
-              const totalCoins = stat1 + stat2 + stat3;
+              // Calculate status
+              const now = new Date();
+              const lastSeenDate = user.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
+              const diffMs = lastSeenDate ? now.getTime() - lastSeenDate.getTime() : Infinity;
+              const diffMins = Math.floor(diffMs / 1000 / 60);
+
+              const isOnline = user.is_active && (user.email === currentUserEmail || diffMins < 5 || !lastSeenDate);
+
+              let timeString = 'Offline';
+              let dotColor = 'bg-slate-300';
+              let borderColor = 'border-slate-300';
+
+              if (isOnline) {
+                 timeString = 'Online';
+                 dotColor = 'bg-[#91C848]';
+                 borderColor = 'border-[#91C848]';
+              } else if (lastSeenDate) {
+                if (diffMins < 60) {
+                  timeString = `${diffMins}m geleden`;
+                  dotColor = 'bg-blue-400';
+                  borderColor = 'border-blue-400';
+                } else if (diffMins < 1440) {
+                  timeString = `${Math.floor(diffMins / 60)}u geleden`;
+                  dotColor = 'bg-blue-400';
+                  borderColor = 'border-blue-400';
+                } else if (diffMins < 2880) { // 1 to 2 days
+                  timeString = `${Math.floor(diffMins / 1440)}d geleden`;
+                  dotColor = 'bg-orange-400';
+                  borderColor = 'border-orange-400';
+                } else { // 2+ days
+                  timeString = `${Math.floor(diffMins / 1440)}d geleden`;
+                  dotColor = 'bg-slate-300';
+                  borderColor = 'border-slate-300';
+                }
+              }
 
               return (
-                <div key={user.id} className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative flex flex-col group">
-                  {/* Header: Avatar & Info */}
-                  <div className="flex items-start gap-4 mb-6">
-                    <div className="relative">
-                      <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shadow-inner relative group border-2 ${isImage ? 'border-[#91C848] bg-slate-50' : 'border-slate-200 bg-white'}`}>
-                        <img src={avatarSrc} alt="Avatar" className={`w-full h-full ${isImage ? 'object-cover' : 'object-contain p-2 opacity-40 grayscale brightness-0'}`} />
-                      </div>
-                      {/* Online Status Dot */}
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 border-2 border-white rounded-full ${user.is_active ? 'bg-[#91C848]' : 'bg-slate-300'}`} />
+                <div key={user.id} className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-slate-100 hover:shadow-md transition-shadow relative flex items-center gap-4 group">
+                  {/* Avatar */}
+                  <div className="relative shrink-0">
+                    <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center shadow-inner border-[3px] ${borderColor} ${isImage ? 'bg-slate-50' : 'bg-white'}`}>
+                      <img src={avatarSrc} alt="Avatar" className={`w-full h-full ${isImage ? 'object-cover' : 'object-contain p-2 opacity-40 grayscale brightness-0'}`} />
                     </div>
-                    <div>
-                      <h4 className="font-black text-slate-600 tracking-tight leading-tight">{fullName}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{user.role}</p>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <div className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-[#91C848]' : 'bg-slate-300'}`} />
-                        <span className="text-[10px] font-bold text-slate-400 capitalize">{user.is_active ? 'Online' : 'Offline'}</span>
-                      </div>
+                    <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-white rounded-full ${dotColor}`} />
+                  </div>
+
+                  {/* Name & Status */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-black text-slate-600 tracking-tight leading-tight truncate">{fullName}</h4>
+                      {user.role === 'admin' && (
+                        <div className="px-1.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 flex items-center shrink-0">
+                          <span className="text-[8px] font-black uppercase tracking-wider text-blue-600">Admin</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] font-bold text-slate-400">{timeString}</span>
                     </div>
                   </div>
 
-                  {/* Middle: 3 Stat Blocks imitating screenshot */}
-                  {user.is_active || tab === 'archived' ? (
-                    <div className="grid grid-cols-3 gap-2 mb-6">
-                      <div className="bg-slate-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
-                        <ZapIcon className="w-4 h-4 text-slate-300 mb-1" />
-                        <span className="font-black text-slate-400 text-sm leading-none">{stat1}</span>
-                      </div>
-                      <div className="bg-slate-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
-                        <FlameIcon className="w-4 h-4 text-slate-300 mb-1" />
-                        <span className="font-black text-slate-400 text-sm leading-none">{stat2}</span>
-                      </div>
-                      <div className="bg-slate-50 rounded-2xl py-3 flex flex-col items-center justify-center gap-1">
-                        <TrophyIcon className="w-4 h-4 text-slate-300 mb-1" />
-                        <span className="font-black text-slate-400 text-sm leading-none">{stat3}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-slate-50 rounded-2xl p-4 mb-6 flex items-center justify-center border border-slate-100">
-                      <p className="text-xs font-bold text-slate-400">Account geblokkeerd</p>
-                    </div>
-                  )}
-
-                  {/* Bottom: Actions */}
-                  <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-end">
-                    <div className="flex gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                  {/* Right side: Actions + Confirmation */}
+                  <div className="flex flex-col items-center gap-1.5 shrink-0">
+                    <div className="flex gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
                       {tab === 'active' ? (
                         <>
-                          {/* Edit Config Abstraction */}
-                          <button onClick={() => openEditModal(user)} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-slate-100 rounded-lg transition-colors" title="Bewerken instellingen">
+                          <button onClick={() => openEditModal(user)} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-slate-100 rounded-lg transition-colors" title="Bewerken">
                             <SettingsIcon className="w-4 h-4" />
                           </button>
-                          {/* Archive/Trash - Hidden for own account to prevent self-lockout */}
                           {user.email !== currentUserEmail && (
                             <button onClick={() => handleToggleStatus(user.id, false, true)} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Archiveren">
                               <TrashIcon className="w-4 h-4" />
@@ -337,10 +367,10 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                         </>
                       ) : (
                         <>
-                          <button onClick={() => handleToggleStatus(user.id, true, false)} className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase rounded-lg hover:bg-emerald-100 transition-colors mr-2">
-                            Herstellen
+                          <button onClick={() => handleToggleStatus(user.id, true, false)} className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase rounded-lg hover:bg-emerald-100 transition-colors">
+                            Herstel
                           </button>
-                          <button onClick={() => handleHardDelete(user.id)} className="p-1.5 text-rose-500 hover:bg-rose-600 hover:text-white rounded-lg transition-colors" title="Definitief verwijderen">
+                          <button onClick={() => handleHardDelete(user.id)} className="p-1.5 text-rose-500 hover:bg-rose-600 hover:text-white rounded-lg transition-colors" title="Verwijderen">
                             <TrashIcon className="w-4 h-4" />
                           </button>
                         </>
@@ -361,24 +391,39 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
             <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 16 }} transition={{ duration: 0.2 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative z-10 overflow-hidden">
 
-              {/* Dark header with live avatar */}
-              <div className="bg-slate-900 px-6 py-5 flex items-center gap-4 relative overflow-hidden">
+              {/* Dark header with live avatar -> Now light gray */}
+              <div className="bg-slate-100 px-6 py-5 flex items-center gap-4 relative overflow-hidden border-b border-slate-200">
                 <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 90% 50%, rgba(145,200,72,0.15) 0%, transparent 65%)' }} />
-                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-white/10 bg-slate-700 shrink-0 relative z-10">
+                <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-sm shrink-0 relative z-10">
                   {formAvatar && (formAvatar.startsWith('http') || formAvatar.includes('/')) ? (
                     <img src={formAvatar} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-2xl font-black text-white/20">{(formFirst || '?').charAt(0).toUpperCase()}</span>
+                      <span className="text-2xl font-black text-slate-300">{(formFirst || '?').charAt(0).toUpperCase()}</span>
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0 relative z-10">
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{editingUser ? 'Gebruiker bewerken' : 'Nieuw account'}</p>
-                  <h3 className="font-black text-white text-base leading-tight truncate">{formFirst || formLast ? `${formFirst} ${formLast}`.trim() : 'Nieuwe gebruiker'}</h3>
-                  {editingUser && <p className="text-xs text-slate-500 mt-0.5 truncate">{formEmail}</p>}
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{editingUser ? 'Gebruiker bewerken' : 'Nieuw account'}</p>
+                  <h3 className="font-black text-slate-700 text-base leading-tight truncate">{formFirst || formLast ? `${formFirst} ${formLast}`.trim() : 'Nieuwe gebruiker'}</h3>
+                  {editingUser && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-slate-500 truncate">{formEmail}</p>
+                      {editingUser.email_confirmed_at ? (
+                        <div className="flex items-center gap-1 rounded bg-emerald-500/10 px-1.5 py-0.5 border border-emerald-500/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-emerald-500 shrink-0"><path fillRule="evenodd" d="M16.403 12.652a3 3 0 000-5.304 3 3 0 00-3.75-3.751 3 3 0 00-5.305 0 3 3 0 00-3.751 3.75 3 3 0 000 5.305 3 3 0 003.75 3.751 3 3 0 005.305 0 3 3 0 003.751-3.75zm-2.546-4.46a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" /></svg>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Bevestigd</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 border border-amber-500/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3 text-amber-500 shrink-0"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clipRule="evenodd" /></svg>
+                          <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">Onbevestigd</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => setShowModal(false)} className="p-2 text-slate-500 hover:text-white hover:bg-white/10 rounded-xl transition-colors relative z-10 shrink-0">
+                <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-xl transition-colors relative z-10 shrink-0 shadow-sm border border-transparent hover:border-slate-200">
                   <XIcon className="w-4 h-4" />
                 </button>
               </div>

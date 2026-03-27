@@ -24,11 +24,17 @@ import {
 
 interface MarketData {
   epexSpot: number;
-  endex: number;
-  ttfEndex: number;
   ttfDam: number;
   margin30to80: number;
   margin80to100: number;
+  enecoResElecVast: number;
+  enecoResElecVar: number;
+  enecoResGasVast: number;
+  enecoResGasVar: number;
+  enecoSohoElecVast: number;
+  enecoSohoElecVar: number;
+  enecoSohoGasVast: number;
+  enecoSohoGasVar: number;
   lastUpdated?: string;
 }
 
@@ -84,8 +90,10 @@ export default function AdminDashboard() {
 
   // Market Data
   const [marketData, setMarketData] = useState<MarketData>({
-    epexSpot: 65.40, endex: 72.10, ttfEndex: 35.20, ttfDam: 32.50,
-    margin30to80: 15, margin80to100: 15
+    epexSpot: 65.40, ttfDam: 32.50,
+    margin30to80: 15, margin80to100: 15,
+    enecoResElecVast: 0, enecoResElecVar: 0, enecoResGasVast: 0, enecoResGasVar: 0,
+    enecoSohoElecVast: 0, enecoSohoElecVar: 0, enecoSohoGasVast: 0, enecoSohoGasVar: 0
   });
   const [overrideData, setOverrideData] = useState<MarketData>({ ...marketData });
   const [inputStrings, setInputStrings] = useState<Record<string, string>>({});
@@ -108,35 +116,29 @@ export default function AdminDashboard() {
   const fetchMarketData = async () => {
     const { data, error } = await supabase.from('market_prices').select('*');
     if (!error && data && data.length > 0) {
-      const epex = data.find(p => p.indicator_name === 'EPEX_SPOT');
-      const endex = data.find(p => p.indicator_name === 'ENDEX');
-      const ttfEndex = data.find(p => p.indicator_name === 'TTF_ENDEX');
-      const ttfDam = data.find(p => p.indicator_name === 'TTF_DAM');
-      const margin30to80 = data.find(m => m.indicator_name === 'MARGIN_30_80');
-      const margin80to100 = data.find(m => m.indicator_name === 'MARGIN_80_100');
-
-      const roundPrice = (val: number | undefined, fallback: number) => Number(Number(val ?? fallback).toFixed(2));
+      const find = (name: string) => data.find(p => p.indicator_name === name);
+      const rp = (val: number | undefined, fb: number) => Number(Number(val ?? fb).toFixed(2));
 
       const fetched: MarketData = {
-        epexSpot: roundPrice(epex?.value, 65.40),
-        endex: roundPrice(endex?.value, 72.10),
-        ttfEndex: roundPrice(ttfEndex?.value, 35.20),
-        ttfDam: roundPrice(ttfDam?.value, 32.50),
-        margin30to80: roundPrice(margin30to80?.value, 15),
-        margin80to100: roundPrice(margin80to100?.value, 15),
+        epexSpot: rp(find('EPEX_SPOT')?.value, 65.40),
+        ttfDam: rp(find('TTF_DAM')?.value, 32.50),
+        margin30to80: rp(find('MARGIN_30_80')?.value, 15),
+        margin80to100: rp(find('MARGIN_80_100')?.value, 15),
+        enecoResElecVast: rp(find('ENECO_RES_ELEC_VAST')?.value, 0),
+        enecoResElecVar: rp(find('ENECO_RES_ELEC_VARIABEL')?.value, 0),
+        enecoResGasVast: rp(find('ENECO_RES_GAS_VAST')?.value, 0),
+        enecoResGasVar: rp(find('ENECO_RES_GAS_VARIABEL')?.value, 0),
+        enecoSohoElecVast: rp(find('ENECO_SOHO_ELEC_VAST')?.value, 0),
+        enecoSohoElecVar: rp(find('ENECO_SOHO_ELEC_VARIABEL')?.value, 0),
+        enecoSohoGasVast: rp(find('ENECO_SOHO_GAS_VAST')?.value, 0),
+        enecoSohoGasVar: rp(find('ENECO_SOHO_GAS_VARIABEL')?.value, 0),
         lastUpdated: data[0].last_updated
       };
       setMarketData(fetched);
       setOverrideData(fetched);
-      // Sync input strings when fresh data loads
-      setInputStrings({
-        epexSpot: String(fetched.epexSpot),
-        endex: String(fetched.endex),
-        ttfEndex: String(fetched.ttfEndex),
-        ttfDam: String(fetched.ttfDam),
-        margin30to80: String(fetched.margin30to80),
-        margin80to100: String(fetched.margin80to100),
-      });
+      const s: Record<string, string> = {};
+      for (const [k, v] of Object.entries(fetched)) { if (k !== 'lastUpdated') s[k] = String(v); }
+      setInputStrings(s);
     }
   };
 
@@ -186,14 +188,23 @@ export default function AdminDashboard() {
     setIsSaving(true);
     setSaveSuccess(false);
     const nowIso = new Date().toISOString();
-    const updates = [
-      { indicator_name: 'EPEX_SPOT', value: overrideData.epexSpot, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'ENDEX', value: overrideData.endex, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'TTF_ENDEX', value: overrideData.ttfEndex, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'TTF_DAM', value: overrideData.ttfDam, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'MARGIN_30_80', value: overrideData.margin30to80, unit: '\u20ac/MWh', last_updated: nowIso },
-      { indicator_name: 'MARGIN_80_100', value: overrideData.margin80to100, unit: '\u20ac/MWh', last_updated: nowIso }
+    const indicators: [string, number][] = [
+      ['EPEX_SPOT', overrideData.epexSpot],
+      ['TTF_DAM', overrideData.ttfDam],
+      ['MARGIN_30_80', overrideData.margin30to80],
+      ['MARGIN_80_100', overrideData.margin80to100],
+      ['ENECO_RES_ELEC_VAST', overrideData.enecoResElecVast],
+      ['ENECO_RES_ELEC_VARIABEL', overrideData.enecoResElecVar],
+      ['ENECO_RES_GAS_VAST', overrideData.enecoResGasVast],
+      ['ENECO_RES_GAS_VARIABEL', overrideData.enecoResGasVar],
+      ['ENECO_SOHO_ELEC_VAST', overrideData.enecoSohoElecVast],
+      ['ENECO_SOHO_ELEC_VARIABEL', overrideData.enecoSohoElecVar],
+      ['ENECO_SOHO_GAS_VAST', overrideData.enecoSohoGasVast],
+      ['ENECO_SOHO_GAS_VARIABEL', overrideData.enecoSohoGasVar],
     ];
+    const updates = indicators.map(([name, value]) => ({
+      indicator_name: name, value, unit: name.startsWith('MARGIN') ? '\u20ac/MWh' : 'MWh', last_updated: nowIso
+    }));
     const { error } = await supabase.from('market_prices').upsert(updates, { onConflict: 'indicator_name' });
     if (error) {
       console.error('Save error:', error);
@@ -234,9 +245,28 @@ export default function AdminDashboard() {
 
   const priceFields: { key: keyof MarketData; label: string; desc: string; color: string }[] = [
     { key: 'epexSpot', label: 'EPEX SPOT', desc: 'Elektriciteit Variabel', color: 'from-yellow-500 to-orange-500' },
-    { key: 'endex', label: 'ENDEX', desc: 'Elektriciteit Vast', color: 'from-blue-500 to-indigo-500' },
-    { key: 'ttfEndex', label: 'TTF ENDEX', desc: 'Gas Vast', color: 'from-emerald-500 to-teal-500' },
     { key: 'ttfDam', label: 'TTF DAM', desc: 'Gas Variabel', color: 'from-purple-500 to-pink-500' },
+  ];
+
+  const enecoPriceFields: { group: string; fields: { key: keyof MarketData; label: string; icon: 'elec' | 'gas' }[] }[] = [
+    {
+      group: 'Residentieel (Particulier)',
+      fields: [
+        { key: 'enecoResElecVast', label: 'Elec Vast', icon: 'elec' },
+        { key: 'enecoResElecVar', label: 'Elec Variabel', icon: 'elec' },
+        { key: 'enecoResGasVast', label: 'Gas Vast', icon: 'gas' },
+        { key: 'enecoResGasVar', label: 'Gas Variabel', icon: 'gas' },
+      ]
+    },
+    {
+      group: 'SOHO',
+      fields: [
+        { key: 'enecoSohoElecVast', label: 'Elec Vast', icon: 'elec' },
+        { key: 'enecoSohoElecVar', label: 'Elec Variabel', icon: 'elec' },
+        { key: 'enecoSohoGasVast', label: 'Gas Vast', icon: 'gas' },
+        { key: 'enecoSohoGasVar', label: 'Gas Variabel', icon: 'gas' },
+      ]
+    }
   ];
 
   const marginFields: { key: keyof MarketData; label: string; desc: string }[] = [
@@ -245,8 +275,17 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="flex flex-col sm:flex-row h-screen bg-slate-50 overflow-hidden w-full">
-      {/* SaaS Sidebar (Hidden on mobile by default or stacked if needed. We'll make it fixed on desktop and scrollable if needed) */}
+    <div className="flex flex-col sm:flex-row h-screen bg-slate-50 overflow-hidden w-full relative">
+      {/* Background SVG moved outside the zoom wrapper to stay unscaled */}
+      <div className="absolute top-0 left-0 w-full h-[60vh] sm:h-[50vh] bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 z-[0] overflow-hidden pointer-events-none">
+        <svg className="absolute bottom-0 w-full min-w-[1200px]" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ transform: 'translateY(2px)' }}>
+          <path fill="#cbd5e1" fillOpacity="1" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,224C960,245,1056,235,1152,213.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+          <path fill="#e2e8f0" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,186.7C672,171,768,117,864,117.3C960,117,1056,171,1152,192C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+          <path fill="#f8fafc" d="M0,288L48,272C96,256,192,224,288,218.7C384,213,480,235,576,229.3C672,224,768,192,864,192C960,192,1056,224,1152,240C1248,256,1344,256,1392,256L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+      </div>
+
+      <div className="flex flex-col sm:flex-row w-full h-full z-10 relative" style={{ zoom: 0.8 }}>
       <aside className="w-full sm:w-64 bg-white border-b sm:border-r border-slate-200 flex flex-col justify-between shrink-0 sm:h-full relative z-30 shadow-sm sm:shadow-none sm:overflow-y-auto">
         <div className="flex flex-col h-full">
           {/* Logo & Header */}
@@ -333,18 +372,8 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 h-full overflow-y-auto relative bg-slate-50 w-full overflow-x-hidden">
-        {/* Homepage Global Foundation Gradient & Waves (Re-styled to Admin Greyscale) */}
-        <div className="absolute top-0 left-0 w-full h-[60vh] sm:h-[50vh] bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 z-0 overflow-hidden pointer-events-none">
-          <svg className="absolute bottom-0 w-full min-w-[1200px]" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ transform: 'translateY(2px)' }}>
-            <path fill="#cbd5e1" fillOpacity="1" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,149.3C672,149,768,203,864,224C960,245,1056,235,1152,213.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-            <path fill="#e2e8f0" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,186.7C672,171,768,117,864,117.3C960,117,1056,171,1152,192C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-            <path fill="#f8fafc" d="M0,288L48,272C96,256,192,224,288,218.7C384,213,480,235,576,229.3C672,224,768,192,864,192C960,192,1056,224,1152,240C1248,256,1344,256,1392,256L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-          </svg>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-10 sm:py-12 relative z-20">
-          {/* Dashboard Header removed because Navbar acts as context */}
+      <main className="flex-1 h-full min-h-0 overflow-y-auto relative bg-transparent w-full overflow-x-hidden flex flex-col">
+        <div className="flex-1 w-full max-w-[clamp(45rem,110vh,65rem)] min-[2000px]:max-w-[clamp(65rem,130vh,80rem)] mx-auto px-4 sm:px-[clamp(1.5rem,3vw,3.5rem)] py-[clamp(1.5rem,4vh,4rem)] relative z-20">
 
         <AnimatePresence mode="wait">
           {/* OVERVIEW / WELCOME TAB */}
@@ -402,6 +431,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
+                    {/* Top Sellers Scoreboard */}
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
                       <div className="flex items-center gap-3 mb-6">
                         <div className="flex items-center justify-center">
@@ -436,6 +466,42 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </div>
+
+                    {/* Recent Activity Preview */}
+                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                          <ClockIcon className="w-6 h-6 text-slate-400" />
+                          <h3 className="text-xl font-black text-slate-500 tracking-tight">Recente Activiteit</h3>
+                        </div>
+                        <button onClick={() => setActiveTab('activity')} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-xs transition-all">Alles bekijken →</button>
+                      </div>
+                      {logs.length === 0 ? (
+                        <p className="text-slate-400 text-center py-6">Nog geen activiteiten gelogd.</p>
+                      ) : (
+                        <div className="space-y-3">
+                          {logs.slice(0, 5).map(log => {
+                            const name = log.profiles?.first_name || log.profiles?.last_name
+                              ? `${log.profiles.first_name || ''} ${log.profiles.last_name || ''}`.trim()
+                              : log.user_email;
+                            return (
+                              <div key={log.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                                <div className="flex items-center gap-3">
+                                  <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                                    log.action === 'CALCULATION' ? 'bg-blue-50 text-blue-600' :
+                                    log.action === 'LOGIN' ? 'bg-emerald-50 text-emerald-600' :
+                                    log.action === 'TELENET_WIZARD' ? 'bg-amber-50 text-amber-600' :
+                                    'bg-slate-100 text-slate-500'
+                                  }`}>{log.action}</span>
+                                  <span className="text-sm font-medium text-slate-500">{name}</span>
+                                </div>
+                                <span className="text-xs text-slate-400">{formatDate(log.created_at)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })()}
@@ -463,7 +529,7 @@ export default function AdminDashboard() {
 
               <h3 className="text-lg font-black text-slate-500 mb-4 mt-8">Huidige Marktprijzen</h3>
               {/* Market Price Cards */}
-              <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 mb-8">
+              <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 sm:gap-4 mb-8">
                 {priceFields.map(field => (
                   <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-center mb-4">
@@ -488,6 +554,43 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+
+              {/* Eneco Tarieven */}
+              <h3 className="text-lg font-black text-slate-500 mb-4">
+                <span className="inline-flex items-center gap-2">
+                  <img src="/eneco-grey.png" alt="Eneco" className="h-8 object-contain opacity-60" />
+                  Tarieven
+                </span>
+              </h3>
+              {enecoPriceFields.map(group => (
+                <div key={group.group} className="mb-6">
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{group.group}</p>
+                  <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+                    {group.fields.map(field => (
+                      <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex items-center mb-4">
+                          {field.icon === 'elec' ? <Zap className="w-5 h-5 text-[#E74B4D]" /> : <Flame className="w-5 h-5 text-[#E74B4D]" />}
+                        </div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{field.label}</p>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={inputStrings[field.key] ?? String(overrideData[field.key] ?? '')}
+                          onChange={e => setInputStrings(prev => ({ ...prev, [field.key]: e.target.value }))}
+                          onBlur={e => {
+                            const parsed = parseFloat(e.target.value);
+                            const val = isNaN(parsed) ? 0 : parsed;
+                            setOverrideData(prev => ({ ...prev, [field.key]: val }));
+                            setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
+                          }}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
+                        />
+                        <p className="text-[10px] text-slate-300 mt-2 text-right">€/MWh</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
 
               {/* Margin Cards */}
               <h3 className="text-lg font-black text-slate-500 mb-4">Vaste Marges per Categorie</h3>
@@ -597,7 +700,6 @@ export default function AdminDashboard() {
           )}
         </AnimatePresence>
         </div>
-      </main>
 
       {/* Sync Notification Popup */}
       <AnimatePresence>
@@ -673,13 +775,17 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Copyright Footer */}
-      <div className="w-full mt-auto pb-6 sm:pb-8 pt-4 z-40 flex justify-center items-center pointer-events-none">
-        <p className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-slate-400/80">
+      {/* Footer — sits at the bottom of the content, scrolls with page, pushed down by mt-auto */}
+      <div className="w-full py-6 flex justify-center items-center mt-auto shrink-0">
+        <div className="flex items-center gap-1.5 text-[9px] sm:text-xs font-bold text-slate-400/80">
           © 2026 Telenco <span className="mx-0.5 opacity-40">·</span> Powered by
-          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3 sm:h-3.5 opacity-50 ml-0.5 object-contain" style={{ filter: 'grayscale(1) brightness(0)' }} />
-        </p>
+          <a href="https://tailormate.ai" target="_blank" rel="noopener noreferrer" className="group flex items-center">
+            <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-[9px] sm:h-3 opacity-50 group-hover:opacity-100 ml-0.5 object-contain transition-all grayscale brightness-0 group-hover:grayscale-0 group-hover:brightness-100" />
+          </a>
+        </div>
       </div>
+      </main>
+     </div>
     </div>
   );
 }

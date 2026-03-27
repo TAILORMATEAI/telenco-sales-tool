@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import LoginPage from './pages/LoginPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import TelenetWizard from './pages/TelenetWizard';
@@ -11,22 +12,32 @@ import App from './App';
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   if (isLoading) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-[#E74B4D]/20 flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-white/20 border-t-[#E74B4D] rounded-full animate-spin" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin" />
     </div>
   );
   if (!user) return <Navigate to="/login" replace />;
+
+  if (localStorage.getItem('mustChangePassword') === 'true') {
+    return <Navigate to="/wachtwoord#type=recovery" replace />;
+  }
+
   return <>{children}</>;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, isLoading } = useAuth();
   if (isLoading) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-[#E74B4D]/20 flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-white/20 border-t-[#E74B4D] rounded-full animate-spin" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin" />
     </div>
   );
   if (!user) return <Navigate to="/login" replace />;
+  
+  if (localStorage.getItem('mustChangePassword') === 'true') {
+    return <Navigate to="/wachtwoord#type=recovery" replace />;
+  }
+
   if (!isAdmin) return <Navigate to="/home" replace />;
   return <>{children}</>;
 }
@@ -61,6 +72,7 @@ export default function AppRouter() {
         >
           <Routes location={location}>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/wachtwoord" element={<ResetPasswordPage />} />
             <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/calculator" element={<ProtectedRoute><App /></ProtectedRoute>} />
             <Route path="/telenet" element={<ProtectedRoute><TelenetWizard /></ProtectedRoute>} />

@@ -109,7 +109,7 @@ export function WaveLines() {
 
   return (
     <group>
-      <SingleWaveLine color="#E74B4D" yOffset={1.5} zOffset={-2} theatreKey="Red" />
+      <SingleWaveLine color="#E5394C" yOffset={1.5} zOffset={-2} theatreKey="Red" />
       <SingleWaveLine color="#91C848" yOffset={0} zOffset={1} theatreKey="Green" />
       <SingleWaveLine color="#FFC421" yOffset={-1.5} zOffset={4} theatreKey="Yellow" />
     </group>

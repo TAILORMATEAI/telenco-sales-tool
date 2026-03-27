@@ -6,7 +6,7 @@ interface LiquidGlassSliderProps {
   max: number;
   step?: number;
   onChange: (val: number) => void;
-  color?: string; // e.g., '#FFC421' or '#E74B4D'
+  color?: string; // e.g., '#FFC421' or '#E5394C'
   className?: string;
 }
 
@@ -72,7 +72,7 @@ export default function LiquidGlassSlider({
       >
         <div 
           className="absolute h-full rounded-full z-[1]"
-          style={{ width: `${percent}%`, backgroundColor: color, boxShadow: `0 0 10px ${color}80` }}
+          style={{ width: `${percent}%`, backgroundColor: color }}
         ></div>
         
         <div 

@@ -23,14 +23,21 @@ import { supabase } from './supabase';
 import Header from './components/Header';
 
 type EnergyType = 'ELEC' | 'GAS' | 'BOTH' | null;
+type CustomerType = 'PARTICULIER' | 'SOHO' | null;
 
 interface MarketData {
   epexSpot: number;
-  endex: number;
-  ttfEndex: number;
   ttfDam: number;
   margin30to80?: number;
   margin80to100?: number;
+  enecoResElecVast?: number;
+  enecoResElecVar?: number;
+  enecoResGasVast?: number;
+  enecoResGasVar?: number;
+  enecoSohoElecVast?: number;
+  enecoSohoElecVar?: number;
+  enecoSohoGasVast?: number;
+  enecoSohoGasVar?: number;
   lastUpdated?: string;
 }
 
@@ -52,6 +59,7 @@ export default function App() {
   const { user, isAdmin, signOut, lang, setLang } = useAuth();
   const navigate = useNavigate();
   const [energyType, setEnergyType] = useState<EnergyType>(null);
+  const [customerType, setCustomerType] = useState<CustomerType>(null);
 
   const handleSignOut = async () => {
     await signOut();
@@ -77,13 +85,22 @@ export default function App() {
   const [showInMWh, setShowInMWh] = useState<boolean>(true);
   const [inputUnit, setInputUnit] = useState<'MWh' | 'kWh'>('MWh');
 
+  // Fixed fee state
+  const [elecCurrentFixedFee, setElecCurrentFixedFee] = useState<number>(100);
+  const [gasCurrentFixedFee, setGasCurrentFixedFee] = useState<number>(100);
+  const [includeFixedFeeSavings, setIncludeFixedFeeSavings] = useState<boolean>(false);
+
+  // Fixed fee constants
+  const ENECO_FIXED_FEE = customerType === 'PARTICULIER' ? { ELEC: 65, GAS: 65 } : { ELEC: 90, GAS: 90 };
+  const ELINDUS_FIXED_FEE = { ELEC: 60, GAS: 60 };
+
   // Universal Commission
   const [elindusMargin, setElindusMargin] = useState<number>(15);
   const [elindusFixedFee, setElindusFixedFee] = useState<number>(100);
 
   // Wizard State
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const totalSteps = 5;
+  const totalSteps = 4;
   const [direction, setDirection] = useState<number>(1);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -111,13 +128,20 @@ export default function App() {
     try {
       const { data: existingPrices, error } = await supabase.from('market_prices').select('*');
       if (!error && existingPrices && existingPrices.length > 0) {
+        const find = (name: string) => existingPrices.find(p => p.indicator_name === name);
         const fetchedData = {
-          epexSpot: existingPrices.find(p => p.indicator_name === 'EPEX_SPOT')?.value || 65.40,
-          endex: existingPrices.find(p => p.indicator_name === 'ENDEX')?.value || 72.10,
-          ttfEndex: existingPrices.find(p => p.indicator_name === 'TTF_ENDEX')?.value || 35.20,
-          ttfDam: existingPrices.find(p => p.indicator_name === 'TTF_DAM')?.value || 32.50,
-          margin30to80: existingPrices.find(p => p.indicator_name === 'MARGIN_30_80')?.value || 15,
-          margin80to100: existingPrices.find(p => p.indicator_name === 'MARGIN_80_100')?.value || 15,
+          epexSpot: find('EPEX_SPOT')?.value || 65.40,
+          ttfDam: find('TTF_DAM')?.value || 32.50,
+          margin30to80: find('MARGIN_30_80')?.value || 15,
+          margin80to100: find('MARGIN_80_100')?.value || 15,
+          enecoResElecVast: find('ENECO_RES_ELEC_VAST')?.value || 0,
+          enecoResElecVar: find('ENECO_RES_ELEC_VARIABEL')?.value || 0,
+          enecoResGasVast: find('ENECO_RES_GAS_VAST')?.value || 0,
+          enecoResGasVar: find('ENECO_RES_GAS_VARIABEL')?.value || 0,
+          enecoSohoElecVast: find('ENECO_SOHO_ELEC_VAST')?.value || 0,
+          enecoSohoElecVar: find('ENECO_SOHO_ELEC_VARIABEL')?.value || 0,
+          enecoSohoGasVast: find('ENECO_SOHO_GAS_VAST')?.value || 0,
+          enecoSohoGasVar: find('ENECO_SOHO_GAS_VARIABEL')?.value || 0,
           lastUpdated: existingPrices[0].last_updated
         };
         setMarketData(fetchedData);
@@ -132,13 +156,25 @@ export default function App() {
 
   useEffect(() => { fetchMarketData(); }, []);
 
+  // Auto-fill Eneco offer prices from admin-set values
+  useEffect(() => {
+    if (!marketData || !customerType) return;
+    const isSoho = customerType === 'SOHO';
+    const getPrice = (type: 'ELEC' | 'GAS', tariff: 'VAST' | 'VARIABEL' | null) => {
+      if (tariff === 'VAST') return type === 'ELEC' ? (isSoho ? marketData.enecoSohoElecVast : marketData.enecoResElecVast) : (isSoho ? marketData.enecoSohoGasVast : marketData.enecoResGasVast);
+      return type === 'ELEC' ? (isSoho ? marketData.enecoSohoElecVar : marketData.enecoResElecVar) : (isSoho ? marketData.enecoSohoGasVar : marketData.enecoResGasVar);
+    };
+    const elecPrice = getPrice('ELEC', elecTariff) || 0;
+    const gasPrice = getPrice('GAS', gasTariff) || 0;
+    if (elecPrice > 0) setElecEnecoOfferPriceMWh(elecPrice);
+    if (gasPrice > 0) setGasEnecoOfferPriceMWh(gasPrice);
+  }, [customerType, elecTariff, gasTariff, marketData]);
+
   const handleSaveOverride = async () => {
     setIsSavingOverride(true);
     const nowIso = new Date().toISOString();
     const updates = [
       { indicator_name: 'EPEX_SPOT', value: overrideData.epexSpot, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'ENDEX', value: overrideData.endex, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'TTF_ENDEX', value: overrideData.ttfEndex, unit: 'MWh', last_updated: nowIso },
       { indicator_name: 'TTF_DAM', value: overrideData.ttfDam, unit: 'MWh', last_updated: nowIso },
       { indicator_name: 'MARGIN_30_80', value: overrideData.margin30to80, unit: '€/MWh', last_updated: nowIso },
       { indicator_name: 'MARGIN_80_100', value: overrideData.margin80to100, unit: '€/MWh', last_updated: nowIso }
@@ -190,7 +226,7 @@ export default function App() {
       vast: 'Vast',
       variabel: 'Variabel',
       consumption: 'Verbruik',
-      over30: 'Verbruik > 30 MWh?',
+      over30: 'Verbruik > 25 MWh?',
       currentPrice: 'Huidige Prijs',
       enecoOffer: 'Eneco Voorstel',
       elindusOffer: 'Elindus Voorstel',
@@ -216,13 +252,16 @@ export default function App() {
       notAvailable: 'Niet beschikbaar voor dit volume',
       next: 'Volgende',
       back: 'Terug',
-      step1Title: 'Kies Energie',
-      step2Title: 'Verbruiksgegevens',
-      step3Title: 'Huidige Situatie',
-      step4Title: 'Vergelijking',
-      step5Title: 'Commissie & Afronden',
-      step1Desc: 'Selecteer het energietype voor de module.',
+      step1Title: 'Klanttype',
+      step2Title: 'Kies Energie',
+      step3Title: 'Verbruiksgegevens',
+      step4Title: 'Huidige Situatie',
+      step5Title: 'Vergelijking',
+      step6Title: 'Commissie & Afronden',
+      step1Desc: 'Selecteer het type klant.',
       step5Desc: 'Configureer de globale commissie over',
+      particulier: 'Particulier',
+      soho: 'SOHO',
       savingWord: 'Besparing:',
       totalSaving: 'Totaal Elindus Besparing',
       marginLocked: 'Marge is vastgezet op',
@@ -242,7 +281,7 @@ export default function App() {
       vast: 'Fixe',
       variabel: 'Variable',
       consumption: 'Consommation',
-      over30: 'Consommation > 30 MWh?',
+      over30: 'Consommation > 25 MWh?',
       currentPrice: 'Prix Actuel',
       enecoOffer: 'Offre Eneco',
       elindusOffer: 'Offre Elindus',
@@ -268,13 +307,16 @@ export default function App() {
       notAvailable: 'Non disponible pour ce volume',
       next: 'Suivant',
       back: 'Retour',
-      step1Title: 'Énergie',
-      step2Title: 'Consommation',
-      step3Title: 'Situation Actuelle',
-      step4Title: 'Comparaison',
-      step5Title: 'Commission & Fin',
-      step1Desc: 'Sélectionnez le type d\'énergie pour le module.',
+      step1Title: 'Type Client',
+      step2Title: 'Énergie',
+      step3Title: 'Consommation',
+      step4Title: 'Situation Actuelle',
+      step5Title: 'Comparaison',
+      step6Title: 'Commission & Fin',
+      step1Desc: 'Sélectionnez le type de client.',
       step5Desc: 'Configurez la commission globale sur',
+      particulier: 'Particulier',
+      soho: 'SOHO',
       savingWord: 'Économie:',
       totalSaving: 'Économie Totale Elindus',
       marginLocked: 'Marge fixée à',
@@ -323,17 +365,34 @@ export default function App() {
     const elinEstimatedPrice = baseMarkt + effectiveElindusMargin;
     const elindusSavingsVal = currPrice - elinEstimatedPrice;
 
+    // Fixed fee savings
+    const currentFixedFee = type === 'ELEC' ? elecCurrentFixedFee : gasCurrentFixedFee;
+    const enecoFixedFeeSaving = currentFixedFee - ENECO_FIXED_FEE[type];
+    const elindusFixedFeeSaving = currentFixedFee - ELINDUS_FIXED_FEE[type];
+
+    // Volume-based visibility rules:
+    // 0-25: Eneco only | 25-100: Both (SOHO) or Eneco only (Particulier) | 100+: Coach message
+    const showEneco = cons <= 100;
+    const showElindus = cons >= 25 && cons <= 100 && customerType === 'SOHO';
+    const showCoachMessage = cons > 100;
+
     return {
       type,
       cons,
       currPrice,
       enecoPrice,
       enecoSavingsPercentage,
-      enecoSavingsTotal: enecoSavingsVal * cons,
+      enecoSavingsTotal: (enecoSavingsVal * cons) + (includeFixedFeeSavings ? enecoFixedFeeSaving : 0),
       elindusEsimatedPrice: elinEstimatedPrice,
-      elindusSavingsTotal: elindusSavingsVal * cons,
-      showEneco: cons <= 100,
-      showElindus: cons >= 30,
+      elindusSavingsTotal: (elindusSavingsVal * cons) + (includeFixedFeeSavings ? elindusFixedFeeSaving : 0),
+      showEneco,
+      showElindus,
+      showCoachMessage,
+      enecoFixedFee: ENECO_FIXED_FEE[type],
+      elindusFixedFee: ELINDUS_FIXED_FEE[type],
+      currentFixedFee,
+      enecoFixedFeeSaving,
+      elindusFixedFeeSaving,
     };
   };
 
@@ -366,14 +425,18 @@ export default function App() {
     if (currentStep === 2) {
       // Must have answered all sub-questions
       if (req.includes('ELEC')) {
-        if (elecKnowsConsumption === null || elecTariff === null) return false;
+        if (elecKnowsConsumption === null) return false;
         if (elecKnowsConsumption === true && elecConsumptionMWh <= 0) return false;
+        if (elecKnowsConsumption === true && elecConsumptionMWh < 25 && elecTariff === null) return false;
         if (elecKnowsConsumption === false && elecIsOver30MWh === null) return false;
+        if (elecKnowsConsumption === false && elecIsOver30MWh === false && elecTariff === null) return false;
       }
       if (req.includes('GAS')) {
-        if (gasKnowsConsumption === null || gasTariff === null) return false;
+        if (gasKnowsConsumption === null) return false;
         if (gasKnowsConsumption === true && gasConsumptionMWh <= 0) return false;
+        if (gasKnowsConsumption === true && gasConsumptionMWh < 25 && gasTariff === null) return false;
         if (gasKnowsConsumption === false && gasIsOver30MWh === null) return false;
+        if (gasKnowsConsumption === false && gasIsOver30MWh === false && gasTariff === null) return false;
       }
     }
     if (currentStep === 3) {
@@ -388,14 +451,14 @@ export default function App() {
     if (currentStep === 2) {
       if (req.includes('ELEC')) {
         if (elecKnowsConsumption === null) { setValidationError(lang === 'NL' ? 'Beantwoord eerst alle vragen voor Elektriciteit.' : 'Répondez d\'abord à toutes les questions.'); return false; }
-        if (elecTariff === null) { setValidationError(lang === 'NL' ? 'Selecteer een tarief type voor Elektriciteit.' : 'Sélectionnez un type de tarif.'); return false; }
         if (elecKnowsConsumption === true && elecConsumptionMWh <= 0) { setValidationError(lang === 'NL' ? 'Vul een geldig Elektriciteitsverbruik in (> 0).' : 'Veuillez entrer une conso Elec valide (> 0).'); return false; }
+        if (elecKnowsConsumption === true && elecConsumptionMWh < 25 && elecTariff === null) { setValidationError(lang === 'NL' ? 'Selecteer een tarief type voor Elektriciteit.' : 'Sélectionnez un type de tarif.'); return false; }
         if (elecKnowsConsumption === false && elecIsOver30MWh === null) { setValidationError(lang === 'NL' ? 'Beantwoord de verbruiksvraag voor Elektriciteit.' : 'Répondez à la question de consommation.'); return false; }
       }
       if (req.includes('GAS')) {
         if (gasKnowsConsumption === null) { setValidationError(lang === 'NL' ? 'Beantwoord eerst alle vragen voor Aardgas.' : 'Répondez d\'abord à toutes les questions.'); return false; }
-        if (gasTariff === null) { setValidationError(lang === 'NL' ? 'Selecteer een tarief type voor Aardgas.' : 'Sélectionnez un type de tarif.'); return false; }
         if (gasKnowsConsumption === true && gasConsumptionMWh <= 0) { setValidationError(lang === 'NL' ? 'Vul een geldig aardgasverbruik in (> 0).' : 'Veuillez entrer une conso Gaz valide (> 0).'); return false; }
+        if (gasKnowsConsumption === true && gasConsumptionMWh < 25 && gasTariff === null) { setValidationError(lang === 'NL' ? 'Selecteer een tarief type voor Aardgas.' : 'Sélectionnez un type de tarif.'); return false; }
         if (gasKnowsConsumption === false && gasIsOver30MWh === null) { setValidationError(lang === 'NL' ? 'Beantwoord de verbruiksvraag voor Aardgas.' : 'Répondez à la question de consommation.'); return false; }
       }
     }
@@ -409,12 +472,16 @@ export default function App() {
 
   const [isTranslating, setIsTranslating] = useState(false);
 
+  // For Particulier: steps are 1(type),2(energy),3(consumption),4(price),5(comparison) — skip margin
+  // For SOHO: steps are 1(type),2(energy),3(consumption),4(price),5(margin),6(comparison)
   const nextStep = () => {
     if (isTranslating) return;
     if (!validateStep()) return;
     if (currentStep < totalSteps) {
       setIsTranslating(true);
       setDirection(1);
+      // Particulier: skip from step 4 (price) directly to step 5 (comparison, which is the last)
+      // because there's no margin step for Particulier
       setCurrentStep(prev => prev + 1);
       setTimeout(() => setIsTranslating(false), 800);
     }
@@ -473,7 +540,7 @@ export default function App() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-500">
-        <Loader2 className="w-10 h-10 animate-spin text-[#E74B4D] mb-4" />
+        <Loader2 className="w-10 h-10 animate-spin text-eneco-gradient mb-4" />
         <p className="font-medium animate-pulse">{text.loading}</p>
       </div>
     );
@@ -494,45 +561,24 @@ export default function App() {
     const Icon = isElec ? Zap : Flame;
 
     return (
-      <div className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-0 flex-1">
-        <div className="flex items-center gap-3 border-b border-slate-100 pb-6 mb-8">
-          <Icon className="w-6 h-6 text-[#E74B4D]" />
+      <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-0 flex-1">
+        <div className="flex items-center gap-3 border-b border-slate-100 pb-[clamp(1rem,3vh,1.5rem)] mb-[clamp(1rem,3vh,2rem)]">
+          <Icon className="w-6 h-6 text-eneco-gradient" />
           <h3 className="text-xl font-bold text-slate-600">{label}</h3>
         </div>
 
         {/* Question 1: Knows consumption? */}
         <div>
-          <label className="block text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest text-center">{text.knowsConsumption}</label>
+          <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.knowsConsumption}</label>
           <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
-            <button onClick={() => setKnows(true)} className={`flex-1 min-w-[120px] py-4 rounded-2xl font-bold transition-all ${knows === true ? 'bg-[#E74B4D] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.yes}</button>
-            <button onClick={() => setKnows(false)} className={`flex-1 min-w-[120px] py-4 rounded-2xl font-bold transition-all ${knows === false ? 'bg-[#E74B4D] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
+            <button onClick={() => setKnows(true)} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${knows === true ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.yes}</button>
+            <button onClick={() => setKnows(false)} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${knows === false ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
           </div>
         </div>
 
-        {/* Question 2: Tariff type — only after answering Q1 */}
-        <AnimatePresence>
-          {knows !== null && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="overflow-clip"
-            >
-              <div className="mt-8 pt-8 border-t border-slate-100">
-                <label className="block text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest text-center">{text.tariffType}</label>
-                <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
-                  <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-4 rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-[#E74B4D] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
-                  <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-4 rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-[#E74B4D] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Question 3: Consumption details — only after answering Q2 */}
+        {/* Question 2: Consumption input — only if knows === true */}
         <AnimatePresence mode="wait">
-          {tariff !== null && knows === true && (
+          {knows === true && (
             <motion.div
               key="slider"
               initial={{ opacity: 0, height: 0 }}
@@ -545,8 +591,8 @@ export default function App() {
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-4">
                   <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{text.consumption}</label>
                   <div className="flex bg-slate-100 p-1 rounded-full">
-                    <button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'kWh' ? 'bg-white text-[#E74B4D] shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>kWh</button>
-                    <button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'MWh' ? 'bg-white text-[#E74B4D] shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>MWh</button>
+                    <button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>kWh</button>
+                    <button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>MWh</button>
                   </div>
                 </div>
                 <div className="space-y-6">
@@ -556,20 +602,45 @@ export default function App() {
                         const raw = e.target.value;
                         if (raw === '') { setConsMWh(0); return; }
                         const val = Number(raw);
-                        setConsMWh(inputUnit === 'kWh' ? val / 1000 : val);
-                      }} className="block w-full pr-16 py-4 text-3xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-[#E74B4D]/5 focus:ring-4 focus:ring-[#E74B4D]/10 focus:border-[#E74B4D] transition-all text-[#E74B4D] outline-none" />
-                      <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-[#E74B4D]/50 font-bold text-lg pointer-events-none">{inputUnit}</span>
+                        const newMWh = inputUnit === 'kWh' ? val / 1000 : val;
+                        setConsMWh(newMWh);
+                        // Auto-set tariff to VARIABEL if >= 25 MWh
+                        if (newMWh >= 25) { setTariff('VARIABEL'); }
+                      }} className="block w-full pr-16 py-[clamp(0.75rem,2.5vh,1rem)] text-[clamp(1.5rem,3vh,1.875rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1rem,2vh,1.5rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-eneco-gradient outline-none" />
+                      <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-eneco-gradient/50 font-bold text-[clamp(1rem,2vh,1.125rem)] pointer-events-none">{inputUnit}</span>
                     </div>
                   </div>
                   {inputUnit === 'MWh' && (
-                    <LiquidGlassSlider min={1} max={250} value={consMWh} onChange={(val) => setConsMWh(val)} color="#E74B4D" className="w-full mb-2" />
+                    <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(val) => { setConsMWh(val); if (val >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full mb-2" />
                   )}
                 </div>
+
+                {/* Tariff type — only if consumption < 25 MWh */}
+                <AnimatePresence>
+                  {consMWh > 0 && consMWh < 25 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                      className="overflow-clip"
+                    >
+                      <div className="pt-6 border-t border-slate-100">
+                        <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
+                        <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
+                          <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
+                          <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
               </div>
             </motion.div>
           )}
 
-          {tariff !== null && knows === false && (
+          {knows === false && (
             <motion.div
               key="toggle"
               initial={{ opacity: 0, height: 0 }}
@@ -578,13 +649,35 @@ export default function App() {
               transition={{ duration: 0.4, ease: 'easeOut' }}
               className="overflow-hidden"
             >
-              <div className="pt-8 mt-8 border-t border-slate-100">
-                <label className="block text-sm font-bold text-slate-400 mb-6 uppercase tracking-widest text-center">{text.over30}</label>
+              <div className="pt-[clamp(1rem,3vh,2rem)] mt-[clamp(1rem,3vh,2rem)] border-t border-slate-100">
+                <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.over30}</label>
                 <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
-                  <button onClick={() => setOver30(true)} className={`flex-1 min-w-[120px] py-4 rounded-2xl font-bold transition-all ${over30 === true ? 'bg-[#E74B4D] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.yes}</button>
-                  <button onClick={() => setOver30(false)} className={`flex-1 min-w-[120px] py-4 rounded-2xl font-bold transition-all ${over30 === false ? 'bg-[#E74B4D] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
+                  <button onClick={() => { setOver30(true); setTariff('VARIABEL'); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${over30 === true ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.yes}</button>
+                  <button onClick={() => { setOver30(false); setTariff(null); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${over30 === false ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
                 </div>
               </div>
+
+              {/* Tariff choice for < 25 MWh when consumption is unknown */}
+              <AnimatePresence>
+                {over30 === false && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    className="overflow-clip"
+                  >
+                    <div className="pt-6 border-t border-slate-100 mt-6">
+                      <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
+                      <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
+                        <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
+                        <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
             </motion.div>
           )}
         </AnimatePresence>
@@ -600,13 +693,16 @@ export default function App() {
     const Icon = isElec ? Zap : Flame;
 
     return (
-      <div className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-8 flex-1">
-        <div className="flex justify-between items-center mb-2 border-b border-slate-100 pb-4">
+      <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-8 flex-1">
+        <div className="flex justify-between items-center mb-2 border-b border-slate-100 pb-[clamp(0.5rem,2vh,1rem)]">
           <div className="flex items-center gap-3">
-            <Icon className="w-6 h-6 text-[#E74B4D]" />
-            <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{label}</label>
+            <Icon className="w-6 h-6 text-eneco-gradient" />
+            <div>
+              <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{label}</label>
+              <p className="text-[10px] text-slate-300 mt-0.5">{lang === 'NL' ? 'Huidige prijs van de klant' : 'Prix actuel du client'}</p>
+            </div>
           </div>
-          <button onClick={() => setShowInMWh(!showInMWh)} className="text-xs font-bold text-[#E74B4D] bg-[#E74B4D]/5 px-4 py-2 rounded-full border border-[#E74B4D]/10">
+          <button onClick={() => setShowInMWh(!showInMWh)} className="text-xs font-bold text-eneco-gradient bg-eneco-gradient/5 px-4 py-2 rounded-full border border-[#E5394C]/10">
             {text.unitToggle} {showInMWh ? 'kWh' : 'MWh'}
           </button>
         </div>
@@ -623,10 +719,11 @@ export default function App() {
               const val = Number(raw);
               setCons(showInMWh ? val : val * 1000);
             }}
-            className="block w-full pl-16 pr-24 py-8 text-4xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[2rem] focus:bg-[#E74B4D]/5 focus:ring-4 focus:ring-[#E74B4D]/10 focus:border-[#E74B4D] transition-all text-slate-600 outline-none"
+            className="block w-full pl-16 pr-24 py-[clamp(1rem,4vh,2rem)] text-[clamp(1.5rem,4vh,2.25rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1.25rem,3vh,2rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
           />
-          <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-xl hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+          <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-[clamp(1rem,2vh,1.25rem)] hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
         </div>
+
       </div>
     );
   };
@@ -643,7 +740,7 @@ export default function App() {
         <motion.div className="h-full bg-white" initial={{ width: '0%' }} animate={{ width: `${(currentStep / totalSteps) * 100}%` }} transition={{ duration: 0.3, ease: 'easeInOut' }} />
       </div>
 
-      <div className="absolute top-0 left-0 w-full h-[70vh] bg-gradient-to-br from-[#E5384C] via-[#E74B4D] to-[#EA704F] z-0 overflow-hidden pointer-events-none">
+      <div className="absolute top-0 left-0 w-full h-[70vh] bg-gradient-to-br from-[#E5384C] via-[#E5394C] to-[#EA704F] z-0 overflow-hidden pointer-events-none">
         <svg className="absolute bottom-0 w-full min-w-[1200px]" viewBox="0 0 1440 320" preserveAspectRatio="none" style={{ transform: 'translateY(2px)' }}>
           <path fill="rgba(255,255,255,0.05)" d="M0,192L48,192C96,192,192,192,288,208C384,224,480,256,576,261.3C672,267,768,245,864,213.3C960,181,1056,139,1152,138.7C1248,139,1344,181,1392,202.7L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
           <path fill="rgba(255,255,255,0.15)" d="M0,160L48,170.7C96,181,192,203,288,186.7C384,171,480,117,576,112C672,107,768,149,864,176C960,203,1056,213,1152,192C1248,171,1344,117,1392,85.3L1440,53.3L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
@@ -651,9 +748,12 @@ export default function App() {
         </svg>
       </div>
 
+      {/* Foreground grouped into zoom layout */}
+      <div className="flex-1 flex flex-col w-full z-10" style={{ zoom: 0.8 }}>
+
       <Header 
         actionButton={
-          <button onClick={() => navigate('/home')} className="p-2 rounded-full transition-colors bg-white/20 border border-white/30 text-white hover:bg-white hover:text-[#E74B4D]" title={text.backToHome}>
+          <button onClick={() => navigate('/home')} className="p-2 rounded-full transition-colors bg-white border border-white/80 text-slate-400 hover:text-[#E5394C] shadow-sm" title={text.backToHome}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m15 18-6-6 6-6" /></svg>
           </button>
         }
@@ -667,34 +767,61 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -15 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-12 pb-24"
+          className="relative z-10 w-full max-w-5xl min-[2000px]:max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-[clamp(1rem,3vh,3rem)] pb-[clamp(2rem,6vh,6rem)]"
         >
-          <div className="w-full relative flex items-center justify-center min-h-[400px]">
+          <div className="w-full relative flex items-center justify-center min-h-[clamp(300px,50vh,600px)]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
 
-              {/* STEP 1 */}
+              {/* STEP 1: Customer Type + Energy Type (combined) */}
               {currentStep === 1 && (
-                <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="bg-white rounded-[2.5rem] p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-4">
-                    {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
-                      const isSelected = energyType === type;
-                      const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
-                      const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
+                <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl space-y-4">
+                  {/* Customer Type */}
+                  <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
+                    {(['PARTICULIER', 'SOHO'] as const).map((type) => {
+                      const isSelected = customerType === type;
+                      const label = type === 'PARTICULIER' ? text.particulier : text.soho;
                       return (
-                        <button key={type} onClick={() => { setEnergyType(type); nextStep(); }} className={`flex-1 flex flex-col items-center justify-center gap-4 p-8 rounded-3xl border-2 transition-all ${isSelected ? 'bg-[#E74B4D]/5 border-[#E74B4D] text-[#E74B4D]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
-                          <Icon className={`h-10 ${type === 'BOTH' ? 'w-auto' : 'w-10'}`} />
-                          <span className="font-bold text-lg">{label}</span>
+                        <button key={type} onClick={() => { setCustomerType(type); setEnergyType(null); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-[clamp(1.5rem,4vh,2.5rem)] w-[clamp(1.5rem,4vh,2.5rem)]">
+                            {type === 'PARTICULIER' ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                            )}
+                          </svg>
+                          <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
                         </button>
                       );
                     })}
                   </div>
+
+                  {/* Energy Type — appears after choosing customer type */}
+                  <AnimatePresence>
+                    {customerType && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}>
+                        <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
+                          {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
+                            const isSelected = energyType === type;
+                            const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
+                            const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
+                            return (
+                              <button key={type} onClick={() => { setEnergyType(type); nextStep(); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                                <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
+                                <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
 
-              {/* STEP 2 */}
+              {/* STEP 2: Consumption */}
               {currentStep === 2 && (
                 <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="flex flex-col md:flex-row gap-6 w-full">
+                  <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
                     {getRequiredTypes().map(type => (
                       <React.Fragment key={type}>{renderConsumptionInput(type)}</React.Fragment>
                     ))}
@@ -702,10 +829,10 @@ export default function App() {
                 </motion.div>
               )}
 
-              {/* STEP 3 */}
+              {/* STEP 3: Current Price */}
               {currentStep === 3 && (
-                <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="flex flex-col md:flex-row gap-6 w-full">
+                <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
                     {getRequiredTypes().map(type => (
                       <React.Fragment key={type}>{renderCurrentPriceInput(type)}</React.Fragment>
                     ))}
@@ -713,98 +840,144 @@ export default function App() {
                 </motion.div>
               )}
 
-              {/* STEP 4: Marge & Vergoeding (was step 5) */}
-              {currentStep === 4 && (
-                <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="bg-white rounded-[2.5rem] p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-6">
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                      <div className="flex justify-between items-end mb-4">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{text.margin}</label>
-                        <div className="text-2xl font-black text-[#E74B4D]">€{effectiveElindusMargin}</div>
-                      </div>
-                      {totalConsumption <= 100 ? (
-                        <div className="text-xs font-bold text-[#E74B4D] bg-[#E74B4D]/10 px-3 py-2 rounded-lg text-center">{text.marginLocked} €{effectiveElindusMargin}.</div>
-                      ) : (
-                        <LiquidGlassSlider min={10} max={31} step={0.5} value={elindusMargin} onChange={(val) => setElindusMargin(val)} color="#E74B4D" className="w-full" />
-                      )}
-                    </div>
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                      <div className="flex justify-between items-end mb-4">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{text.fixedFee}</label>
-                        <div className="text-2xl font-black text-[#E74B4D]">€{totalConsumption <= 100 ? Math.max(50, elindusFixedFee) : elindusFixedFee}</div>
-                      </div>
-                      <LiquidGlassSlider min={totalConsumption <= 100 ? 50 : 0} max={250} step={10} value={elindusFixedFee} onChange={(val) => setElindusFixedFee(val)} color="#E74B4D" className="w-full" />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+              {/* LAST STEP: Vergelijking & Afronden */}
+              {currentStep === totalSteps && (
+                <motion.div key="stepFinal" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-[clamp(1rem,3vh,1.5rem)]">
 
-              {/* STEP 5: Vergelijking & Afronden (was step 4) */}
-              {currentStep === 5 && (
-                <motion.div key="step5" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="bg-white rounded-[2.5rem] p-8 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-6">
-                    {outcomes.map(({ type, cons, showEneco, showElindus, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage }) => (
+                    {/* Vaste Vergoeding sectie — alleen als er geen coach message is */}
+                    {!outcomes.every(o => o.showCoachMessage) && (
+                      <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-slate-500">{lang === 'NL' ? 'Vaste vergoeding meetellen?' : 'Inclure frais fixes?'}</span>
+                          <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-12 h-7 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                            <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-5' : ''}`} />
+                          </button>
+                        </div>
+
+                        <AnimatePresence>
+                          {includeFixedFeeSavings && (
+                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+                              <div className="space-y-3">
+                                {getRequiredTypes().map(etype => {
+                                  const isElec = etype === 'ELEC';
+                                  const currentFee = isElec ? elecCurrentFixedFee : gasCurrentFixedFee;
+                                  const setFee = isElec ? setElecCurrentFixedFee : setGasCurrentFixedFee;
+                                  const enecoFee = ENECO_FIXED_FEE[etype];
+                                  const elindusFee = ELINDUS_FIXED_FEE[etype];
+                                  const enecoSaving = currentFee - enecoFee;
+                                  const elindusSaving = currentFee - elindusFee;
+                                  return (
+                                    <div key={etype} className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                                      <div className="flex items-center gap-2">
+                                        {isElec ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{isElec ? text.elec : text.gas}</span>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <label className="text-xs text-slate-400 font-bold whitespace-nowrap">{lang === 'NL' ? 'Huidig:' : 'Actuel:'}</label>
+                                        <div className="relative flex-1">
+                                          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold">€</span>
+                                          <input type="number" step="5" value={currentFee === 0 ? '' : currentFee} onChange={(e) => setFee(e.target.value === '' ? 0 : Number(e.target.value))} className="w-full pl-8 pr-14 py-2 text-sm font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#E5394C]/20 focus:border-[#E5394C] outline-none text-slate-600" />
+                                          <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 text-xs font-bold">/{lang === 'NL' ? 'jaar' : 'an'}</span>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-wrap gap-2">
+                                        <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${enecoSaving > 0 ? 'bg-emerald-50 text-emerald-600' : enecoSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                          <img src="/eneco-grey.png" alt="Eneco" className="h-3.5 object-contain opacity-60" />
+                                          €{enecoFee} → {enecoSaving > 0 ? `+€${enecoSaving}` : enecoSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(enecoSaving)}`}
+                                        </div>
+                                        {customerType === 'SOHO' && (
+                                          <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${elindusSaving > 0 ? 'bg-emerald-50 text-emerald-600' : elindusSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                            <img src="/elindus-grey.png" alt="Elindus" className="h-3.5 object-contain opacity-60" />
+                                            €{elindusFee} → {elindusSaving > 0 ? `+€${elindusSaving}` : elindusSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(elindusSaving)}`}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+
+                    {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
                       <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative">
                         <div className="absolute top-0 left-0 w-2 h-full bg-slate-300" />
                         <h4 className="font-bold text-slate-600 mb-4 pl-4 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
 
-                        <div className="grid md:grid-cols-2 gap-4 pl-4">
-                          {/* Eneco */}
-                          <div className={`p-4 rounded-xl border-2 ${showEneco ? 'border-slate-200 bg-white' : 'border-slate-100 bg-white opacity-50'}`}>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-bold text-slate-500">Eneco</span>
-                              {!showEneco && <span className="text-[10px] uppercase font-bold text-slate-400">&gt; 100 MWh</span>}
+                        {showCoachMessage ? (
+                          <div className="pl-4 py-6 text-center">
+                            <div className="inline-flex items-center gap-3 bg-white text-[#E5394C] border border-[#E5394C]/20 px-6 py-4 rounded-2xl shadow-sm">
+                              <Info className="w-5 h-5 flex-shrink-0" />
+                              <span className="font-bold text-sm">{lang === 'NL' ? 'Berekening via Salesforce — contacteer coach' : 'Calcul via Salesforce — contactez le coach'}</span>
                             </div>
-                            {showEneco ? (
-                              <>
-                                <input type="number" step="0.01" value={showInMWh ? (enecoPrice === 0 ? '' : enecoPrice) : (enecoPrice === 0 ? '' : enecoPrice / 1000)} onChange={(e) => { const raw = e.target.value; const val = raw === '' ? 0 : Number(raw); type === 'ELEC' ? setElecEnecoOfferPriceMWh(showInMWh ? val : val * 1000) : setGasEnecoOfferPriceMWh(showInMWh ? val : val * 1000); }} className="w-full bg-slate-50 focus:bg-[#E74B4D]/5 border border-slate-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] font-bold mb-2 text-sm outline-none" />
+                          </div>
+                        ) : (
+                          <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 pl-4`}>
+                            {/* Eneco */}
+                            {showEneco && (
+                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white">
+                                <div className="flex justify-between items-center mb-2">
+                                  <img src="/eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
+                                  <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
+                                </div>
+                                <input type="number" step="0.01" value={showInMWh ? (enecoPrice === 0 ? '' : enecoPrice) : (enecoPrice === 0 ? '' : enecoPrice / 1000)} onChange={(e) => { const raw = e.target.value; const val = raw === '' ? 0 : Number(raw); type === 'ELEC' ? setElecEnecoOfferPriceMWh(showInMWh ? val : val * 1000) : setGasEnecoOfferPriceMWh(showInMWh ? val : val * 1000); }} className="w-full bg-slate-50 focus:bg-[#E5394C]/5 border border-slate-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-[#E5394C]/30 focus:border-[#E5394C] font-bold mb-2 text-sm outline-none" />
                                 <div className="text-right flex items-center justify-end gap-2 mt-2">
                                   <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
                                   <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
                                 </div>
-                              </>
-                            ) : <div className="text-xs font-bold text-slate-400 mt-2">{text.na}</div>}
-                          </div>
+                                {includeFixedFeeSavings && enecoFixedFeeSaving !== 0 && (
+                                  <div className={`text-right text-[10px] font-bold mt-1 ${enecoFixedFeeSaving > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                                    VV: {enecoFixedFeeSaving > 0 ? '+' : ''}€{enecoFixedFeeSaving}
+                                  </div>
+                                )}
+                              </div>
+                            )}
 
-                          {/* Elindus */}
-                          <div className={`p-4 rounded-xl border-2 ${showElindus ? 'border-slate-200 bg-white' : 'border-slate-100 bg-white opacity-50'}`}>
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-bold text-slate-500">Elindus</span>
-                              {!showElindus && <span className="text-[10px] uppercase font-bold text-slate-400">&lt; 30 MWh</span>}
-                            </div>
-                            {showElindus ? (
-                              <>
-                                <div className="w-full bg-white border border-[#E74B4D]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
+                            {/* Elindus — alleen voor SOHO */}
+                            {showElindus && (
+                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white">
+                                <div className="flex justify-between items-center mb-2">
+                                  <img src="/elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
+                                  <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
+                                </div>
+                                <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
                                   <span>{formatPrice(elindusEsimatedPrice)}</span>
-                                  <a href="https://klant.elindus.be/s/marktinformatie" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#E74B4D] hover:underline flex items-center gap-0.5 bg-[#E74B4D]/10 px-1.5 py-0.5 rounded"><Info className="w-3 h-3" /> {text.imbalance}</a>
+                                  <a href="https://klant.elindus.be/s/marktinformatie" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#E5394C] hover:underline flex items-center gap-0.5 bg-[#E5394C]/10 px-1.5 py-0.5 rounded"><Info className="w-3 h-3" /> {text.imbalance}</a>
                                 </div>
                                 <div className="text-right">
                                   <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
                                   <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
                                 </div>
-                              </>
-                            ) : <div className="text-xs font-bold text-slate-400 mt-2">{text.na}</div>}
+                                {includeFixedFeeSavings && elindusFixedFeeSaving !== 0 && (
+                                  <div className={`text-right text-[10px] font-bold mt-1 ${elindusFixedFeeSaving > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                                    VV: {elindusFixedFeeSaving > 0 ? '+' : ''}€{elindusFixedFeeSaving}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                        </div>
+                        )}
                       </div>
                     ))}
 
-                    {/* Totale besparing + Commissie */}
+                    {/* Totale besparing + Commissie — hidden when all outcomes are coach messages */}
+                    {!outcomes.every(o => o.showCoachMessage) && (
                     <div className="pt-4 flex flex-col sm:flex-row justify-between items-center gap-6 border-t border-slate-100">
                       <div className="text-center sm:text-left">
-                        <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{text.totalSaving}</span>
-                        <span className={`text-4xl font-black ${totalElindusSavings > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{totalElindusSavings > 0 ? '+' : ''}€{totalElindusSavings.toFixed(2)}</span>
+                        <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? text.totalSaving : 'Totaal Eneco Besparing'}</span>
+                        <span className={`text-4xl font-black ${(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings) > 0 ? '+' : ''}€{(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings).toFixed(2)}</span>
                       </div>
-                      <div className="flex flex-col items-center sm:items-end gap-2">
-                        <span className="text-xs uppercase tracking-widest font-bold text-slate-400">{text.commission}</span>
-                        <span className="text-3xl font-black text-emerald-500">€{commission.toFixed(2)}</span>
-                        <div className="bg-slate-100 px-4 py-2 rounded-xl font-mono font-bold text-sm text-[#E74B4D] tracking-tight">{commissionCode}</div>
-                      </div>
+
                     </div>
+                    )}
 
                     {/* Verstuur knop */}
-                    <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-[#E74B4D] text-white hover:bg-[#E5384C]'}`}>
+                    <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
                       {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isSuccess ? <><CheckCircle2 className="w-5 h-5" /> Verzonden</> : <><Send className="w-5 h-5" /> {text.send}</>}
                     </button>
                   </div>
@@ -822,13 +995,13 @@ export default function App() {
               ) : (
                 <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-50">
                   <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
-                    <button onClick={prevStep} className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5" /><span className="hidden sm:inline">{text.back}</span></button>
-                    <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-[#E74B4D] w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
+                    <button onClick={prevStep} className="group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
+                    <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
                     <div className="flex flex-col items-end relative">
                       <AnimatePresence>
                         {validationError && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full mb-4 right-0 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm border border-rose-100 whitespace-nowrap">{validationError}</motion.div>)}
                       </AnimatePresence>
-                      <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#E74B4D] text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                      <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
                     </div>
                   </div>
                 </motion.div>
@@ -841,12 +1014,15 @@ export default function App() {
 
 
       {/* Copyright Footer */}
-      <div className="w-full mt-auto pb-8 sm:pb-10 pt-4 z-40 flex justify-center items-center pointer-events-none">
-        <p className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-slate-400/80">
-          © 2026 Telenco <span className="mx-0.5 opacity-40">·</span> Powered by
-          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3 sm:h-3.5 opacity-50 ml-0.5 object-contain" style={{ filter: 'grayscale(1) brightness(0)' }} />
-        </p>
+      <div className="w-full mt-auto pb-[clamp(1rem,4vw,2rem)] sm:pb-8 pt-4 z-40 flex justify-center items-center pointer-events-none">
+        <div className="flex items-center gap-[clamp(0.25rem,1vw,0.375rem)] text-[clamp(8px,2.5vw,11px)] sm:text-xs font-bold text-slate-400/80">
+          © 2026 Telenco <span className="mx-[clamp(0.125rem,0.5vw,0.25rem)] opacity-40">·</span> Powered by
+          <a href="https://tailormate.ai" target="_blank" rel="noopener noreferrer" className="pointer-events-auto group flex items-center">
+            <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-[clamp(9px,2.75vw,11px)] sm:h-3 opacity-50 group-hover:opacity-100 ml-[clamp(0.125rem,0.5vw,0.25rem)] object-contain transition-all grayscale brightness-0 group-hover:grayscale-0 group-hover:brightness-100" />
+          </a>
+        </div>
       </div>
+      </div>{/* End zoom wrapper */}
     </motion.div>
   );
 }

@@ -88,65 +88,65 @@ export const DESKTOP_WAVES: WaveConfig[] = [
   {
     "color": "#0ea5e9",
     "glow": "rgba(14, 165, 233, 0.4)",
-    "amplitude1": 31,
+    "amplitude1": 24,
     "frequency1": 0.011,
     "speed1": 0.00036,
-    "amplitude2": 41,
+    "amplitude2": 32,
     "frequency2": 0.0056,
     "speed2": 0.00049,
     "verticalOffset": -2,
-    "lineWidth": 5.5,
-    "glowWidth": 6,
+    "lineWidth": 4.5,
+    "glowWidth": 4.5,
     "phase": 180,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   },
   {
-    "color": "#E74B4D",
+    "color": "#E5394C",
     "glow": "rgba(231, 75, 77, 0.4)",
-    "amplitude1": 20,
+    "amplitude1": 15,
     "frequency1": 0.011,
     "speed1": 0.00036,
-    "amplitude2": 20,
+    "amplitude2": 15,
     "frequency2": 0.0056,
     "speed2": 0.00049,
     "verticalOffset": -6,
-    "lineWidth": 6,
-    "glowWidth": 6,
+    "lineWidth": 4.5,
+    "glowWidth": 4.5,
     "phase": 0,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   },
   {
     "color": "#FFC421",
     "glow": "rgba(255, 196, 33, 0.4)",
-    "amplitude1": 35,
+    "amplitude1": 27,
     "frequency1": 0.0117,
     "speed1": 0.00036,
-    "amplitude2": 45,
+    "amplitude2": 35,
     "frequency2": 0.0056,
     "speed2": 0.00049,
     "verticalOffset": -2,
-    "lineWidth": 6.5,
-    "glowWidth": 6,
+    "lineWidth": 5,
+    "glowWidth": 5,
     "phase": 250,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   },
   {
     "color": "#91C848",
     "glow": "rgba(145, 200, 72, 0.4)",
-    "amplitude1": 39,
+    "amplitude1": 30,
     "frequency1": 0.0094,
     "speed1": 0.0004,
-    "amplitude2": 23,
+    "amplitude2": 18,
     "frequency2": 0.0094,
     "speed2": 0.00046,
     "verticalOffset": 0,
-    "lineWidth": 6.5,
-    "glowWidth": 6,
+    "lineWidth": 5,
+    "glowWidth": 5,
     "phase": 100,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   }
 ];
@@ -155,65 +155,65 @@ export const MOBILE_WAVES: WaveConfig[] = [
   {
     "color": "#0ea5e9",
     "glow": "rgba(14, 165, 233, 0.4)",
-    "amplitude1": 3,
+    "amplitude1": 2.5,
     "frequency1": 0.004,
     "speed1": 0.00033,
-    "amplitude2": 10,
+    "amplitude2": 8,
     "frequency2": 0.0085,
     "speed2": 0.00017,
     "verticalOffset": 21,
-    "lineWidth": 5.5,
-    "glowWidth": 6,
+    "lineWidth": 4.5,
+    "glowWidth": 4.5,
     "phase": 180,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   },
   {
-    "color": "#E74B4D",
+    "color": "#E5394C",
     "glow": "rgba(231, 75, 77, 0.4)",
-    "amplitude1": 5,
+    "amplitude1": 4,
     "frequency1": 0.0159,
     "speed1": 0.00027,
-    "amplitude2": 13,
+    "amplitude2": 10,
     "frequency2": 0.0075,
     "speed2": 0.00036,
     "verticalOffset": 18,
-    "lineWidth": 6,
-    "glowWidth": 6,
+    "lineWidth": 4.5,
+    "glowWidth": 4.5,
     "phase": 0,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   },
   {
     "color": "#FFC421",
     "glow": "rgba(255, 196, 33, 0.4)",
-    "amplitude1": 21,
+    "amplitude1": 16,
     "frequency1": 0.0014,
     "speed1": 0.00059,
-    "amplitude2": 41,
+    "amplitude2": 32,
     "frequency2": 0.004,
     "speed2": 0.00043,
     "verticalOffset": 27,
-    "lineWidth": 6.5,
-    "glowWidth": 6,
+    "lineWidth": 5,
+    "glowWidth": 5,
     "phase": 250,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   },
   {
     "color": "#91C848",
     "glow": "rgba(145, 200, 72, 0.4)",
-    "amplitude1": 41,
+    "amplitude1": 30,
     "frequency1": 0.0036,
     "speed1": 0.0002,
-    "amplitude2": 8,
+    "amplitude2": 6,
     "frequency2": 0.0123,
     "speed2": 0.00072,
     "verticalOffset": 21,
-    "lineWidth": 6.5,
-    "glowWidth": 6,
+    "lineWidth": 5,
+    "glowWidth": 5,
     "phase": 100,
-    "highlightOffset": -3,
+    "highlightOffset": -2,
     "visible": true
   }
 ];
@@ -222,9 +222,10 @@ export const DEFAULT_WAVES = window.innerWidth < 768 ? MOBILE_WAVES : DESKTOP_WA
 
 interface Props {
   config?: WaveConfig[];
+  useGradient?: boolean;
 }
 
-export default function LoginBackgroundWaves({ config }: Props) {
+export default function LoginBackgroundWaves({ config, useGradient = true }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const configRef = useRef(config || DEFAULT_WAVES);
 
@@ -264,6 +265,12 @@ export default function LoginBackgroundWaves({ config }: Props) {
 
       const centerY = logicalHeight / 2;
 
+      const gradient = ctx.createLinearGradient(0, 0, logicalWidth, 0);
+      gradient.addColorStop(0, "#91C848");    // Telenco Groen
+      gradient.addColorStop(0.33, "#FFC421"); // Telenet Geel
+      gradient.addColorStop(0.66, "#E5394C"); // Energie Rood
+      gradient.addColorStop(1, "#0ea5e9");    // Webdesign Blauw
+
       const midX = logicalWidth / 2;
 
       const drawSegment = (waveIndices: number[], startX: number, endX: number) => {
@@ -291,15 +298,21 @@ export default function LoginBackgroundWaves({ config }: Props) {
           ctx.beginPath();
           points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
           ctx.shadowBlur = 0;
-          ctx.strokeStyle = wave.color;
+          ctx.strokeStyle = useGradient ? gradient : (wave.color || '#94a3b8');
           ctx.lineCap = 'round';
           ctx.lineJoin = 'round';
           ctx.lineWidth = wave.lineWidth;
+
+          // Optionally add multiply blend mode if it improves colors on light bg:
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.globalAlpha = 0.9;
+
           ctx.stroke();
 
           ctx.beginPath();
           points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y + wave.highlightOffset) : ctx.lineTo(p.x, p.y + wave.highlightOffset));
-          ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+          ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+          ctx.globalAlpha = 1.0;
           ctx.lineWidth = 1.5;
           ctx.stroke();
         });

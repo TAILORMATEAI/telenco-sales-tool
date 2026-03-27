@@ -144,14 +144,6 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
         intercepted['TTF_DAM'] = await response.json();
         await logProgress('\u2713 Data voor TTF DAM (Aardgas Variabel) ontvangen.');
       }
-      if (url.includes('/marketinfo/fixed/prices') && url.includes('market=ELECTRICITY')) {
-        intercepted['ENDEX'] = await response.json();
-        await logProgress('\u2713 Data voor ENDEX (Elektriciteit Vast) ontvangen.');
-      }
-      if (url.includes('/marketinfo/fixed/prices') && url.includes('market=GAS')) {
-        intercepted['TTF_ENDEX'] = await response.json();
-        await logProgress('\u2713 Data voor TTF ENDEX (Aardgas Vast) ontvangen.');
-      }
     } catch {
       // Not JSON — skip
     }
@@ -166,10 +158,8 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
   await humanDelay();
 
   // Navigate to each remaining market page with wider random delays (6–12s)
-  const marketPages = [
-    { url: 'https://klant.elindus.be/s/marktinformatie/endex', key: 'ENDEX', label: 'ENDEX' },
+  const marketPages: { url: string; key: string; label: string }[] = [
     { url: 'https://klant.elindus.be/s/marktinformatie/ttf-dam', key: 'TTF_DAM', label: 'TTF DAM' },
-    { url: 'https://klant.elindus.be/s/marktinformatie/ttf-endex', key: 'TTF_ENDEX', label: 'TTF ENDEX' },
   ];
 
   for (const market of marketPages) {

@@ -294,11 +294,15 @@ function startAutoSync() {
   console.log(`⏰ Auto-sync enabled — running every ${AUTO_SYNC_INTERVAL_MS / (60 * 60 * 1000)} hours`);
   console.log(`🛡️ Manual sync cooldown: ${MANUAL_COOLDOWN_MS / (60 * 1000)} minutes`);
 
-  // Run once on startup
-  runFullSync().then((result) => {
-    lastSyncResult = result;
-    lastSyncTime = new Date().toISOString();
-  });
+  // Run once on startup (ONLY IN PRODUCTION)
+  if (process.env.NODE_ENV === 'production') {
+    runFullSync().then((result) => {
+      lastSyncResult = result;
+      lastSyncTime = new Date().toISOString();
+    });
+  } else {
+    console.log('⏩ LOCAL DEV: Automatische startup scrape is uitgeschakeld zodat de server direct opstart.');
+  }
 
   // Then repeat on interval
   syncIntervalId = setInterval(async () => {
@@ -647,16 +651,38 @@ async function startServer() {
   });
 
   // ── Admin User Management ──
+
+  // Fetch email confirmation status from auth.users (only accessible via service role)
+  app.get('/api/admin/auth-users', async (_req, res) => {
+    const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
+    const adminClient = createClient(supabaseUrl, serviceKey);
+    try {
+      const { data, error } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+      if (error) throw error;
+      const mapped = (data?.users || []).map(u => ({
+        id: u.id,
+        email: u.email,
+        email_confirmed_at: u.email_confirmed_at || u.confirmed_at || null,
+        last_sign_in_at: u.last_sign_in_at || null
+      }));
+      res.json(mapped);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post('/api/admin/create-user', express.json(), async (req, res) => {
     const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden in de server omgeving.' });
     
     const adminClient = createClient(supabaseUrl, serviceKey);
-    const { email, password, firstName, lastName, role, avatarId } = req.body;
+    const { email, password, firstName, lastName, role, avatarId, adminName } = req.body;
     
     try {
       const { data: user, error: authError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-        data: { first_name: firstName, last_name: lastName, role: role || 'user' }
+        data: { first_name: firstName, last_name: lastName, role: role || 'user', inviter_name: adminName || 'Een beheerder' },
+        redirectTo: `${process.env.VITE_SITE_URL || 'http://localhost:3000'}/login`
       });
 
       if (authError) throw authError;

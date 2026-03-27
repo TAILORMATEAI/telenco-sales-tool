@@ -17,11 +17,18 @@ export default function LoginPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(localStorage.getItem('telenco-remember') !== 'false');
 
   // If already logged in, redirect
   React.useEffect(() => {
-    if (user) navigate('/home', { replace: true });
+    if (user) {
+      if (localStorage.getItem('mustChangePassword') === 'true') {
+        navigate('/wachtwoord#type=recovery', { replace: true });
+      } else {
+        navigate('/home', { replace: true });
+      }
+    }
   }, [user, navigate]);
 
   const maskPassword = (pw: string) => {
@@ -46,6 +53,17 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
+
+      const hasUpperCase = /[A-Z]/.test(password);
+      const hasLowerCase = /[a-z]/.test(password);
+      const hasNumbers = /\d/.test(password);
+
+      if (password.length < 6 || !hasUpperCase || !hasLowerCase || !hasNumbers) {
+        setError('Wachtwoord moet minimaal 6 tekens, 1 hoofdletter, 1 kleine letter en 1 cijfer bevatten.');
+        setIsLoading(false);
+        return;
+      }
+
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -53,6 +71,7 @@ export default function LoginPage() {
           data: {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
+            full_name: `${firstName.trim()} ${lastName.trim()}`,
             masked_password: maskPassword(password)
           }
         }
@@ -75,12 +94,42 @@ export default function LoginPage() {
       }
       const { error: authError } = await signIn(email, password);
       if (authError) {
-        setError(authError.message === 'Invalid login credentials'
+        const msg = authError.message;
+        const translated = msg === 'Invalid login credentials'
           ? 'Ongeldige inloggegevens. Probeer opnieuw.'
-          : authError.message);
+          : msg === 'Email not confirmed'
+            ? 'Je e-mail is nog niet bevestigd. Controleer je inbox en klik op de bevestigingslink.'
+            : msg;
+        setError(translated);
         setIsLoading(false);
       }
     }
+  };
+
+  const handleResetPassword = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!email) {
+      setError('Vul eerst je e-mailadres in om een reset aan te vragen.');
+      return;
+    }
+    setError(null);
+    setSuccess(null);
+    setIsLoading(true);
+
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.endsWith('/login') ? currentPath.replace('/login', '') : currentPath;
+    const resetUrl = `${window.location.origin}${basePath}/wachtwoord`;
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: resetUrl,
+    });
+
+    if (resetError) {
+      setError(resetError.message === 'Over rate limit' ? 'Wacht even voordat je opnieuw een e-mail aanvraagt.' : resetError.message);
+    } else {
+      setSuccess('Check je mailbox! We hebben een link verstuurd om je wachtwoord te herstellen.');
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -92,29 +141,30 @@ export default function LoginPage() {
     >
       {/* Animated Telenco wave lines — the base layer */}
       <div className="absolute inset-0 z-0 translate-y-8 sm:translate-y-0">
-        <LoginBackgroundWaves config={DEFAULT_WAVES} />
+        <LoginBackgroundWaves config={DEFAULT_WAVES} useGradient={true} />
 
         {/* Full-screen frosted glass filter over the waves (Extremely Subtle) */}
         <div className="absolute inset-0 pointer-events-none" style={{ backdropFilter: 'blur(0.5px)' }} />
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center w-full z-10">
+      {/* Scaled foreground content */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full z-10" style={{ zoom: 0.8 }}>
         {/* Main Login Card Wrapper */}
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: 'spring', bounce: 0, duration: 1.0 }}
-          className="w-full max-w-md relative z-10"
+          className="w-full max-w-[400px] relative z-10"
         >
-          <div className="flex flex-col items-center justify-center mb-8">
-            <img src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png" alt="Telenco Logo" className="w-[180px] object-contain mb-3" style={{ filter: 'grayscale(1) brightness(0) opacity(0.5)' }} />
-            <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-slate-400">Sales tool</h2>
+          <div className="flex flex-col items-center justify-center mb-[clamp(1.25rem,3.5vh,1.75rem)]">
+            <img src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png" alt="Telenco Logo" className="w-[clamp(120px,25vw,150px)] object-contain mb-[clamp(0.25rem,1vh,0.5rem)]" style={{ filter: 'grayscale(1) brightness(0) opacity(0.5)' }} />
+            <h2 className="text-[clamp(10px,2vw,12px)] font-bold tracking-[0.25em] uppercase text-slate-400">Sales tool</h2>
           </div>
 
           <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-8 sm:p-10 border border-slate-100/50 relative overflow-hidden">
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={isForgotPassword ? handleResetPassword : handleSubmit} className="space-y-5">
               {/* Name fields - only for registration */}
-              {isSignUp && (
+              {isSignUp && !isForgotPassword && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Voornaam</label>
@@ -169,29 +219,54 @@ export default function LoginPage() {
                 </AnimatePresence>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Wachtwoord</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              {!isSignUp && (
-                <label className="flex items-center gap-3 cursor-pointer group">
+              {!isForgotPassword && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Wachtwoord</label>
                   <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-slate-200 bg-slate-50 text-slate-600 focus:ring-slate-800/50 focus:ring-offset-0 cursor-pointer"
+                    type="password"
+                    required
+                    minLength={isSignUp ? 6 : undefined}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
+                    placeholder="••••••••"
                   />
-                  <span className="text-sm text-slate-400 group-hover:text-slate-600 font-medium transition-colors">Login onthouden</span>
-                </label>
+                  <AnimatePresence>
+                    {isSignUp && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="text-xs text-slate-400 font-medium px-2 flex items-start overflow-hidden"
+                      >
+                        <div className="pt-1.5 pb-0.5">
+                          Minimaal <strong className="text-slate-500 font-bold">6 tekens</strong>, <strong className="text-slate-500 font-bold">1 hoofdletter</strong>, <strong className="text-slate-500 font-bold">1 kleine letter</strong> en <strong className="text-slate-500 font-bold">1 cijfer</strong>.
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {!isSignUp && !isForgotPassword && (
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-200 bg-slate-50 text-slate-600 focus:ring-slate-800/50 focus:ring-offset-0 cursor-pointer"
+                    />
+                    <span className="text-sm text-slate-400 group-hover:text-slate-600 font-medium transition-colors">Login onthouden</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgotPassword(true); setError(null); setSuccess(null); }}
+                    className="text-sm text-slate-400 hover:text-slate-600 font-semibold transition-colors focus:outline-none"
+                  >
+                    Wachtwoord vergeten?
+                  </button>
+                </div>
               )}
 
               <AnimatePresence mode="wait">
@@ -244,7 +319,15 @@ export default function LoginPage() {
                     <>
                       {/* Primary Visible State */}
                       <span className="absolute inset-0 flex items-center justify-center gap-2.5 transition-transform duration-[600ms] ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-[150%]">
-                        {isSignUp ? (
+                        {isForgotPassword ? (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                              <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z" />
+                              <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10" />
+                            </svg>
+                            Reset link aanvragen
+                          </>
+                        ) : isSignUp ? (
                           <>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -268,7 +351,15 @@ export default function LoginPage() {
 
                       {/* Hover State (Slides in from bottom) */}
                       <span className="absolute inset-0 flex items-center justify-center gap-2.5 text-slate-500 translate-y-[150%] transition-transform duration-[600ms] ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:translate-y-0">
-                        {isSignUp ? (
+                        {isForgotPassword ? (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                              <path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z" />
+                              <path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10" />
+                            </svg>
+                            Reset link aanvragen
+                          </>
+                        ) : isSignUp ? (
                           <>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
                               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -295,37 +386,49 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Toggle between Sign In / Sign Up */}
+            {/* Toggle between Sign In / Sign Up / Forgot Password */}
             <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-              <button
-                onClick={() => { setIsSignUp(!isSignUp); setError(null); setSuccess(null); }}
-                className="text-sm text-slate-400 hover:text-slate-600 font-medium transition-colors"
-              >
-                {isSignUp ? (
-                  <>Al een account? <span className="text-slate-600 font-bold">Inloggen</span></>
-                ) : (
-                  <>Nog geen account? <span className="text-slate-600 font-bold">Registreren</span></>
-                )}
-              </button>
+              {isForgotPassword ? (
+                <button
+                  type="button"
+                  onClick={() => { setIsForgotPassword(false); setError(null); setSuccess(null); }}
+                  className="text-sm text-slate-400 hover:text-slate-600 font-medium transition-colors"
+                >
+                  Terug naar <span className="text-slate-600 font-bold">Inloggen</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setIsSignUp(!isSignUp); setError(null); setSuccess(null); }}
+                  className="text-sm text-slate-400 hover:text-slate-600 font-medium transition-colors"
+                >
+                  {isSignUp ? (
+                    <>Al een account? <span className="text-slate-600 font-bold">Inloggen</span></>
+                  ) : (
+                    <>Nog geen account? <span className="text-slate-600 font-bold">Registreren</span></>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Partner Logos - Aligned with the Card */}
+          <div className="flex items-center justify-between w-full opacity-40 px-5 mt-[clamp(2rem,4vh,3rem)]">
+            <img src="https://tailormate.ai/telencotool/images/logos/telenetlogo.webp" alt="Telenet" className="h-[clamp(12px,1.5vh,16px)] object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Eneco_logo.svg/1280px-Eneco_logo.svg.png" alt="Eneco" className="h-[clamp(16px,2vh,22px)] object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+            <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-[clamp(10px,1.2vh,12px)] object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+            <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-[clamp(10px,1.2vh,12px)] object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
+          </div>
+
+          {/* Footer Anchored within Card Layout for perfect alignment */}
+          <div className="w-full mt-auto pb-[clamp(1rem,4vw,2rem)] sm:pb-8 pt-4 z-40 flex justify-center items-center pointer-events-none">
+            <div className="flex items-center justify-center gap-[clamp(0.25rem,1vw,0.375rem)] text-[clamp(8px,2.5vw,11px)] sm:text-xs font-bold text-slate-400/80">
+              © 2026 Telenco <span className="mx-[clamp(0.125rem,0.5vw,0.25rem)] opacity-40">·</span> Powered by
+              <a href="https://tailormate.ai" target="_blank" rel="noopener noreferrer" className="pointer-events-auto group flex items-center">
+                <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-[clamp(10px,3vw,12px)] sm:h-3.5 opacity-50 group-hover:opacity-100 ml-[clamp(0.125rem,0.5vw,0.25rem)] object-contain transition-all grayscale brightness-0 group-hover:grayscale-0 group-hover:brightness-100" />
+              </a>
             </div>
           </div>
         </motion.div>
-      </div>
-
-      {/* Footer Anchored to Bottom */}
-      <div className="w-full pb-4 pt-8 z-10 flex flex-col items-center justify-center">
-        {/* Partner Logos */}
-        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5 opacity-30 px-4">
-          <img src="https://tailormate.ai/telencotool/images/logos/telenetlogo.webp" alt="Telenet" className="h-4 sm:h-6 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Eneco_logo.svg/1280px-Eneco_logo.svg.png" alt="Eneco" className="h-5 sm:h-7 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
-          <img src="https://klant.elindus.be/file-asset/Elindus_Logo_Wordmark_RGB_Red1" alt="Elindus" className="h-2.5 sm:h-4 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
-          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-2.5 sm:h-4 object-contain" style={{ filter: 'grayscale(1) brightness(0) opacity(0.6)' }} />
-        </div>
-
-        <p className="flex justify-center items-center gap-1.5 text-center text-slate-400 text-xs sm:text-sm mt-4 pb-4 font-bold tracking-wider">
-          © 2026 Telenco <span className="mx-0.5 opacity-40">·</span> Powered by
-          <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-3 sm:h-3.5 opacity-50 ml-0.5 object-contain" style={{ filter: 'grayscale(1) brightness(0)' }} />
-        </p>
       </div>
     </motion.div>
   );

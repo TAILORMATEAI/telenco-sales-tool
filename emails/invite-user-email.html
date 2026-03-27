@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<!--[if mso]>
+<xml>
+  <o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings>
+</xml>
+<noscript>
+<style>table{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}td{mso-line-height-rule:exactly;}</style>
+</noscript>
+<![endif]-->
+<style>
+  /* Dark Mode styling voor échte mail apps die het wel respecteren (Apple Mail, iOS) */
+  :root { color-scheme: light dark; supported-color-schemes: light dark; }
+  @media (prefers-color-scheme: dark) {
+    .body-bg { background-color: #0f172a !important; }
+    .card-bg { background-color: #1e293b !important; }
+    .text-primary, h1 { color: #f8fafc !important; }
+    .text-secondary, p { color: #94a3b8 !important; }
+  }
+
+  body { margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  table, td { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; max-width: 100%; height: auto; display: block; }
+  a { text-decoration: none; }
+  
+  @media only screen and (max-width: 620px) {
+    .outer-table { width: 100% !important; max-width: 100% !important; }
+    .main-card { padding: 32px 24px 32px !important; }
+    .header-pad { padding: 40px 24px 0 !important; }
+    .footer-pad { padding: 24px 24px 32px !important; }
+  }
+  @media only screen and (max-width: 480px) {
+    .main-card { padding: 24px 16px 24px !important; }
+    .header-pad { padding: 32px 16px 0 !important; }
+    .footer-pad { padding: 16px 16px 24px !important; }
+    .h1-title { font-size: 22px !important; }
+    .subtitle { font-size: 14px !important; }
+    .cta-btn { padding: 12px 24px !important; font-size: 14px !important; }
+    .disclaimer { font-size: 13px !important; }
+    .footer-logo { margin: 0 8px !important; }
+  }
+</style>
+</head>
+<body class="body-bg" style="margin:0;padding:0;background-color:#f1f5f9;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="body-bg" style="background-color:#f1f5f9;padding:0;">
+<tr><td align="center" style="padding:48px 16px;">
+
+<!--[if mso]><table role="presentation" align="center" border="0" cellspacing="0" cellpadding="0" width="600"><tr><td align="center" valign="top" width="600"><![endif]-->
+<table class="outer-table card-bg" role="presentation" border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;width:100%;box-shadow:0 10px 40px -10px rgba(0,0,0,0.08);border-radius:24px;background-color:#ffffff;overflow:hidden;">
+
+<!-- Unified Background Card -->
+<tr><td class="card-bg" bgcolor="#ffffff" style="background-color:#ffffff;padding:0;">
+
+  <!-- Header -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td class="header-pad" align="center" style="padding:48px 48px 0;">
+        <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/telencologogrey.png" alt="Telenco" width="120" style="display:block;width:120px;max-width:100%;height:auto;" />
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size:0;line-height:0;height:40px;" height="40">&nbsp;</td>
+    </tr>
+    <tr>
+      <td align="center" style="padding:0 48px;">
+        <h1 class="h1-title text-primary" style="color:#334155;font-size:26px;font-weight:700;margin:0 0 8px;line-height:1.2;letter-spacing:-0.5px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;">Welkom bij Telenco Sales Tool!</h1>
+        <p class="subtitle text-secondary" style="color:#64748b;font-size:16px;margin:0;font-weight:400;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;">{{ if .Data.inviter_name }}{{ .Data.inviter_name }}{{ else }}Een beheerder{{ end }} heeft je toegang gegeven tot het Telenco Sales Portaal. Klik hieronder om je account te activeren.</p>
+      </td>
+    </tr>
+  </table>
+
+  <!-- TOP WAVE RIBBON PNG -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td style="padding-top:24px;padding-bottom:12px;line-height:0;font-size:0;">
+        <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/mail-images/top-wave-ribbon.png" alt="" width="600" style="display:block;width:100%;max-width:100%;height:auto;border:0;" />
+      </td>
+    </tr>
+  </table>
+
+  <!-- Main content area -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td class="main-card" align="center" style="padding:16px 48px 0px;">
+      
+      <!-- CTA Button -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding-bottom:32px;">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .ConfirmationURL }}" style="height:48px;v-text-anchor:middle;width:280px;" arcsize="21%" stroke="f" fillcolor="#10b981">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">Account activeren</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <table role="presentation" border="0" cellspacing="0" cellpadding="0">
+              <tr>
+                <td align="center" bgcolor="#10b981" style="border-radius:10px;">
+                  <a href="{{ .ConfirmationURL }}" target="_blank" class="cta-btn" style="display:inline-block;padding:14px 32px;font-family:-apple-system,Arial,sans-serif;font-weight:600;font-size:15px;color:#ffffff;text-decoration:none;border-radius:10px;background-color:#10b981;border:1px solid #10b981;">
+                    Account activeren
+                  </a>
+                </td>
+              </tr>
+            </table>
+            <!--<![endif]-->
+          </td>
+        </tr>
+      </table>
+
+      <!-- Disclaimer tekst -->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td align="center" style="padding-bottom:24px;">
+            <p class="disclaimer text-secondary" style="color:#64748b;margin:0;font-family:-apple-system,Arial,sans-serif;font-size:14px;line-height:1.5;">
+              Heb je geen uitnodiging verwacht? Dan kun je deze mail veilig negeren.
+            </p>
+          </td>
+        </tr>
+      </table>
+
+    </td></tr>
+  </table>
+
+  <!-- BOTTOM WAVE RIBBON PNG -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+      <td style="line-height:0;font-size:0;padding-top:32px;">
+        <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/mail-images/bottom-wave-ribbon.png" alt="" width="600" style="display:block;width:100%;max-width:100%;height:auto;border:0;" />
+      </td>
+    </tr>
+  </table>
+
+  <!-- Footer -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr><td class="footer-pad" style="padding:32px 48px;">
+      <div style="border-top:1px solid rgba(148, 163, 184, 0.2);margin-bottom:24px;"></div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr><td align="center" style="padding-bottom:24px;">
+          <img class="footer-logo" src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/telenetlogo-grey.png" alt="Telenet" height="20" style="height:20px;margin:0 24px;vertical-align:middle;opacity:0.4;display:inline-block;" />
+          <img class="footer-logo" src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/eneco-grey.png" alt="Eneco" height="18" style="height:18px;margin:0 24px;vertical-align:middle;opacity:0.4;display:inline-block;" />
+          <img class="footer-logo" src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/elindus-grey.png" alt="Elindus" height="9" style="height:9px;margin:0 24px;vertical-align:middle;opacity:0.4;display:inline-block;" />
+        </td></tr>
+        <tr><td align="center" style="padding-bottom:16px;">
+          <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/tailormatelogo-grey.png" alt="Tailormate" height="16" style="height:16px;vertical-align:middle;opacity:0.35;display:inline-block;border:none;" />
+        </td></tr>
+        <tr><td align="center">
+          <p class="text-secondary" style="color:#94a3b8;font-size:11px;margin:0;font-family:-apple-system,Arial,sans-serif;">
+            © 2026 Telenco · Powered by <a href="https://tailormate.ai" target="_blank" class="text-secondary" style="color:#94a3b8;text-decoration:none;font-weight:600;">Tailormate</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+
+</td></tr>
+
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+
+</td></tr>
+</table>
+</body>
+</html>

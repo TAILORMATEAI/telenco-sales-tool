@@ -43,8 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!error && data) {
       setProfile(data as Profile);
-      // Update last_login
-      await supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', userId);
+      // Update last_login asynchronously so it doesn't block the loading phase
+      supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', userId);
     } else {
       // Auto-create profile for new users (pull name from auth metadata)
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -56,28 +56,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         first_name: meta.first_name || '',
         last_name: meta.last_name || ''
       };
-      await supabase.from('profiles').insert(newProfile);
-      setProfile(newProfile);
+      const { error: insertError } = await supabase.from('profiles').insert(newProfile);
+      if (insertError) {
+        console.error('Failed to create profile (possibly RLS issue):', insertError);
+      } else {
+        setProfile(newProfile);
+      }
     }
   };
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      const remembered = localStorage.getItem('telenco-remember');
-      if (s?.user && !remembered) {
-        // User did not check "remember me" — clear session
-        supabase.auth.signOut();
+    // Get initial session — this is the ONLY place that controls isLoading
+    supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+      try {
+        const remembered = localStorage.getItem('telenco-remember');
+        if (s?.user && !remembered) {
+          supabase.auth.signOut();
+          return;
+        }
+        setSession(s);
+        setUser(s?.user ?? null);
+        if (s?.user) {
+          await fetchProfile(s.user.id, s.user.email);
+        }
+      } catch (e) {
+        console.error('Session init error:', e);
+      } finally {
         setIsLoading(false);
-        return;
       }
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) fetchProfile(s.user.id, s.user.email);
-      setIsLoading(false);
     });
 
-    // Listen for auth changes
+    // Listen for auth changes — never touch isLoading here
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       setUser(s?.user ?? null);
@@ -86,7 +95,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setProfile(null);
       }
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();

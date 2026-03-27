@@ -53,12 +53,12 @@ export default function Login3DEffects() {
         <directionalLight position={[10, 10, 10]} intensity={2} color="#ffffff" />
         
         {/* Soft glowing cinematic dust particles matching Telenco brand colors */}
-        <Sparkles count={80} scale={15} size={2} speed={0.4} opacity={0.3} color="#E74B4D" />
+        <Sparkles count={80} scale={15} size={2} speed={0.4} opacity={0.3} color="#E5394C" />
         <Sparkles count={80} scale={15} size={2} speed={0.3} opacity={0.3} color="#91C848" />
         <Sparkles count={80} scale={15} size={2} speed={0.5} opacity={0.3} color="#FFC421" />
 
         {/* Floating abstract liquid orbs in the background */}
-        <EnergyBlob position={[-5, 2, -5]} color="#E74B4D" speed={1.5} distort={0.4} scale={1.2} />
+        <EnergyBlob position={[-5, 2, -5]} color="#E5394C" speed={1.5} distort={0.4} scale={1.2} />
         <EnergyBlob position={[6, -1, -8]} color="#91C848" speed={1} distort={0.3} scale={2} />
         <EnergyBlob position={[3, 3, -10]} color="#FFC421" speed={2} distort={0.5} scale={1.5} />
 

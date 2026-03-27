@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 ::-webkit-scrollbar {
@@ -7,7 +7,18 @@
 }
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility bg-eneco-gradient {
+  background-image: linear-gradient(to right, #E5394C, #E6404D, #E7484D, #E8504E, #E8574E, #E85D4E, #E9634E, #EA6A4F, #EA704F);
+}
+
+@utility text-eneco-gradient {
+  background-image: linear-gradient(to right, #E5394C, #E6404D, #E7484D, #E8504E, #E8574E, #E85D4E, #E9634E, #EA6A4F, #EA704F);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 html, body {

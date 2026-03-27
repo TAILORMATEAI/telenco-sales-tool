@@ -30,7 +30,7 @@ function WaveTubes() {
     <>
       <e.mesh theatreKey="Red Wave" position={[-2, -1, -5]}>
         <torusKnotGeometry args={[3, 0.4, 256, 32]} />
-        <MeshTransmissionMaterial {...materialProps} color="#E74B4D" />
+        <MeshTransmissionMaterial {...materialProps} color="#E5394C" />
       </e.mesh>
 
       <e.mesh theatreKey="Green Wave" position={[0, 0, -3]}>

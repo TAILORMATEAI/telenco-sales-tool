@@ -329,7 +329,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
             >
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#E74B4D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="url(#enecoGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                 </div>
                 <h3 className="font-black text-slate-500 text-base">Systeem Logboek wissen</h3>
               </div>
@@ -351,7 +351,7 @@ export default function LiveSyncTerminal({ onSyncComplete }: { onSyncComplete: (
                       setShowClearConfirm(false);
                     }
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#E74B4D] text-white font-bold text-sm hover:bg-[#c73a3c] transition-colors"
+                  className="px-4 py-2 rounded-xl bg-eneco-gradient text-white font-bold text-sm opacity-90 transition-opacity transition-colors"
                 >
                   Wis Alles
                 </button>
