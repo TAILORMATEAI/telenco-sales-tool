@@ -770,7 +770,7 @@ export default function App() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -15 }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="relative z-10 w-full max-w-5xl min-[2000px]:max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-[clamp(1rem,3vh,3rem)] pb-[clamp(2rem,6vh,6rem)]"
+          className="relative z-10 w-full max-w-5xl min-[2000px]:max-w-[70vw] min-[3000px]:max-w-[65vw] mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-[clamp(1rem,3vh,3rem)] pb-[clamp(2rem,6vh,6rem)]"
         >
           <div className="w-full relative flex items-center justify-center min-h-[clamp(300px,50vh,600px)]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
