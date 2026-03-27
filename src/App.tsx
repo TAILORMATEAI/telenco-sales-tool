@@ -932,7 +932,6 @@ export default function App() {
                                   <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
                                 </div>
                                 <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                  <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-400 hover:text-[#E74B4D] hover:underline flex items-center gap-1 mr-auto"><Info className="w-3 h-3" /> sales.eneco.be</a>
                                   <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
                                   <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
@@ -974,14 +973,18 @@ export default function App() {
 
                     {/* Totale besparing + Commissie — hidden when all outcomes are coach messages */}
                     {!outcomes.every(o => o.showCoachMessage) && (
-                    <div className="pt-4 flex flex-col sm:flex-row justify-between items-center gap-6 border-t border-slate-100">
-                      <div className="text-center sm:text-left">
+                    <div className="pt-4 flex justify-end items-center border-t border-slate-100">
+                      <div className="text-right">
                         <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? text.totalSaving : 'Totaal Eneco Besparing'}</span>
                         <span className={`text-4xl font-black ${(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings) > 0 ? '+' : ''}€{(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings).toFixed(2)}</span>
                       </div>
-
                     </div>
                     )}
+
+                    {/* Sales Eneco Button */}
+                    <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="w-full py-3 rounded-2xl font-bold text-sm bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-600 transition-all flex justify-center items-center gap-2 border border-slate-200">
+                      <Info className="w-4 h-4" /> Open sales.eneco.be in nieuw venster
+                    </a>
 
                     {/* Verstuur knop */}
                     <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
