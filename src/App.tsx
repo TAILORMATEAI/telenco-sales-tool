@@ -364,6 +364,7 @@ export default function App() {
 
     const elinEstimatedPrice = baseMarkt + effectiveElindusMargin;
     const elindusSavingsVal = currPrice - elinEstimatedPrice;
+    const elindusSavingsPercentage = currPrice > 0 ? (elindusSavingsVal / currPrice) * 100 : 0;
 
     // Fixed fee savings
     const currentFixedFee = type === 'ELEC' ? elecCurrentFixedFee : gasCurrentFixedFee;
@@ -384,6 +385,7 @@ export default function App() {
       enecoSavingsPercentage,
       enecoSavingsTotal: (enecoSavingsVal * cons) + (includeFixedFeeSavings ? enecoFixedFeeSaving : 0),
       elindusEsimatedPrice: elinEstimatedPrice,
+      elindusSavingsPercentage,
       elindusSavingsTotal: (elindusSavingsVal * cons) + (includeFixedFeeSavings ? elindusFixedFeeSaving : 0),
       showEneco,
       showElindus,
@@ -906,7 +908,7 @@ export default function App() {
                       </div>
                     )}
 
-                    {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
+                    {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, elindusSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
                       <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative">
                         <div className="absolute top-0 left-0 w-2 h-full bg-slate-300" />
                         <h4 className="font-bold text-slate-600 mb-4 pl-4 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
@@ -953,10 +955,10 @@ export default function App() {
                                 </div>
                                 <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
                                   <span>{formatPrice(elindusEsimatedPrice)}</span>
-                                  <a href="https://klant.elindus.be/s/marktinformatie" target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#E5394C] hover:underline flex items-center gap-0.5 bg-[#E5394C]/10 px-1.5 py-0.5 rounded"><Info className="w-3 h-3" /> {text.imbalance}</a>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-right flex items-center justify-end gap-2 mt-2">
                                   <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
                                   <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
                                 </div>
                                 {includeFixedFeeSavings && elindusFixedFeeSaving !== 0 && (
@@ -982,8 +984,14 @@ export default function App() {
                     )}
 
                     {/* Sales Eneco Button */}
-                    <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="w-full py-3 rounded-2xl font-bold text-sm bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-600 transition-all flex justify-center items-center gap-2 border border-slate-200">
-                      <Info className="w-4 h-4" /> Open sales.eneco.be in nieuw venster
+                    <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-4 rounded-2xl font-black text-lg bg-white text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border-2 border-slate-100 overflow-hidden">
+                      <div className="absolute inset-0 w-full h-full text-slate-500 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none flex items-end">
+                        <svg viewBox="0 0 1440 320" className="w-full h-auto min-w-[200%] md:min-w-[100%] absolute bottom-0 left-0" preserveAspectRatio="none">
+                          <path fill="currentColor" fillOpacity="1" d="M0,128L48,122.7C96,117,192,107,288,117.3C384,128,480,160,576,160C672,160,768,128,864,133.3C960,139,1056,181,1152,192C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                        </svg>
+                      </div>
+                      <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain z-10 transition-transform group-hover:scale-110" />
+                      <span className="z-10 group-hover:text-[#E74B4D] transition-colors">sales.eneco.be</span>
                     </a>
 
                     {/* Verstuur knop */}
