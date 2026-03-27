@@ -736,10 +736,10 @@ export default function App() {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
-      exit={{ opacity: 0 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut' }}
       className="min-h-screen bg-slate-50 text-slate-500 font-sans overflow-x-hidden relative flex flex-col"
     >
@@ -754,416 +754,416 @@ export default function App() {
       {/* Foreground grouped into zoom layout */}
       <div className="flex-1 flex flex-col w-full z-10" style={{ zoom: 0.8 }}>
 
-      <Header 
-        actionButton={
-          <button onClick={() => navigate('/')} className="p-2 rounded-full transition-colors bg-white border border-white/80 text-slate-400 hover:text-[#E5394C] shadow-sm" title={text.backToHome}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m15 18-6-6 6-6" /></svg>
-          </button>
-        }
-      />
+        <Header
+          actionButton={
+            <button onClick={() => navigate('/home')} className="p-2 rounded-full transition-colors bg-white border border-white/80 text-slate-400 hover:text-[#E5394C] shadow-sm" title={text.backToHome}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="m15 18-6-6 6-6" /></svg>
+            </button>
+          }
+        />
 
 
-      <AnimatePresence mode="wait">
-        <motion.main
-          key={lang}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -15 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="relative z-10 w-full max-w-5xl min-[2000px]:max-w-[70vw] min-[3000px]:max-w-[65vw] mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-[clamp(1rem,3vh,3rem)] pb-[clamp(2rem,6vh,6rem)]"
-        >
-          <div className="w-full relative flex items-center justify-center min-h-[clamp(300px,50vh,600px)]">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
+        <AnimatePresence mode="wait">
+          <motion.main
+            key={lang}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative z-10 w-full max-w-5xl min-[2000px]:max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-[clamp(1rem,3vh,3rem)] pb-[clamp(2rem,6vh,6rem)]"
+          >
+            <div className="w-full relative flex items-center justify-center min-h-[clamp(300px,50vh,600px)]">
+              <AnimatePresence initial={false} custom={direction} mode="wait">
 
-              {/* STEP 1: Customer Type + Energy Type (combined) */}
-              {currentStep === 1 && (
-                <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl space-y-4">
-                  {/* Customer Type */}
-                  <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
-                    {(['PARTICULIER', 'SOHO'] as const).map((type) => {
-                      const isSelected = customerType === type;
-                      const label = type === 'PARTICULIER' ? text.particulier : text.soho;
-                      return (
-                        <button key={type} onClick={() => { setCustomerType(type); setEnergyType(null); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-[clamp(1.5rem,4vh,2.5rem)] w-[clamp(1.5rem,4vh,2.5rem)]">
-                            {type === 'PARTICULIER' ? (
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                            ) : (
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
-                            )}
-                          </svg>
-                          <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Energy Type — appears after choosing customer type */}
-                  <AnimatePresence>
-                    {customerType && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}>
-                        <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
-                          {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
-                            const isSelected = energyType === type;
-                            const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
-                            const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
-                            return (
-                              <button key={type} onClick={() => { setEnergyType(type); nextStep(); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
-                                <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
-                                <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              )}
-
-              {/* STEP 2: Consumption */}
-              {currentStep === 2 && (
-                <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
-                    {getRequiredTypes().map(type => (
-                      <React.Fragment key={type}>{renderConsumptionInput(type)}</React.Fragment>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* STEP 3: Current Price */}
-              {currentStep === 3 && (
-                <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
-                    {getRequiredTypes().map(type => (
-                      <React.Fragment key={type}>{renderCurrentPriceInput(type)}</React.Fragment>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* LAST STEP: Vergelijking & Afronden */}
-              {currentStep === totalSteps && (
-                <motion.div key="stepFinal" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
-                  <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-[clamp(1rem,3vh,1.5rem)] relative overflow-hidden">
-                    
-                    {/* Inner Slide Buttons (Eneco / Elindus) */}
-                    {!outcomes.every(o => o.showCoachMessage) && (
-                      <>
-                        {/* Eneco slide btn */}
-                        <button onClick={() => setGlobalCalcOpen(globalCalcOpen === 'ENECO' ? null : 'ENECO')} className="hidden md:flex absolute top-[calc(50%+1rem)] -translate-y-1/2 left-0 h-16 w-8 bg-slate-50 border-y border-r border-slate-200 rounded-r-xl items-center justify-center z-40 transition-colors shadow-sm hover:bg-slate-100 text-slate-400 group cursor-pointer hover:w-9 px-1">
-                          <img src="./eneco-grey.png" alt="Eneco" className="h-4 object-contain opacity-60 group-hover:opacity-100 transition-opacity rotate-90 flex-shrink-0" />
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-300 absolute right-1"><path d="m9 18 6-6-6-6"/></svg>
-                        </button>
-                        
-                        {/* Elindus slide btn */}
-                        {customerType === 'SOHO' && (
-                          <button onClick={() => setGlobalCalcOpen(globalCalcOpen === 'ELINDUS' ? null : 'ELINDUS')} className="hidden md:flex absolute top-[calc(50%+1rem)] -translate-y-1/2 right-0 h-16 w-8 bg-slate-50 border-y border-l border-slate-200 rounded-l-xl items-center justify-center z-40 transition-colors shadow-sm hover:bg-slate-100 text-slate-400 group cursor-pointer hover:w-9 px-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-300 absolute left-1"><path d="m15 18-6-6 6-6"/></svg>
-                            <img src="./elindus-grey.png" alt="Elindus" className="h-4 object-contain opacity-60 group-hover:opacity-100 transition-opacity -rotate-90 flex-shrink-0" />
+                {/* STEP 1: Customer Type + Energy Type (combined) */}
+                {currentStep === 1 && (
+                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw] space-y-4">
+                    {/* Customer Type */}
+                    <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
+                      {(['PARTICULIER', 'SOHO'] as const).map((type) => {
+                        const isSelected = customerType === type;
+                        const label = type === 'PARTICULIER' ? text.particulier : text.soho;
+                        return (
+                          <button key={type} onClick={() => { setCustomerType(type); setEnergyType(null); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-[clamp(1.5rem,4vh,2.5rem)] w-[clamp(1.5rem,4vh,2.5rem)]">
+                              {type === 'PARTICULIER' ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                              ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+                              )}
+                            </svg>
+                            <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
                           </button>
-                        )}
-                      </>
-                    )}
-
-                    {/* Vaste Vergoeding sectie — alleen als er geen coach message is */}
-                    {!outcomes.every(o => o.showCoachMessage) && (
-                      <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-slate-500">{lang === 'NL' ? 'Vaste vergoeding?' : 'Frais fixes?'}</span>
-                          <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-12 h-7 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                            <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-5' : ''}`} />
-                          </button>
-                        </div>
-
-                        <AnimatePresence>
-                          {includeFixedFeeSavings && (
-                            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-                              <div className="space-y-3">
-                                {getRequiredTypes().map(etype => {
-                                  const isElec = etype === 'ELEC';
-                                  const currentFee = isElec ? elecCurrentFixedFee : gasCurrentFixedFee;
-                                  const setFee = isElec ? setElecCurrentFixedFee : setGasCurrentFixedFee;
-                                  const enecoFee = ENECO_FIXED_FEE[etype];
-                                  const elindusFee = ELINDUS_FIXED_FEE[etype];
-                                  const enecoSaving = currentFee - enecoFee;
-                                  const elindusSaving = currentFee - elindusFee;
-                                  return (
-                                    <div key={etype} className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-                                      <div className="flex items-center gap-2">
-                                        {isElec ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{isElec ? text.elec : text.gas}</span>
-                                      </div>
-                                      <div className="flex items-center gap-3">
-                                        <label className="text-xs text-slate-400 font-bold whitespace-nowrap">{lang === 'NL' ? 'Huidig:' : 'Actuel:'}</label>
-                                        <div className="relative flex-1">
-                                          <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold">€</span>
-                                          <input type="number" step="5" value={currentFee === 0 ? '' : currentFee} onChange={(e) => setFee(e.target.value === '' ? 0 : Number(e.target.value))} className="w-full pl-8 pr-14 py-2 text-sm font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#E5394C]/20 focus:border-[#E5394C] outline-none text-slate-600" />
-                                          <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 text-xs font-bold">/{lang === 'NL' ? 'jaar' : 'an'}</span>
-                                        </div>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2">
-                                        <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${enecoSaving > 0 ? 'bg-emerald-50 text-emerald-600' : enecoSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
-                                          <img src="./eneco-grey.png" alt="Eneco" className="h-3.5 object-contain opacity-60" />
-                                          €{enecoFee} → {enecoSaving > 0 ? `+€${enecoSaving}` : enecoSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(enecoSaving)}`}
-                                        </div>
-                                        {customerType === 'SOHO' && (
-                                          <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${elindusSaving > 0 ? 'bg-emerald-50 text-emerald-600' : elindusSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
-                                            <img src="./elindus-grey.png" alt="Elindus" className="h-3.5 object-contain opacity-60" />
-                                            €{elindusFee} → {elindusSaving > 0 ? `+€${elindusSaving}` : elindusSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(elindusSaving)}`}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
-
-                    {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, elindusSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
-                      <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative overflow-hidden">
-                        <h4 className="font-bold text-slate-600 mb-4 pl-0 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
-
-                        {showCoachMessage ? (
-                          <div className="pl-4 py-6 text-center">
-                            <div className="inline-flex items-center gap-3 bg-white text-[#E5394C] border border-[#E5394C]/20 px-6 py-4 rounded-2xl shadow-sm">
-                              <Info className="w-5 h-5 flex-shrink-0" />
-                              <span className="font-bold text-sm">{lang === 'NL' ? 'Berekening via Salesforce — contacteer coach' : 'Calcul via Salesforce — contactez le coach'}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 relative`}>
-                            {/* Eneco */}
-                            {showEneco && (
-                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
-                                <div className="flex justify-between items-center mb-2">
-                                  <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
-                                  <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
-                                </div>
-                                <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
-                                  <span>€{showInMWh ? enecoPrice.toFixed(2) : (enecoPrice / 1000).toFixed(4)}</span>
-                                  <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
-                                </div>
-                                <div className="mt-auto">
-                                  <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                    <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
-                                    <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
-                                  </div>
-                                  {includeFixedFeeSavings && (
-                                    <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${enecoFixedFeeSaving > 0 ? 'text-emerald-500' : enecoFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
-                                      VV: {enecoFixedFeeSaving > 0 ? '+' : ''}€{enecoFixedFeeSaving}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Elindus — alleen voor SOHO */}
-                            {showElindus && (
-                              <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
-                                <div className="flex justify-between items-center mb-2">
-                                  <img src="./elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
-                                  <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
-                                </div>
-                                <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
-                                  <span>€{showInMWh ? elindusEsimatedPrice.toFixed(2) : (elindusEsimatedPrice / 1000).toFixed(4)}</span>
-                                  <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
-                                </div>
-                                <div className="mt-auto">
-                                  <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                    <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
-                                    <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
-                                  </div>
-                                  {includeFixedFeeSavings && (
-                                    <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${elindusFixedFeeSaving > 0 ? 'text-emerald-500' : elindusFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
-                                      VV: {elindusFixedFeeSaving > 0 ? '+' : ''}€{elindusFixedFeeSaving}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-
-                    {/* Vergelijking Slider — Alleen voor SOHO */}
-                    {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
-                      <div className="pt-6 pb-2 border-t border-slate-100">
-                        <div className="bg-slate-100/50 p-1.5 rounded-2xl flex relative max-w-sm mx-auto shadow-inner border border-slate-200/60">
-                          <div 
-                            className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
-                            style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
-                          />
-                          <button 
-                            onClick={() => setComparisonView('ENECO')}
-                            className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ENECO' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
-                          >
-                            <img src="./eneco-grey.png" alt="Eneco" className={`h-5 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
-                            Eneco
-                          </button>
-                          <button 
-                            onClick={() => setComparisonView('ELINDUS')}
-                            className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ELINDUS' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
-                          >
-                            <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
-                            Elindus
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Totale besparing + Commissie — hidden when all outcomes are coach messages */}
-                    {!outcomes.every(o => o.showCoachMessage) && (
-                    <div className={`flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4 ${customerType !== 'SOHO' ? 'pt-4 border-t border-slate-100' : 'pt-2'}`}>
-                      <div className="text-center sm:text-left w-full sm:w-auto mb-2 sm:mb-0">
-                         {/* Display diff between Eneco and Elindus if SOHO */}
-                         {customerType === 'SOHO' && (
-                           <div className="text-xs font-bold text-slate-400 flex flex-col items-center sm:items-start gap-1.5 mt-2">
-                             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${totalEnecoSavings > totalElindusSavings ? (comparisonView === 'ENECO' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100') : (comparisonView === 'ELINDUS' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100')}`}>
-                               {comparisonView === 'ENECO' ? 'Eneco is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalEnecoSavings > totalElindusSavings ? 'goedkoper' : 'duurder') : 'Elindus is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalElindusSavings > totalEnecoSavings ? 'goedkoper' : 'duurder')}
-                             </span>
-                           </div>
-                         )}
-                      </div>
-                      <div className="text-center sm:text-right w-full sm:w-auto">
-                        <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `Totaal ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} Besparing` : 'Totaal Eneco Besparing'}</span>
-                        <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
-                      </div>
+                        );
+                      })}
                     </div>
-                    )}
 
-                    {/* Sales Eneco Button */}
-                    {(!outcomes.every(o => o.showCoachMessage) && (customerType === 'PARTICULIER' || comparisonView === 'ENECO')) && (
-                      <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-4 rounded-2xl font-black text-lg bg-white text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border-2 border-slate-100 overflow-hidden mt-6">
-                        <div className="absolute inset-0 w-full h-full text-slate-500 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none flex items-end">
-                          <svg viewBox="0 0 1440 320" className="w-full h-auto min-w-[200%] md:min-w-[100%] absolute bottom-0 left-0" preserveAspectRatio="none">
-                            <path fill="currentColor" fillOpacity="1" d="M0,128L48,122.7C96,117,192,107,288,117.3C384,128,480,160,576,160C672,160,768,128,864,133.3C960,139,1056,181,1152,192C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-                          </svg>
-                        </div>
-                        <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain z-10 transition-transform group-hover:scale-110" />
-                        <span className="z-10 group-hover:text-[#E74B4D] transition-colors">sales.eneco.be</span>
-                      </a>
-                    )}
-
-                    {/* Verstuur knop */}
-                    <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
-                      {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isSuccess ? <><CheckCircle2 className="w-5 h-5" /> Verzonden</> : <><Send className="w-5 h-5" /> {text.send}</>}
-                    </button>
-
-                    {/* GLOBAL CALCULATION OVERLAY */}
+                    {/* Energy Type — appears after choosing customer type */}
                     <AnimatePresence>
-                      {globalCalcOpen && (
-                        <motion.div
-                          initial={{ x: globalCalcOpen === 'ENECO' ? '100%' : '-100%', opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          exit={{ x: globalCalcOpen === 'ENECO' ? '100%' : '-100%', opacity: 0 }}
-                          transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
-                          className={`absolute top-0 bottom-0 z-50 bg-white/95 backdrop-blur-md shadow-md flex flex-col p-6 sm:p-8 ${customerType === 'SOHO' ? 'w-1/2' : 'w-full'} ${globalCalcOpen === 'ENECO' ? 'right-0 border-l border-slate-200' : 'left-0 border-r border-slate-200'}`}
-                        >
-                           <button onClick={() => setGlobalCalcOpen(null)} className="absolute top-4 right-4 text-slate-400 hover:text-[#E74B4D] transition-colors bg-white rounded-full p-1.5 shadow-sm border border-slate-200">
-                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                           </button>
+                      {customerType && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}>
+                          <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
+                            {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
+                              const isSelected = energyType === type;
+                              const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
+                              const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
+                              return (
+                                <button key={type} onClick={() => { setEnergyType(type); nextStep(); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                                  <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
+                                  <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
 
-                           <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-3">
-                             <img src={`./${globalCalcOpen.toLowerCase()}-grey.png`} alt={globalCalcOpen} className="h-6 object-contain" />
-                             <span className="opacity-30 font-medium">/</span> 
-                             Detail Berekening
-                           </h3>
+                {/* STEP 2: Consumption */}
+                {currentStep === 2 && (
+                  <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
+                    <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
+                      {getRequiredTypes().map(type => (
+                        <React.Fragment key={type}>{renderConsumptionInput(type)}</React.Fragment>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
-                           <div className="flex-1 overflow-y-auto pr-2 space-y-4">
-                             {outcomes.map(o => {
-                               if (globalCalcOpen === 'ENECO' && !o.showEneco) return null;
-                               if (globalCalcOpen === 'ELINDUS' && !o.showElindus) return null;
+                {/* STEP 3: Current Price */}
+                {currentStep === 3 && (
+                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
+                    <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
+                      {getRequiredTypes().map(type => (
+                        <React.Fragment key={type}>{renderCurrentPriceInput(type)}</React.Fragment>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
 
-                               const newPrice = globalCalcOpen === 'ENECO' ? (o.enecoPrice * o.cons) : (o.elindusEsimatedPrice * o.cons);
-                               const savings = globalCalcOpen === 'ENECO' ? o.enecoSavingsTotal : o.elindusSavingsTotal;
-                               const newFixedFee = globalCalcOpen === 'ENECO' ? o.enecoFixedFee : o.elindusFixedFee;
+                {/* LAST STEP: Vergelijking & Afronden */}
+                {currentStep === totalSteps && (
+                  <motion.div key="stepFinal" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
+                    <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-[clamp(1rem,3vh,1.5rem)] relative overflow-hidden">
 
-                               return (
-                                 <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                   <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2 flex items-center gap-2">
-                                     {o.type === 'ELEC' ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
-                                     {o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)
-                                   </h4>
-                                   <div className="space-y-2 text-sm">
+                      {/* Inner Slide Buttons (Eneco / Elindus) */}
+                      {!outcomes.every(o => o.showCoachMessage) && (
+                        <>
+                          {/* Eneco slide btn */}
+                          <button onClick={() => setGlobalCalcOpen(globalCalcOpen === 'ENECO' ? null : 'ENECO')} className="hidden md:flex absolute top-[calc(50%+1rem)] -translate-y-1/2 left-0 h-16 w-8 bg-slate-50 border-y border-r border-slate-200 rounded-r-xl items-center justify-center z-40 transition-colors shadow-sm hover:bg-slate-100 text-slate-400 group cursor-pointer hover:w-9 px-1">
+                            <img src="./eneco-grey.png" alt="Eneco" className="h-4 object-contain opacity-60 group-hover:opacity-100 transition-opacity rotate-90 flex-shrink-0" />
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-300 absolute right-1"><path d="m9 18 6-6-6-6" /></svg>
+                          </button>
+
+                          {/* Elindus slide btn */}
+                          {customerType === 'SOHO' && (
+                            <button onClick={() => setGlobalCalcOpen(globalCalcOpen === 'ELINDUS' ? null : 'ELINDUS')} className="hidden md:flex absolute top-[calc(50%+1rem)] -translate-y-1/2 right-0 h-16 w-8 bg-slate-50 border-y border-l border-slate-200 rounded-l-xl items-center justify-center z-40 transition-colors shadow-sm hover:bg-slate-100 text-slate-400 group cursor-pointer hover:w-9 px-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-300 absolute left-1"><path d="m15 18-6-6 6-6" /></svg>
+                              <img src="./elindus-grey.png" alt="Elindus" className="h-4 object-contain opacity-60 group-hover:opacity-100 transition-opacity -rotate-90 flex-shrink-0" />
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Vaste Vergoeding sectie — alleen als er geen coach message is */}
+                      {!outcomes.every(o => o.showCoachMessage) && (
+                        <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-4">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-slate-500">{lang === 'NL' ? 'Vaste vergoeding?' : 'Frais fixes?'}</span>
+                            <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-12 h-7 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-5' : ''}`} />
+                            </button>
+                          </div>
+
+                          <AnimatePresence>
+                            {includeFixedFeeSavings && (
+                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+                                <div className="space-y-3">
+                                  {getRequiredTypes().map(etype => {
+                                    const isElec = etype === 'ELEC';
+                                    const currentFee = isElec ? elecCurrentFixedFee : gasCurrentFixedFee;
+                                    const setFee = isElec ? setElecCurrentFixedFee : setGasCurrentFixedFee;
+                                    const enecoFee = ENECO_FIXED_FEE[etype];
+                                    const elindusFee = ELINDUS_FIXED_FEE[etype];
+                                    const enecoSaving = currentFee - enecoFee;
+                                    const elindusSaving = currentFee - elindusFee;
+                                    return (
+                                      <div key={etype} className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                          {isElec ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
+                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{isElec ? text.elec : text.gas}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <label className="text-xs text-slate-400 font-bold whitespace-nowrap">{lang === 'NL' ? 'Huidig:' : 'Actuel:'}</label>
+                                          <div className="relative flex-1">
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold">€</span>
+                                            <input type="number" step="5" value={currentFee === 0 ? '' : currentFee} onChange={(e) => setFee(e.target.value === '' ? 0 : Number(e.target.value))} className="w-full pl-8 pr-14 py-2 text-sm font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#E5394C]/20 focus:border-[#E5394C] outline-none text-slate-600" />
+                                            <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 text-xs font-bold">/{lang === 'NL' ? 'jaar' : 'an'}</span>
+                                          </div>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                          <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${enecoSaving > 0 ? 'bg-emerald-50 text-emerald-600' : enecoSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                            <img src="./eneco-grey.png" alt="Eneco" className="h-3.5 object-contain opacity-60" />
+                                            €{enecoFee} → {enecoSaving > 0 ? `+€${enecoSaving}` : enecoSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(enecoSaving)}`}
+                                          </div>
+                                          {customerType === 'SOHO' && (
+                                            <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${elindusSaving > 0 ? 'bg-emerald-50 text-emerald-600' : elindusSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                              <img src="./elindus-grey.png" alt="Elindus" className="h-3.5 object-contain opacity-60" />
+                                              €{elindusFee} → {elindusSaving > 0 ? `+€${elindusSaving}` : elindusSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(elindusSaving)}`}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+
+                      {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, elindusSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
+                        <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative overflow-hidden">
+                          <h4 className="font-bold text-slate-600 mb-4 pl-0 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
+
+                          {showCoachMessage ? (
+                            <div className="pl-4 py-6 text-center">
+                              <div className="inline-flex items-center gap-3 bg-white text-[#E5394C] border border-[#E5394C]/20 px-6 py-4 rounded-2xl shadow-sm">
+                                <Info className="w-5 h-5 flex-shrink-0" />
+                                <span className="font-bold text-sm">{lang === 'NL' ? 'Berekening via Salesforce — contacteer coach' : 'Calcul via Salesforce — contactez le coach'}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 pl-4 relative`}>
+                              {/* Eneco */}
+                              {showEneco && (
+                                <div className="pt-2 pb-4 px-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
+                                  <div className="flex justify-between items-center mb-0">
+                                    <img src="./eneco-grey.png" alt="Eneco" className="h-10 min-[2000px]:h-12 object-contain" />
+                                    <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
+                                  </div>
+                                  <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
+                                    <span>€{showInMWh ? enecoPrice.toFixed(2) : (enecoPrice / 1000).toFixed(4)}</span>
+                                    <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
+                                  </div>
+                                  <div className="mt-auto">
+                                    <div className="text-right flex items-center justify-end gap-2 mt-2">
+                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
+                                      <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
+                                    </div>
+                                    {includeFixedFeeSavings && (
+                                      <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${enecoFixedFeeSaving > 0 ? 'text-emerald-500' : enecoFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
+                                        VV: {enecoFixedFeeSaving > 0 ? '+' : ''}€{enecoFixedFeeSaving}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Elindus — alleen voor SOHO */}
+                              {showElindus && (
+                                <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <img src="./elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
+                                    <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
+                                  </div>
+                                  <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
+                                    <span>€{showInMWh ? elindusEsimatedPrice.toFixed(2) : (elindusEsimatedPrice / 1000).toFixed(4)}</span>
+                                    <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
+                                  </div>
+                                  <div className="mt-auto">
+                                    <div className="text-right flex items-center justify-end gap-2 mt-2">
+                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
+                                      <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
+                                    </div>
+                                    {includeFixedFeeSavings && (
+                                      <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${elindusFixedFeeSaving > 0 ? 'text-emerald-500' : elindusFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
+                                        VV: {elindusFixedFeeSaving > 0 ? '+' : ''}€{elindusFixedFeeSaving}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      {/* Vergelijking Slider — Alleen voor SOHO */}
+                      {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
+                        <div className="pt-6 pb-2 border-t border-slate-100">
+                          <div className="bg-slate-100/50 p-1.5 rounded-2xl flex relative max-w-sm mx-auto shadow-inner border border-slate-200/60">
+                            <div
+                              className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
+                              style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
+                            />
+                            <button
+                              onClick={() => setComparisonView('ENECO')}
+                              className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ENECO' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                              <img src="./eneco-grey.png" alt="Eneco" className={`h-5 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
+                              Eneco
+                            </button>
+                            <button
+                              onClick={() => setComparisonView('ELINDUS')}
+                              className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ELINDUS' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                            >
+                              <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
+                              Elindus
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Totale besparing + Commissie — hidden when all outcomes are coach messages */}
+                      {!outcomes.every(o => o.showCoachMessage) && (
+                        <div className={`flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4 ${customerType !== 'SOHO' ? 'pt-4 border-t border-slate-100' : 'pt-2'}`}>
+                          <div className="text-center sm:text-left w-full sm:w-auto mb-2 sm:mb-0">
+                            {/* Display diff between Eneco and Elindus if SOHO */}
+                            {customerType === 'SOHO' && (
+                              <div className="text-xs font-bold text-slate-400 flex flex-col items-center sm:items-start gap-1.5 mt-2">
+                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${totalEnecoSavings > totalElindusSavings ? (comparisonView === 'ENECO' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100') : (comparisonView === 'ELINDUS' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100')}`}>
+                                  {comparisonView === 'ENECO' ? 'Eneco is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalEnecoSavings > totalElindusSavings ? 'goedkoper' : 'duurder') : 'Elindus is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalElindusSavings > totalEnecoSavings ? 'goedkoper' : 'duurder')}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-center sm:text-right w-full sm:w-auto">
+                            <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `Totaal ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} Besparing` : 'Totaal Eneco Besparing'}</span>
+                            <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Sales Eneco Button */}
+                      {(!outcomes.every(o => o.showCoachMessage) && (customerType === 'PARTICULIER' || comparisonView === 'ENECO')) && (
+                        <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-4 rounded-2xl font-black text-lg bg-white text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border-2 border-slate-100 overflow-hidden mt-6">
+                          <div className="absolute inset-0 w-full h-full text-slate-500 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none flex items-end">
+                            <svg viewBox="0 0 1440 320" className="w-full h-auto min-w-[200%] md:min-w-[100%] absolute bottom-0 left-0" preserveAspectRatio="none">
+                              <path fill="currentColor" fillOpacity="1" d="M0,128L48,122.7C96,117,192,107,288,117.3C384,128,480,160,576,160C672,160,768,128,864,133.3C960,139,1056,181,1152,192C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                            </svg>
+                          </div>
+                          <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain z-10 transition-transform group-hover:scale-110" />
+                          <span className="z-10 group-hover:text-[#E74B4D] transition-colors">sales.eneco.be</span>
+                        </a>
+                      )}
+
+                      {/* Verstuur knop */}
+                      <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
+                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isSuccess ? <><CheckCircle2 className="w-5 h-5" /> Verzonden</> : <><Send className="w-5 h-5" /> {text.send}</>}
+                      </button>
+
+                      {/* GLOBAL CALCULATION OVERLAY */}
+                      <AnimatePresence>
+                        {globalCalcOpen && (
+                          <motion.div
+                            initial={{ x: globalCalcOpen === 'ENECO' ? '100%' : '-100%', opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            exit={{ x: globalCalcOpen === 'ENECO' ? '100%' : '-100%', opacity: 0 }}
+                            transition={{ type: 'spring', bounce: 0, duration: 0.5 }}
+                            className={`absolute top-0 bottom-0 z-50 bg-white/95 backdrop-blur-md shadow-md flex flex-col p-6 sm:p-8 ${customerType === 'SOHO' ? 'w-1/2' : 'w-full'} ${globalCalcOpen === 'ENECO' ? 'right-0 border-l border-slate-200' : 'left-0 border-r border-slate-200'}`}
+                          >
+                            <button onClick={() => setGlobalCalcOpen(null)} className="absolute top-4 right-4 text-slate-400 hover:text-[#E74B4D] transition-colors bg-white rounded-full p-1.5 shadow-sm border border-slate-200">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </button>
+
+                            <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-3">
+                              <img src={`./${globalCalcOpen.toLowerCase()}-grey.png`} alt={globalCalcOpen} className="h-6 object-contain" />
+                              <span className="opacity-30 font-medium">/</span>
+                              Detail Berekening
+                            </h3>
+
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                              {outcomes.map(o => {
+                                if (globalCalcOpen === 'ENECO' && !o.showEneco) return null;
+                                if (globalCalcOpen === 'ELINDUS' && !o.showElindus) return null;
+
+                                const newPrice = globalCalcOpen === 'ENECO' ? (o.enecoPrice * o.cons) : (o.elindusEsimatedPrice * o.cons);
+                                const savings = globalCalcOpen === 'ENECO' ? o.enecoSavingsTotal : o.elindusSavingsTotal;
+                                const newFixedFee = globalCalcOpen === 'ENECO' ? o.enecoFixedFee : o.elindusFixedFee;
+
+                                return (
+                                  <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                    <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2 flex items-center gap-2">
+                                      {o.type === 'ELEC' ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
+                                      {o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)
+                                    </h4>
+                                    <div className="space-y-2 text-sm">
                                       <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
-                                      <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c=>c.toUpperCase())} (Energie):</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newPrice.toFixed(2)}</span></div>
-                                      
+                                      <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} (Energie):</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newPrice.toFixed(2)}</span></div>
+
                                       {includeFixedFeeSavings && (
                                         <>
                                           <div className="flex justify-between mt-1"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
-                                          <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c=>c.toUpperCase())} VV:</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newFixedFee}</span></div>
+                                          <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} VV:</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newFixedFee}</span></div>
                                         </>
                                       )}
                                       <div className="flex justify-between pt-1 text-emerald-600 font-bold">
                                         <span>Besparing ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span>
                                         <span>€{savings.toFixed(2)}</span>
                                       </div>
-                                   </div>
-                                 </div>
-                               );
-                             })}
-                           </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
 
-                           <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
-                             <div className="flex flex-col gap-1 font-black">
-                               <span className="text-xs uppercase tracking-widest">Totaal Besparing:</span>
-                               <span className="text-2xl">€{(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings).toFixed(2)}</span>
-                             </div>
-                           </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              )}
-
-            </AnimatePresence>
-          </div>
-
-          {/* Navigation Controls */}
-          <div className="w-full relative flex items-center justify-center mt-8">
-            <AnimatePresence initial={false} custom={direction} mode="wait">
-              {currentStep === 1 ? (
-                <motion.div key="nav-1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="opacity-0 pointer-events-none h-0" />
-              ) : (
-                <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-50">
-                  <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
-                    <button onClick={prevStep} className="group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
-                    <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
-                    <div className="flex flex-col items-end relative">
-                      <AnimatePresence>
-                        {validationError && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full mb-4 right-0 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm border border-rose-100 whitespace-nowrap">{validationError}</motion.div>)}
+                            <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
+                              <div className="flex flex-col gap-1 font-black">
+                                <span className="text-xs uppercase tracking-widest">Totaal Besparing:</span>
+                                <span className="text-2xl">€{(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings).toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
                       </AnimatePresence>
-                      <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
                     </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  </motion.div>
+                )}
+
+              </AnimatePresence>
+            </div>
+
+            {/* Navigation Controls */}
+            <div className="w-full relative flex items-center justify-center mt-8">
+              <AnimatePresence initial={false} custom={direction} mode="wait">
+                {currentStep === 1 ? (
+                  <motion.div key="nav-1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="opacity-0 pointer-events-none h-0" />
+                ) : (
+                  <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw] mx-auto px-0 sm:px-6 z-50">
+                    <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
+                      <button onClick={prevStep} className="group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
+                      <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
+                      <div className="flex flex-col items-end relative">
+                        <AnimatePresence>
+                          {validationError && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full mb-4 right-0 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm border border-rose-100 whitespace-nowrap">{validationError}</motion.div>)}
+                        </AnimatePresence>
+                        <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.main>
+        </AnimatePresence>
+
+
+
+        {/* Copyright Footer */}
+        <div className="w-full mt-auto pb-[clamp(1rem,4vw,2rem)] sm:pb-8 pt-4 z-40 flex justify-center items-center pointer-events-none">
+          <div className="flex items-center gap-[clamp(0.25rem,1vw,0.375rem)] text-[clamp(8px,2.5vw,11px)] sm:text-xs font-bold text-slate-400/80">
+            © 2026 Telenco <span className="mx-[clamp(0.125rem,0.5vw,0.25rem)] opacity-40">·</span> Powered by
+            <a href="https://tailormate.ai" target="_blank" rel="noopener noreferrer" className="pointer-events-auto group flex items-center">
+              <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-[clamp(9px,2.75vw,11px)] sm:h-3 opacity-50 group-hover:opacity-100 ml-[clamp(0.125rem,0.5vw,0.25rem)] object-contain transition-all grayscale brightness-0 group-hover:grayscale-0 group-hover:brightness-100" />
+            </a>
           </div>
-        </motion.main>
-      </AnimatePresence>
-
-
-
-      {/* Copyright Footer */}
-      <div className="w-full mt-auto pb-[clamp(1rem,4vw,2rem)] sm:pb-8 pt-4 z-40 flex justify-center items-center pointer-events-none">
-        <div className="flex items-center gap-[clamp(0.25rem,1vw,0.375rem)] text-[clamp(8px,2.5vw,11px)] sm:text-xs font-bold text-slate-400/80">
-          © 2026 Telenco <span className="mx-[clamp(0.125rem,0.5vw,0.25rem)] opacity-40">·</span> Powered by
-          <a href="https://tailormate.ai" target="_blank" rel="noopener noreferrer" className="pointer-events-auto group flex items-center">
-            <img src="https://tailormate.ai/highresotailormatelogo.webp" alt="Tailormate" className="h-[clamp(9px,2.75vw,11px)] sm:h-3 opacity-50 group-hover:opacity-100 ml-[clamp(0.125rem,0.5vw,0.25rem)] object-contain transition-all grayscale brightness-0 group-hover:grayscale-0 group-hover:brightness-100" />
-          </a>
         </div>
-      </div>
       </div>{/* End zoom wrapper */}
     </motion.div>
   );

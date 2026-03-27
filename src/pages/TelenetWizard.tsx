@@ -922,7 +922,7 @@ export default function TelenetWizard() {
 
                 {/* STEP 1: Klantgegevens */}
                 {currentStep === 1 && (
-                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
                     <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 overflow-visible">
                       <StepHeader title={text.step1Title} />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1017,7 +1017,7 @@ export default function TelenetWizard() {
 
                 {/* STEP 2: Aansluiting */}
                 {currentStep === 2 && (
-                  <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
                     <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
                       <StepHeader title={text.step2Title} />
                       <div className="space-y-6">
@@ -1069,7 +1069,7 @@ export default function TelenetWizard() {
 
                 {/* STEP 3: Product & Aansluiting */}
                 {currentStep === 3 && (
-                  <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
                     <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
                       <StepHeader title={text.step3Title} />
                       <div className="space-y-6">
@@ -1181,7 +1181,7 @@ export default function TelenetWizard() {
 
                 {/* STEP 4: KLIK Details (only for KLIK products) */}
                 {currentStep === 4 && (
-                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
                     <div className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
                       <StepHeader title={text.step4Title} />
                       {(productChoice === 'KLIK_UPGRADE' || productChoice === 'KLIK_NEW') ? (
@@ -1226,7 +1226,7 @@ export default function TelenetWizard() {
 
                 {/* STEP 5: Mobile Numbers */}
                 {currentStep === 5 && (
-                  <motion.div key="step5" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step5" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
                     <div className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
                       <StepHeader title={text.step5Title} />
                       {productType === 'KLIK' ? (
@@ -1288,7 +1288,7 @@ export default function TelenetWizard() {
 
                 {/* STEP 6: Photos / Submit */}
                 {currentStep === 6 && (
-                  <motion.div key="step6" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step6" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
                     <div className="bg-white rounded-[2.5rem] p-8 sm:p-10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100">
                       <StepHeader title={text.step6Title} />
                       {(() => { const ec = catsapConfirmed === false ? catsapOverride : catsapStatus; return ec === 'CATSAP3'; })() ? (
@@ -1324,7 +1324,7 @@ export default function TelenetWizard() {
             {/* Navigation Controls */}
             <div className="w-full relative flex items-center justify-center mt-8">
               <AnimatePresence initial={false} custom={direction} mode="wait">
-                <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-10">
+                <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw] mx-auto px-0 sm:px-6 z-10">
                   <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
                     <button onClick={prevStep} className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all ${currentStep === 1 ? 'opacity-0 pointer-events-none' : 'text-slate-500 hover:bg-slate-100'}`}><ChevronLeft className="w-5 h-5" /><span className="hidden sm:inline">{text.back}</span></button>
                     <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-[#FFC421] w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
