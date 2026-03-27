@@ -883,12 +883,12 @@ export default function App() {
                                       </div>
                                       <div className="flex flex-wrap gap-2">
                                         <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${enecoSaving > 0 ? 'bg-emerald-50 text-emerald-600' : enecoSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
-                                          <img src="/eneco-grey.png" alt="Eneco" className="h-3.5 object-contain opacity-60" />
+                                          <img src="./eneco-grey.png" alt="Eneco" className="h-3.5 object-contain opacity-60" />
                                           €{enecoFee} → {enecoSaving > 0 ? `+€${enecoSaving}` : enecoSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(enecoSaving)}`}
                                         </div>
                                         {customerType === 'SOHO' && (
                                           <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${elindusSaving > 0 ? 'bg-emerald-50 text-emerald-600' : elindusSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
-                                            <img src="/elindus-grey.png" alt="Elindus" className="h-3.5 object-contain opacity-60" />
+                                            <img src="./elindus-grey.png" alt="Elindus" className="h-3.5 object-contain opacity-60" />
                                             €{elindusFee} → {elindusSaving > 0 ? `+€${elindusSaving}` : elindusSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(elindusSaving)}`}
                                           </div>
                                         )}
@@ -921,7 +921,7 @@ export default function App() {
                             {showEneco && (
                               <div className="p-4 rounded-xl border-2 border-slate-200 bg-white">
                                 <div className="flex justify-between items-center mb-2">
-                                  <img src="/eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
+                                  <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
                                   <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
                                 </div>
                                 <input type="number" step="0.01" value={showInMWh ? (enecoPrice === 0 ? '' : enecoPrice) : (enecoPrice === 0 ? '' : enecoPrice / 1000)} onChange={(e) => { const raw = e.target.value; const val = raw === '' ? 0 : Number(raw); type === 'ELEC' ? setElecEnecoOfferPriceMWh(showInMWh ? val : val * 1000) : setGasEnecoOfferPriceMWh(showInMWh ? val : val * 1000); }} className="w-full bg-slate-50 focus:bg-[#E5394C]/5 border border-slate-200 rounded-lg py-2 px-3 focus:ring-2 focus:ring-[#E5394C]/30 focus:border-[#E5394C] font-bold mb-2 text-sm outline-none" />
@@ -942,7 +942,7 @@ export default function App() {
                             {showElindus && (
                               <div className="p-4 rounded-xl border-2 border-slate-200 bg-white">
                                 <div className="flex justify-between items-center mb-2">
-                                  <img src="/elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
+                                  <img src="./elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
                                   <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
                                 </div>
                                 <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">

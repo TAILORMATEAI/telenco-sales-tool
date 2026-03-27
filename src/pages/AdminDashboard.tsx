@@ -558,7 +558,7 @@ export default function AdminDashboard() {
               {/* Eneco Tarieven */}
               <h3 className="text-lg font-black text-slate-500 mb-4">
                 <span className="inline-flex items-center gap-2">
-                  <img src="/eneco-grey.png" alt="Eneco" className="h-8 object-contain opacity-60" />
+                  <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain opacity-60" />
                   Tarieven
                 </span>
               </h3>
