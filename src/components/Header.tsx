@@ -103,7 +103,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
                 <span className="hidden sm:inline text-[clamp(13px,1.7vh,17px)] 2xl:text-[clamp(17px,0.8vw,19px)] font-bold text-slate-500 tracking-tight pl-2 pr-2 2xl:px-3">
                   {getDisplayName().split(' ')[0]}
                 </span>
-                <ChevronDownIcon className={`w-[clamp(0.875rem,1.5vh,1.25rem)] h-[clamp(0.875rem,1.5vh,1.25rem)] 2xl:w-[clamp(1.25rem,1vw,2rem)] 2xl:h-[clamp(1.25rem,1vw,2rem)] transition-transform duration-300 ml-1 sm:ml-0 shrink-0 ${isProfileMenuOpen ? (isTelenet ? 'rotate-180 text-[#FFC421]' : 'rotate-180 text-[#E5394C]') : `text-slate-400 ${isTelenet ? 'group-hover:text-[#FFC421]' : 'group-hover:text-[#E5394C]'}`}`} />
+                <ChevronDownIcon className={`w-[clamp(0.875rem,1.5vh,1.25rem)] h-[clamp(0.875rem,1.5vh,1.25rem)] 2xl:w-[clamp(1.25rem,1vw,2rem)] 2xl:h-[clamp(1.25rem,1vw,2rem)] transition-transform duration-300 ml-1 sm:ml-0 shrink-0 ${isProfileMenuOpen ? (isTelenet ? 'rotate-180 text-[#FFC421]' : 'rotate-180 text-[#E5394C]') : `text-slate-500 ${isTelenet ? 'group-hover:text-[#FFC421]' : 'group-hover:text-[#E5394C]'}`}`} />
               </button>
 
               <AnimatePresence>

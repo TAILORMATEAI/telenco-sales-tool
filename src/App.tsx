@@ -777,7 +777,7 @@ export default function App() {
 
                 {/* STEP 1: Customer Type + Energy Type (combined) */}
                 {currentStep === 1 && (
-                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw] space-y-4">
+                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl space-y-4">
                     {/* Customer Type */}
                     <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
                       {(['PARTICULIER', 'SOHO'] as const).map((type) => {
@@ -823,7 +823,7 @@ export default function App() {
 
                 {/* STEP 2: Consumption */}
                 {currentStep === 2 && (
-                  <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
+                  <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
                     <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
                       {getRequiredTypes().map(type => (
                         <React.Fragment key={type}>{renderConsumptionInput(type)}</React.Fragment>
@@ -834,7 +834,7 @@ export default function App() {
 
                 {/* STEP 3: Current Price */}
                 {currentStep === 3 && (
-                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
+                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
                     <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
                       {getRequiredTypes().map(type => (
                         <React.Fragment key={type}>{renderCurrentPriceInput(type)}</React.Fragment>
@@ -845,7 +845,7 @@ export default function App() {
 
                 {/* LAST STEP: Vergelijking & Afronden */}
                 {currentStep === totalSteps && (
-                  <motion.div key="stepFinal" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw]">
+                  <motion.div key="stepFinal" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
                     <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-[clamp(1rem,3vh,1.5rem)] relative overflow-hidden">
 
                       {/* Inner Slide Buttons (Eneco / Elindus) */}
@@ -940,53 +940,48 @@ export default function App() {
                             <div className={`grid ${showElindus ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4 pl-4 relative`}>
                               {/* Eneco */}
                               {showEneco && (
-                                <div className="pt-2 pb-4 px-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
-                                  <div className="flex justify-between items-center mb-0">
-                                    <img src="./eneco-grey.png" alt="Eneco" className="h-10 min-[2000px]:h-12 object-contain" />
+                                <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative">
+                                  <div className="flex justify-between items-center mb-2">
+                                    <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain" />
                                     <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
                                   </div>
                                   <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
                                     <span>€{showInMWh ? enecoPrice.toFixed(2) : (enecoPrice / 1000).toFixed(4)}</span>
                                     <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
                                   </div>
-                                  <div className="mt-auto">
-                                    <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
-                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
-                                      <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
-                                    </div>
-                                    {includeFixedFeeSavings && (
-                                      <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${enecoFixedFeeSaving > 0 ? 'text-emerald-500' : enecoFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
-                                        VV: {enecoFixedFeeSaving > 0 ? '+' : ''}€{enecoFixedFeeSaving}
-                                      </div>
-                                    )}
+                                  <div className="text-right flex items-center justify-end gap-2 mt-2">
+                                    <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
+                                    <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
                                   </div>
+                                  {includeFixedFeeSavings && enecoFixedFeeSaving !== 0 && (
+                                    <div className={`text-right text-[10px] font-bold mt-1 ${enecoFixedFeeSaving > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                                      VV: {enecoFixedFeeSaving > 0 ? '+' : ''}€{enecoFixedFeeSaving}
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
                               {/* Elindus — alleen voor SOHO */}
                               {showElindus && (
-                                <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
+                                <div className="p-4 rounded-xl border-2 border-slate-200 bg-white relative">
                                   <div className="flex justify-between items-center mb-2">
                                     <img src="./elindus-grey.png" alt="Elindus" className="h-8 object-contain" />
                                     <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{elindusFeeVal}</span>
                                   </div>
                                   <div className="w-full bg-white border border-[#E5394C]/20 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
-                                    <span>€{showInMWh ? elindusEsimatedPrice.toFixed(2) : (elindusEsimatedPrice / 1000).toFixed(4)}</span>
-                                    <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
+                                    <span>{formatPrice(elindusEsimatedPrice)}</span>
                                   </div>
-                                  <div className="mt-auto">
-                                    <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
-                                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
-                                      <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
+                                  <div className="text-right flex items-center justify-end gap-2 mt-2">
+                                    <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
+                                    <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
+                                  </div>
+                                  {includeFixedFeeSavings && elindusFixedFeeSaving !== 0 && (
+                                    <div className={`text-right text-[10px] font-bold mt-1 ${elindusFixedFeeSaving > 0 ? 'text-emerald-500' : 'text-rose-400'}`}>
+                                      VV: {elindusFixedFeeSaving > 0 ? '+' : ''}€{elindusFixedFeeSaving}
                                     </div>
-                                    {includeFixedFeeSavings && (
-                                      <div className={`text-right text-[10px] font-bold mt-1 h-[15px] ${elindusFixedFeeSaving > 0 ? 'text-emerald-500' : elindusFixedFeeSaving < 0 ? 'text-rose-400' : 'opacity-0 select-none'}`}>
-                                        VV: {elindusFixedFeeSaving > 0 ? '+' : ''}€{elindusFixedFeeSaving}
-                                      </div>
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -1135,7 +1130,7 @@ export default function App() {
                 {currentStep === 1 ? (
                   <motion.div key="nav-1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="opacity-0 pointer-events-none h-0" />
                 ) : (
-                  <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl min-[2000px]:max-w-[50vw] min-[3000px]:max-w-[40vw] mx-auto px-0 sm:px-6 z-50">
+                  <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-50">
                     <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
                       <button onClick={prevStep} className="group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
                       <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
