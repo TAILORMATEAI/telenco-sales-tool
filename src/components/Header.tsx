@@ -71,7 +71,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
       initial={{ opacity: 0, filter: 'blur(4px)', y: -5 }}
       animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
       transition={{ duration: 0.6, delay: 0.05, ease: 'easeOut' }}
-      className="w-full max-w-5xl min-[2000px]:max-w-7xl mx-auto px-[clamp(1rem,5vw,1.5rem)] sm:px-6 lg:px-8 py-[clamp(0.75rem,2.5vh,1.25rem)] flex justify-between items-center relative z-40 mt-[clamp(0.5rem,1.5vh,0.75rem)]"
+      className="w-full max-w-5xl min-[2000px]:max-w-[70vw] min-[3000px]:max-w-[65vw] mx-auto px-[clamp(1rem,5vw,1.5rem)] sm:px-6 lg:px-8 py-[clamp(0.75rem,2.5vh,1.25rem)] flex justify-between items-center relative z-40 mt-[clamp(0.5rem,1.5vh,0.75rem)]"
     >
       <div className="flex items-center">
         <img
@@ -97,10 +97,10 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
                   {profile?.avatar_id ? (
                     <img src={profile.avatar_id} alt={getDisplayName()} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-white text-[clamp(11px,1.5vh,15px)] 2xl:text-[clamp(15px,1vw,24px)] font-bold flex items-center leading-none mt-0.5">{getDisplayName().charAt(0).toUpperCase()}</span>
+                    <span className="text-white text-[clamp(11px,1.5vh,15px)] 2xl:text-[clamp(15px,0.8vw,19px)] font-bold flex items-center leading-none mt-0.5">{getDisplayName().charAt(0).toUpperCase()}</span>
                   )}
                 </div>
-                <span className="hidden sm:inline text-[clamp(13px,1.7vh,17px)] 2xl:text-[clamp(17px,1vw,24px)] font-bold text-slate-500 tracking-tight pl-2 pr-2 2xl:px-3">
+                <span className="hidden sm:inline text-[clamp(13px,1.7vh,17px)] 2xl:text-[clamp(17px,0.8vw,19px)] font-bold text-slate-500 tracking-tight pl-2 pr-2 2xl:px-3">
                   {getDisplayName().split(' ')[0]}
                 </span>
                 <ChevronDownIcon className={`w-[clamp(0.875rem,1.5vh,1.25rem)] h-[clamp(0.875rem,1.5vh,1.25rem)] 2xl:w-[clamp(1.25rem,1vw,2rem)] 2xl:h-[clamp(1.25rem,1vw,2rem)] transition-transform duration-300 ml-1 sm:ml-0 shrink-0 ${isProfileMenuOpen ? (isTelenet ? 'rotate-180 text-[#FFC421]' : 'rotate-180 text-[#E5394C]') : `text-slate-400 ${isTelenet ? 'group-hover:text-[#FFC421]' : 'group-hover:text-[#E5394C]'}`}`} />

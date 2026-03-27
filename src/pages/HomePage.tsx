@@ -244,11 +244,11 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-          className="w-full max-w-5xl min-[2000px]:max-w-7xl mx-auto px-[clamp(1rem,5vw,1.5rem)] sm:px-6 lg:px-8 py-[clamp(0.5rem,2vh,2rem)]"
+          className="w-full max-w-5xl min-[2000px]:max-w-[70vw] min-[3000px]:max-w-[65vw] mx-auto px-[clamp(1rem,5vw,1.5rem)] sm:px-6 lg:px-8 py-[clamp(0.5rem,2vh,2rem)]"
         >
 
           {/* Tool Cards */}
-          <div className="flex flex-col items-center md:grid md:grid-cols-3 gap-[clamp(1rem,4vw,1.5rem)] sm:gap-4 lg:gap-[clamp(1rem,2vh,2.5rem)] w-full">
+          <div className="flex flex-col items-center md:grid md:grid-cols-3 gap-[clamp(1rem,4vw,1.5rem)] sm:gap-4 lg:gap-[clamp(1rem,2vh,2.5rem)] min-[2000px]:gap-[clamp(2.5rem,2.5vw,4rem)] w-full">
             {tools.map((tool, i) => (
               <button
                 key={tool.id}
@@ -284,7 +284,7 @@ export default function HomePage() {
             ))}
           </div>
           {/* Dashboard Widgets */}
-          <div className="mt-[clamp(1rem,5vw,2rem)] sm:mt-5 lg:mt-[clamp(1.25rem,3vh,4rem)] grid grid-cols-1 md:grid-cols-3 gap-[clamp(1rem,4vw,1.5rem)] lg:gap-[clamp(1rem,2vh,3rem)]">
+          <div className="mt-[clamp(1rem,5vw,2rem)] sm:mt-5 lg:mt-[clamp(1.25rem,3vh,4rem)] grid grid-cols-1 md:grid-cols-3 gap-[clamp(1rem,4vw,1.5rem)] lg:gap-[clamp(1rem,2vh,3rem)] min-[2000px]:gap-[clamp(3rem,3vw,5rem)]">
             {/* Widget 1: Top Verkopers */}
             <div className="bg-white rounded-[clamp(1.5rem,6vw,2.5rem)] sm:rounded-[clamp(1.5rem,3vh,3rem)] shadow-sm border border-slate-100 flex flex-col relative overflow-hidden h-full">
               <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
