@@ -8,7 +8,7 @@ import './index.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {/* @ts-ignore - Vite handled environment variable */}
-    <BrowserRouter basename={import.meta.env.PROD ? "/telenco-sales-tool" : "/"}>
+    <BrowserRouter basename="/">
       <AuthProvider>
         <AppRouter />
       </AuthProvider>
