@@ -89,6 +89,9 @@ export default function App() {
   const [elecCurrentFixedFee, setElecCurrentFixedFee] = useState<number>(100);
   const [gasCurrentFixedFee, setGasCurrentFixedFee] = useState<number>(100);
   const [includeFixedFeeSavings, setIncludeFixedFeeSavings] = useState<boolean>(false);
+  const [comparisonView, setComparisonView] = useState<'ENECO' | 'ELINDUS'>('ENECO');
+  const [isEnecoSidebarOpen, setIsEnecoSidebarOpen] = useState(false);
+  const [isElindusSidebarOpen, setIsElindusSidebarOpen] = useState(false);
 
   // Fixed fee constants
   const ENECO_FIXED_FEE = customerType === 'PARTICULIER' ? { ELEC: 65, GAS: 65 } : { ELEC: 90, GAS: 90 };
@@ -973,26 +976,64 @@ export default function App() {
                       </div>
                     ))}
 
+                    {/* Vergelijking Slider — Alleen voor SOHO */}
+                    {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
+                      <div className="pt-6 pb-2 border-t border-slate-100">
+                        <div className="bg-slate-100/50 p-1.5 rounded-2xl flex relative max-w-sm mx-auto shadow-inner border border-slate-200/60">
+                          <div 
+                            className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
+                            style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
+                          />
+                          <button 
+                            onClick={() => setComparisonView('ENECO')}
+                            className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ENECO' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                          >
+                            <img src="./eneco-grey.png" alt="Eneco" className={`h-5 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
+                            Eneco
+                          </button>
+                          <button 
+                            onClick={() => setComparisonView('ELINDUS')}
+                            className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ELINDUS' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                          >
+                            <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
+                            Elindus
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Totale besparing + Commissie — hidden when all outcomes are coach messages */}
                     {!outcomes.every(o => o.showCoachMessage) && (
-                    <div className="pt-4 flex justify-end items-center border-t border-slate-100">
-                      <div className="text-right">
-                        <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? text.totalSaving : 'Totaal Eneco Besparing'}</span>
-                        <span className={`text-4xl font-black ${(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings) > 0 ? '+' : ''}€{(customerType === 'SOHO' ? totalElindusSavings : totalEnecoSavings).toFixed(2)}</span>
+                    <div className={`flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4 ${customerType !== 'SOHO' ? 'pt-4 border-t border-slate-100' : 'pt-2'}`}>
+                      <div className="text-center sm:text-left w-full sm:w-auto mb-2 sm:mb-0">
+                         {/* Display diff between Eneco and Elindus if SOHO */}
+                         {customerType === 'SOHO' && (
+                           <div className="text-xs font-bold text-slate-400 flex flex-col items-center sm:items-start gap-1.5 mt-2">
+                             <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${totalEnecoSavings > totalElindusSavings ? (comparisonView === 'ENECO' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100') : (comparisonView === 'ELINDUS' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100')}`}>
+                               {comparisonView === 'ENECO' ? 'Eneco is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalEnecoSavings > totalElindusSavings ? 'goedkoper' : 'duurder') : 'Elindus is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalElindusSavings > totalEnecoSavings ? 'goedkoper' : 'duurder')}
+                             </span>
+                           </div>
+                         )}
+                      </div>
+                      <div className="text-center sm:text-right w-full sm:w-auto">
+                        <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `Totaal ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} Besparing` : 'Totaal Eneco Besparing'}</span>
+                        <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
                       </div>
                     </div>
                     )}
 
                     {/* Sales Eneco Button */}
-                    <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-4 rounded-2xl font-black text-lg bg-white text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border-2 border-slate-100 overflow-hidden">
-                      <div className="absolute inset-0 w-full h-full text-slate-500 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none flex items-end">
-                        <svg viewBox="0 0 1440 320" className="w-full h-auto min-w-[200%] md:min-w-[100%] absolute bottom-0 left-0" preserveAspectRatio="none">
-                          <path fill="currentColor" fillOpacity="1" d="M0,128L48,122.7C96,117,192,107,288,117.3C384,128,480,160,576,160C672,160,768,128,864,133.3C960,139,1056,181,1152,192C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-                        </svg>
-                      </div>
-                      <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain z-10 transition-transform group-hover:scale-110" />
-                      <span className="z-10 group-hover:text-[#E74B4D] transition-colors">sales.eneco.be</span>
-                    </a>
+                    {(!outcomes.every(o => o.showCoachMessage) && (customerType === 'PARTICULIER' || comparisonView === 'ENECO')) && (
+                      <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-4 rounded-2xl font-black text-lg bg-white text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border-2 border-slate-100 overflow-hidden mt-6">
+                        <div className="absolute inset-0 w-full h-full text-slate-500 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none flex items-end">
+                          <svg viewBox="0 0 1440 320" className="w-full h-auto min-w-[200%] md:min-w-[100%] absolute bottom-0 left-0" preserveAspectRatio="none">
+                            <path fill="currentColor" fillOpacity="1" d="M0,128L48,122.7C96,117,192,107,288,117.3C384,128,480,160,576,160C672,160,768,128,864,133.3C960,139,1056,181,1152,192C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+                          </svg>
+                        </div>
+                        <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain z-10 transition-transform group-hover:scale-110" />
+                        <span className="z-10 group-hover:text-[#E74B4D] transition-colors">sales.eneco.be</span>
+                      </a>
+                    )}
 
                     {/* Verstuur knop */}
                     <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
@@ -1041,6 +1082,100 @@ export default function App() {
         </div>
       </div>
       </div>{/* End zoom wrapper */}
+
+      {/* Sidebars for Calculations (Desktop Only) */}
+      {currentStep === totalSteps && (
+        <>
+          {/* Left Sidebar (Eneco) */}
+          <div className={`fixed left-0 top-0 h-full max-w-sm w-full bg-white shadow-[30px_0_60px_-15px_rgba(0,0,0,0.1)] border-r border-slate-200 z-[100] transition-transform duration-500 ease-out hidden md:flex flex-col ${isEnecoSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            {/* Toggle Button */}
+            <button 
+              onClick={() => setIsEnecoSidebarOpen(!isEnecoSidebarOpen)}
+              className="absolute left-full top-1/2 -translate-y-1/2 bg-white border border-l-0 border-slate-200 shadow-sm py-4 px-2 rounded-r-xl flex items-center justify-center text-slate-400 hover:text-[#E74B4D] transition-colors"
+            >
+              <img src="./eneco-grey.png" alt="Eneco" className={`h-5 object-contain transition-transform duration-300 opacity-60 ${isEnecoSidebarOpen ? 'rotate-[-90deg]' : 'rotate-90'}`} />
+            </button>
+            <div className="p-6 h-full overflow-y-auto w-full">
+              <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-3">
+                <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain" />
+                Berekening
+              </h3>
+              <div className="space-y-6">
+                {outcomes.map(o => o.showEneco && (
+                  <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2">{o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">Eneco (Energie):</span><span className="font-bold">€{(o.enecoPrice * o.cons).toFixed(2)}</span></div>
+                      {includeFixedFeeSavings && (
+                        <>
+                          <div className="flex justify-between text-xs mt-1 pt-1 border-t border-slate-200"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
+                          <div className="flex justify-between text-xs"><span className="text-slate-400">Eneco VV:</span><span className="font-bold">€{o.enecoFixedFee}</span></div>
+                        </>
+                      )}
+                      <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-600 font-bold">
+                        <span>Besparing ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span><span>€{o.enecoSavingsTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
+                  <div className="flex justify-between items-center font-black">
+                    <span>Totaal Eneco:</span>
+                    <span className="text-xl">€{totalEnecoSavings.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Sidebar (Elindus) */}
+          {customerType === 'SOHO' && (
+            <div className={`fixed right-0 top-0 h-full max-w-sm w-full bg-white shadow-[-30px_0_60px_-15px_rgba(0,0,0,0.1)] border-l border-slate-200 z-[100] transition-transform duration-500 ease-out hidden md:flex flex-col ${isElindusSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+              {/* Toggle Button */}
+              <button 
+                onClick={() => setIsElindusSidebarOpen(!isElindusSidebarOpen)}
+                className="absolute right-full top-1/2 -translate-y-1/2 bg-white border border-r-0 border-slate-200 shadow-sm py-4 px-2 rounded-l-xl flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-transform duration-300 opacity-60 ${isElindusSidebarOpen ? 'rotate-90' : '-rotate-90'}`} />
+              </button>
+              <div className="p-6 h-full overflow-y-auto w-full">
+                <h3 className="font-black text-xl text-slate-700 mb-6 flex items-center gap-3">
+                  <img src="./elindus-grey.png" alt="Elindus" className="h-6 object-contain" />
+                  Berekening
+                </h3>
+                <div className="space-y-6">
+                  {outcomes.map(o => o.showElindus && (
+                    <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                      <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2">{o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-400">Elindus (Energie):</span><span className="font-bold">€{(o.elindusEsimatedPrice * o.cons).toFixed(2)}</span></div>
+                        {includeFixedFeeSavings && (
+                          <>
+                            <div className="flex justify-between text-xs mt-1 pt-1 border-t border-slate-200"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
+                            <div className="flex justify-between text-xs"><span className="text-slate-400">Elindus VV:</span><span className="font-bold">€{o.elindusFixedFee}</span></div>
+                          </>
+                        )}
+                        <div className="flex justify-between pt-2 border-t border-slate-200 text-emerald-600 font-bold">
+                          <span>Besparing ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span><span>€{o.elindusSavingsTotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
+                    <div className="flex justify-between items-center font-black">
+                      <span>Totaal Elindus:</span>
+                      <span className="text-xl">€{totalElindusSavings.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
     </motion.div>
   );
 }
