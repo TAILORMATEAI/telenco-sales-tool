@@ -252,8 +252,8 @@ export default function AdminDashboard() {
     {
       group: 'Residentieel (Particulier)',
       fields: [
-        { key: 'enecoResElecVast', label: 'Elec Vast', icon: 'elec' },
-        { key: 'enecoResElecVar', label: 'Elec Variabel', icon: 'elec' },
+        { key: 'enecoResElecVast', label: 'Elek Vast', icon: 'elec' },
+        { key: 'enecoResElecVar', label: 'Elek Variabel', icon: 'elec' },
         { key: 'enecoResGasVast', label: 'Gas Vast', icon: 'gas' },
         { key: 'enecoResGasVar', label: 'Gas Variabel', icon: 'gas' },
       ]
@@ -261,8 +261,8 @@ export default function AdminDashboard() {
     {
       group: 'SOHO',
       fields: [
-        { key: 'enecoSohoElecVast', label: 'Elec Vast', icon: 'elec' },
-        { key: 'enecoSohoElecVar', label: 'Elec Variabel', icon: 'elec' },
+        { key: 'enecoSohoElecVast', label: 'Elek Vast', icon: 'elec' },
+        { key: 'enecoSohoElecVar', label: 'Elek Variabel', icon: 'elec' },
         { key: 'enecoSohoGasVast', label: 'Gas Vast', icon: 'gas' },
         { key: 'enecoSohoGasVar', label: 'Gas Variabel', icon: 'gas' },
       ]
@@ -586,7 +586,7 @@ export default function AdminDashboard() {
                           }}
                           className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
                         />
-                        <p className="text-[10px] text-slate-300 mt-2 text-right">cent/kWh</p>
+                        <p className="text-[10px] text-slate-300 mt-2 text-right">€cent/kWh</p>
                       </div>
                     ))}
                   </div>

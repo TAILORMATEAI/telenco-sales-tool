@@ -694,17 +694,20 @@ export default function App() {
 
     return (
       <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-8 flex-1">
-        <div className="flex justify-between items-center mb-2 border-b border-slate-100 pb-[clamp(0.5rem,2vh,1rem)]">
+        <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
             <Icon className="w-6 h-6 text-eneco-gradient" />
-            <div>
-              <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{label}</label>
-              <p className="text-[10px] text-slate-300 mt-0.5">{lang === 'NL' ? 'Huidige prijs van de klant' : 'Prix actuel du client'}</p>
-            </div>
+            <h3 className="text-xl font-bold text-slate-600">{label}</h3>
           </div>
           <button onClick={() => setShowInMWh(!showInMWh)} className="text-xs font-bold text-eneco-gradient bg-eneco-gradient/5 px-4 py-2 rounded-full border border-[#E5394C]/10">
             {text.unitToggle} {showInMWh ? 'kWh' : 'MWh'}
           </button>
+        </div>
+
+        <div>
+          <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">
+            {lang === 'NL' ? 'Huidige prijs van de klant' : 'Prix actuel du client'}
+          </label>
         </div>
 
         <div className="relative group">
@@ -849,7 +852,7 @@ export default function App() {
                     {!outcomes.every(o => o.showCoachMessage) && (
                       <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-4">
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-bold text-slate-500">{lang === 'NL' ? 'Vaste vergoeding meetellen?' : 'Inclure frais fixes?'}</span>
+                          <span className="text-sm font-bold text-slate-500">{lang === 'NL' ? 'Vaste vergoeding?' : 'Frais fixes?'}</span>
                           <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-12 h-7 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
                             <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-5' : ''}`} />
                           </button>
@@ -929,6 +932,7 @@ export default function App() {
                                   <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
                                 </div>
                                 <div className="text-right flex items-center justify-end gap-2 mt-2">
+                                  <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-400 hover:text-[#E74B4D] hover:underline flex items-center gap-1 mr-auto"><Info className="w-3 h-3" /> sales.eneco.be</a>
                                   <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
                                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
                                   <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
