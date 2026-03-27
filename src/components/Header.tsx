@@ -77,7 +77,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
         <img
           src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png"
           alt="Telenco Logo"
-          className={`h-[clamp(1.25rem,6vw,2.25rem)] object-contain transition-all cursor-pointer ${isHome ? 'opacity-40 hover:opacity-75' : 'opacity-90 hover:opacity-100'}`}
+          className={`h-[clamp(1.25rem,6vw,2.25rem)] 2xl:h-[clamp(2.25rem,1.5vw,4rem)] object-contain transition-all cursor-pointer ${isHome ? 'opacity-40 hover:opacity-75' : 'opacity-90 hover:opacity-100'}`}
           style={isHome ? { filter: 'grayscale(1) brightness(0)' } : { filter: 'brightness(0) invert(1)' }}
           onClick={() => navigate('/')}
         />
@@ -90,20 +90,20 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
             <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className={`group flex items-center gap-1 p-[4px] pr-4 sm:pr-5 bg-white ${isHome ? 'border border-slate-200 shadow-sm hover:bg-slate-50' : 'border border-white/80'} rounded-full hover:shadow-md cursor-pointer transition-all`}
+                className={`group flex items-center gap-1 2xl:gap-3 p-[4px] 2xl:p-1.5 pr-4 sm:pr-5 2xl:pr-7 bg-white ${isHome ? 'border border-slate-200 shadow-sm hover:bg-slate-50' : 'border border-white/80'} rounded-full hover:shadow-md cursor-pointer transition-all`}
               >
                 {/* Avatar with padding around it */}
-                <div className={`w-[clamp(1.75rem,7vw,2.5rem)] h-[clamp(1.75rem,7vw,2.5rem)] rounded-[100px] overflow-hidden shrink-0 ${themeBgClass} flex items-center justify-center`}>
+                <div className={`w-[clamp(1.75rem,7vw,2.5rem)] h-[clamp(1.75rem,7vw,2.5rem)] 2xl:w-[clamp(2.5rem,1.5vw,4rem)] 2xl:h-[clamp(2.5rem,1.5vw,4rem)] rounded-[100px] 2xl:rounded-full overflow-hidden shrink-0 ${themeBgClass} flex items-center justify-center`} >
                   {profile?.avatar_id ? (
                     <img src={profile.avatar_id} alt={getDisplayName()} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-white text-[clamp(11px,1.5vh,15px)] font-bold">{getDisplayName().charAt(0).toUpperCase()}</span>
+                    <span className="text-white text-[clamp(11px,1.5vh,15px)] 2xl:text-[clamp(15px,1vw,24px)] font-bold flex items-center leading-none mt-0.5">{getDisplayName().charAt(0).toUpperCase()}</span>
                   )}
                 </div>
-                <span className="hidden sm:inline text-[clamp(13px,1.7vh,17px)] font-bold text-slate-500 tracking-tight pl-2 pr-2">
+                <span className="hidden sm:inline text-[clamp(13px,1.7vh,17px)] 2xl:text-[clamp(17px,1vw,24px)] font-bold text-slate-500 tracking-tight pl-2 pr-2 2xl:px-3">
                   {getDisplayName().split(' ')[0]}
                 </span>
-                <ChevronDownIcon className={`w-[clamp(0.875rem,1.5vh,1.25rem)] h-[clamp(0.875rem,1.5vh,1.25rem)] transition-transform duration-300 ml-1 sm:ml-0 ${isProfileMenuOpen ? (isTelenet ? 'rotate-180 text-[#FFC421]' : 'rotate-180 text-[#E5394C]') : `text-slate-400 ${isTelenet ? 'group-hover:text-[#FFC421]' : 'group-hover:text-[#E5394C]'}`}`} />
+                <ChevronDownIcon className={`w-[clamp(0.875rem,1.5vh,1.25rem)] h-[clamp(0.875rem,1.5vh,1.25rem)] 2xl:w-[clamp(1.25rem,1vw,2rem)] 2xl:h-[clamp(1.25rem,1vw,2rem)] transition-transform duration-300 ml-1 sm:ml-0 shrink-0 ${isProfileMenuOpen ? (isTelenet ? 'rotate-180 text-[#FFC421]' : 'rotate-180 text-[#E5394C]') : `text-slate-400 ${isTelenet ? 'group-hover:text-[#FFC421]' : 'group-hover:text-[#E5394C]'}`}`} />
               </button>
 
               <AnimatePresence>
