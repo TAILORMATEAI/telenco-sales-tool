@@ -681,14 +681,12 @@ export default function AdminDashboard() {
                         <p className="text-sm text-slate-400">
                           Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
                           {marketData.updatedBy && (
-                            <span className="inline-flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-200">
+                            <span className="inline-flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
                               door: 
                               {marketData.updatedByAvatar ? (
-                                <img src={marketData.updatedByAvatar} alt={marketData.updatedBy} className="w-4 h-4 rounded-full object-cover inline-block" />
-                              ) : (
-                                <span className="text-slate-500 font-bold ml-1">{marketData.updatedBy}</span>
-                              )}
-                              {marketData.updatedByAvatar && <span className="text-slate-500 font-bold">{marketData.updatedBy}</span>}
+                                <img src={marketData.updatedByAvatar} alt={marketData.updatedBy} className="w-6 h-6 rounded-full object-cover inline-block ring-2 ring-slate-200 shadow-sm" />
+                              ) : null}
+                              <span className="text-slate-500 font-bold">{marketData.updatedBy}</span>
                             </span>
                           )}
                         </p>
@@ -964,14 +962,12 @@ export default function AdminDashboard() {
                         <p className="text-sm text-slate-400">
                           Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
                           {marketData.updatedBy && (
-                            <span className="inline-flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-200">
+                            <span className="inline-flex items-center gap-2 ml-2 pl-2 border-l border-slate-200">
                               door: 
                               {marketData.updatedByAvatar ? (
-                                <img src={marketData.updatedByAvatar} alt={marketData.updatedBy} className="w-4 h-4 rounded-full object-cover inline-block" />
-                              ) : (
-                                <span className="text-slate-500 font-bold ml-1">{marketData.updatedBy}</span>
-                              )}
-                              {marketData.updatedByAvatar && <span className="text-slate-500 font-bold">{marketData.updatedBy}</span>}
+                                <img src={marketData.updatedByAvatar} alt={marketData.updatedBy} className="w-6 h-6 rounded-full object-cover inline-block ring-2 ring-slate-200 shadow-sm" />
+                              ) : null}
+                              <span className="text-slate-500 font-bold">{marketData.updatedBy}</span>
                             </span>
                           )}
                         </p>

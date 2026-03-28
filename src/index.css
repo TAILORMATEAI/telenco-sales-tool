@@ -155,12 +155,12 @@ input[type=range]::-moz-range-track {
 .pac-item-query {
   font-weight: 900 !important;
   font-size: 0.875rem !important;
-  color: #FFC421 !important;
+  color: #E5394C !important;
 }
 
 .pac-matched {
   font-weight: 900 !important;
-  color: #FFC421 !important;
+  color: #E5394C !important;
 }
 
 .pac-icon {
@@ -175,4 +175,30 @@ input[type=range]::-moz-range-track {
   border-radius: 0 0 1.5rem 1.5rem !important;
   padding: 8px !important;
   margin-top: 4px !important;
+}
+
+/* Override Chrome's yellow autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #f8fafc inset !important;
+  box-shadow: 0 0 0 30px #f8fafc inset !important;
+  -webkit-text-fill-color: #475569 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Smooth expand/collapse using CSS grid trick */
+.expand-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.35s ease;
+}
+.expand-wrapper.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.expand-wrapper > .expand-inner {
+  overflow: hidden;
 }

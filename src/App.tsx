@@ -167,6 +167,7 @@ export default function App() {
   const [showAdminSettings, setShowAdminSettings] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [dossierCode, setDossierCode] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Market Data
@@ -690,6 +691,7 @@ export default function App() {
       // Must have answered all sub-questions
       if (req.includes('ELEC')) {
         if (elecKnowsConsumption === null) return false;
+        if (elecKnowsConsumption === true && elecMeterType === null) return false;
         if (elecKnowsConsumption === true && elecConsumptionMWh <= 0) return false;
         if (elecKnowsConsumption === true && elecConsumptionMWh < 25 && elecTariff === null) return false;
         if (elecKnowsConsumption === false && elecIsOver30MWh === null) return false;
@@ -708,7 +710,8 @@ export default function App() {
       return true; // Just viewing
     }
     if (currentStep === 5) {
-      if (!customerData.companyName || !customerData.firstName || !customerData.lastName || !customerData.birthDate || !customerData.email) return false;
+      if (!customerData.firstName || !customerData.lastName || !customerData.birthDate || !customerData.email) return false;
+      if (customerType === 'SOHO' && !customerData.companyName) return false;
       if (!customerData.billingEmailSame && !customerData.billingEmail) return false;
       if (!connectionAddress.street || !connectionAddress.houseNumber || !connectionAddress.postalCode || !connectionAddress.city) return false;
       if (!billingAddressSame && (!billingAddress.street || !billingAddress.houseNumber || !billingAddress.postalCode || !billingAddress.city)) return false;
@@ -717,35 +720,8 @@ export default function App() {
   };
 
 
-  const validateStep = () => {
-    const req = getRequiredTypes();
-    if (currentStep === 2) {
-      if (req.includes('ELEC')) {
-        if (elecKnowsConsumption === null) { setValidationError(lang === 'NL' ? 'Beantwoord eerst alle vragen voor Elektriciteit.' : 'Répondez d\'abord à toutes les questions.'); return false; }
-        if (elecKnowsConsumption === true && elecConsumptionMWh <= 0) { setValidationError(lang === 'NL' ? 'Vul een geldig Elektriciteitsverbruik in (> 0).' : 'Veuillez entrer une conso Elec valide (> 0).'); return false; }
-        if (elecKnowsConsumption === true && elecMeterType === null) { setValidationError(lang === 'NL' ? 'Selecteer het type meter.' : 'Sélectionnez le type de compteur.'); return false; }
-        if (elecKnowsConsumption === true && elecConsumptionMWh < 25 && elecTariff === null) { setValidationError(lang === 'NL' ? 'Selecteer een tarief type voor Elektriciteit.' : 'Sélectionnez un type de tarif.'); return false; }
-        if (elecKnowsConsumption === false && elecIsOver30MWh === null) { setValidationError(lang === 'NL' ? 'Beantwoord de verbruiksvraag voor Elektriciteit.' : 'Répondez à la question de consommation.'); return false; }
-      }
-      if (req.includes('GAS')) {
-        if (gasKnowsConsumption === null) { setValidationError(lang === 'NL' ? 'Beantwoord eerst alle vragen voor Aardgas.' : 'Répondez d\'abord à toutes les questions.'); return false; }
-        if (gasKnowsConsumption === true && gasConsumptionMWh <= 0) { setValidationError(lang === 'NL' ? 'Vul een geldig aardgasverbruik in (> 0).' : 'Veuillez entrer une conso Gaz valide (> 0).'); return false; }
-        if (gasKnowsConsumption === true && gasConsumptionMWh < 25 && gasTariff === null) { setValidationError(lang === 'NL' ? 'Selecteer een tarief type voor Aardgas.' : 'Sélectionnez un type de tarif.'); return false; }
-        if (gasKnowsConsumption === false && gasIsOver30MWh === null) { setValidationError(lang === 'NL' ? 'Beantwoord de verbruiksvraag voor Aardgas.' : 'Répondez à la question de consommation.'); return false; }
-      }
-    }
-    
-    if (currentStep === 4) {
-      return true; // Just viewing
-    }
-    if (currentStep === 5) {
-      if (!customerData.companyName || !customerData.firstName || !customerData.lastName || !customerData.birthDate || !customerData.email) return false;
-      if (!customerData.billingEmailSame && !customerData.billingEmail) return false;
-      if (!connectionAddress.street || !connectionAddress.houseNumber || !connectionAddress.postalCode || !connectionAddress.city) return false;
-      if (!billingAddressSame && (!billingAddress.street || !billingAddress.houseNumber || !billingAddress.postalCode || !billingAddress.city)) return false;
-    }
-    return true;
-  };
+  // validateStep is now just isStepValid — no popups
+  const validateStep = () => isStepValid();
 
 
   const [isTranslating, setIsTranslating] = useState(false);
@@ -782,10 +758,18 @@ export default function App() {
   };
 
   
+  const generateDossierCode = () => {
+    const prefix = energyType === 'ELEC' ? 'EL' : energyType === 'GAS' ? 'GA' : 'EB';
+    const date = new Date();
+    const dateStr = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`;
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${prefix}-${dateStr}-${rand}`;
+  };
+
   const handleSaveOrder = async () => {
     setIsSubmitting(true);
+    const code = generateDossierCode();
     try {
-      // 1. Log to sales_logs / activity_logs
       await supabase.from('sales_logs').insert({
         commission_code: commissionCode,
         energy_type: energyType,
@@ -796,11 +780,10 @@ export default function App() {
       });
       if (user) {
         await supabase.from('activity_logs').insert({
-          user_id: user.id, user_email: user.email, action: 'CALCULATION',
-          energy_type: energyType, consumption_mwh: totalConsumption, commission_code: commissionCode
+          user_id: user.id, user_email: user.email, action: 'ENERGY_ORDER',
+          energy_type: energyType, consumption_mwh: totalConsumption, commission_code: code
         });
         
-        // 2. Save pure bon to energy_orders
         await supabase.from('energy_orders').insert({
           user_id: user.id,
           user_email: user.email,
@@ -813,9 +796,9 @@ export default function App() {
           gas_consumption_mwh: gasConsumptionMWh,
           has_solar: hasSolarPanels,
           comparison_view: comparisonView,
-          commission_code: commissionCode,
-          company_name: customerData.companyName,
-          vat_number: customerData.vatNumber,
+          commission_code: code,
+          company_name: customerData.companyName || null,
+          vat_number: customerData.vatNumber || null,
           first_name: customerData.firstName,
           last_name: customerData.lastName,
           birth_date: customerData.birthDate,
@@ -834,9 +817,13 @@ export default function App() {
           billing_city: billingAddress.city
         });
       }
+      setDossierCode(code);
       setIsSuccess(true);
+      // Move to final success step
+      setDirection(1);
+      setCurrentStep(totalSteps + 1);
     } catch (err) {
-      console.error('Failed to log sale', err);
+      console.error('Failed to save order', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -884,16 +871,8 @@ export default function App() {
         </div>
 
         {/* Question 2: Consumption input — only if knows === true */}
-        <AnimatePresence mode="wait">
-          {knows === true && (
-            <motion.div
-              key="slider"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="overflow-visible"
-            >
+        <div className={`expand-wrapper ${knows === true ? 'open' : ''}`}>
+          <div className="expand-inner">
               <div className="space-y-8 pt-8 mt-8 border-t border-slate-100">
                 {isElec ? (
                   <>
@@ -978,38 +957,24 @@ export default function App() {
                 )}
 
                 {/* Tariff type — only if consumption < 25 MWh */}
-                <AnimatePresence>
-                  {consMWh > 0 && consMWh < 25 && (!isElec || (isElec && elecMeterType)) && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.4, ease: 'easeOut' }}
-                      className="overflow-clip"
-                    >
-                      <div className="pt-6 border-t border-slate-100">
-                        <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
-                        <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
-                          <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
-                          <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
-                        </div>
+                <div className={`expand-wrapper ${consMWh > 0 && consMWh < 25 && (!isElec || (isElec && elecMeterType)) ? 'open' : ''}`}>
+                  <div className="expand-inner">
+                    <div className="pt-6 border-t border-slate-100">
+                      <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
+                      <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
+                        <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
+                        <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
                       </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </motion.div>
-          )}
+            </div>
+          </div>
 
-          {knows === false && (
-            <motion.div
-              key="toggle"
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="overflow-hidden"
-            >
+          {/* Question 3: Unknown consumption — over 30 MWh toggle */}
+          <div className={`expand-wrapper ${knows === false ? 'open' : ''}`}>
+            <div className="expand-inner">
               <div className="pt-[clamp(1rem,3vh,2rem)] mt-[clamp(1rem,3vh,2rem)] border-t border-slate-100">
                 <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.over30}</label>
                 <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
@@ -1019,29 +984,19 @@ export default function App() {
               </div>
 
               {/* Tariff choice for < 25 MWh when consumption is unknown */}
-              <AnimatePresence>
-                {over30 === false && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.4, ease: 'easeOut' }}
-                    className="overflow-clip"
-                  >
-                    <div className="pt-6 border-t border-slate-100 mt-6">
-                      <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
-                      <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
-                        <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
-                        <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
-                      </div>
+              <div className={`expand-wrapper ${over30 === false ? 'open' : ''}`}>
+                <div className="expand-inner">
+                  <div className="pt-6 border-t border-slate-100 mt-6">
+                    <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
+                    <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
+                      <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
+                      <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
       </div>
     );
   };
@@ -1196,49 +1151,46 @@ export default function App() {
                       })}
                     </div>
 
-                    {/* Energy Type — appears after choosing customer type */}
-                    <AnimatePresence>
-                      {customerType && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}>
-                          <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
-                            {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
-                              const isSelected = energyType === type;
-                              const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
-                              const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
-                              return (
-                                <button key={type} onClick={() => { 
-                                  setEnergyType(type); 
-                                  if (type === 'GAS') {
-                                    setHasSolarPanels(null);
-                                    nextStep();
-                                  } else {
-                                    setHasSolarPanels(null); // Reset if changing between ELEC/BOTH
-                                  }
-                                }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
-                                  <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
-                                  <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
-                                </button>
-                              );
-                            })}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                    {/* Energy Type — smooth expand after choosing customer type */}
+                    <div className={`expand-wrapper ${customerType ? 'open' : ''}`}>
+                      <div className="expand-inner">
+                        <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)] mt-4">
+                          {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
+                            const isSelected = energyType === type;
+                            const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
+                            const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
+                            return (
+                              <button key={type} onClick={() => { 
+                                setEnergyType(type); 
+                                if (type === 'GAS') {
+                                  setHasSolarPanels(null);
+                                  nextStep();
+                                } else {
+                                  setHasSolarPanels(null);
+                                }
+                              }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                                <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
+                                <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
 
-                      {/* Solar Panels — appears after choosing ELEC or BOTH */}
-                      <AnimatePresence>
-                        {(energyType === 'ELEC' || energyType === 'BOTH') && (
-                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }} className="w-full">
-                            <div className="bg-white mt-4 rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col items-center">
-                              <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">Heeft de klant zonnepanelen?</label>
-                              <div className="flex justify-center w-full gap-[clamp(0.75rem,1.5vh,1rem)] sm:max-w-md mx-auto">
-                                <button onClick={() => { setHasSolarPanels(true); nextStep(); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === true ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}>{text.yes}</button>
-                                <button onClick={() => { setHasSolarPanels(false); nextStep(); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === false ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}>{text.no}</button>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                    {/* Solar Panels — smooth expand after choosing ELEC or BOTH */}
+                    <div className={`expand-wrapper ${(energyType === 'ELEC' || energyType === 'BOTH') ? 'open' : ''}`}>
+                      <div className="expand-inner">
+                        <div className="bg-white mt-4 rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col items-center">
+                          <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">Heeft de klant zonnepanelen?</label>
+                          <div className="flex justify-center w-full gap-[clamp(0.75rem,1.5vh,1rem)] sm:max-w-md mx-auto">
+                            <button onClick={() => { setHasSolarPanels(true); nextStep(); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === true ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}>{text.yes}</button>
+                            <button onClick={() => { setHasSolarPanels(false); nextStep(); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === false ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}>{text.no}</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
 
                     </motion.div>
                 )}
@@ -1301,7 +1253,7 @@ export default function App() {
 
                           <AnimatePresence>
                             {includeFixedFeeSavings && (
-                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
+                              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }} className="overflow-visible">
                                 <div className="space-y-3">
                                   {getRequiredTypes().map(etype => {
                                     const isElec = etype === 'ELEC';
@@ -1565,16 +1517,49 @@ export default function App() {
                         <button
                           onClick={handleSaveOrder}
                           disabled={isSubmitting || !customerData.firstName || !customerData.lastName || !customerData.email || !connectionAddress.street || !connectionAddress.houseNumber || !connectionAddress.postalCode || !connectionAddress.city || (customerType === 'SOHO' && !customerData.companyName)}
-                          className="w-full mt-8 py-4 rounded-[clamp(1rem,2vh,1.25rem)] bg-eneco-gradient text-white font-black text-[clamp(14px,2vh,18px)] transition-all hover:shadow-lg hover:shadow-[#E5394C]/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="w-full mt-8 py-4 rounded-[clamp(1rem,2vh,1.25rem)] bg-eneco-gradient text-white font-black text-[clamp(14px,2vh,18px)] transition-all hover:shadow-lg hover:shadow-[#E5394C]/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
-                          {isSubmitting ? (lang === 'NL' ? 'Opslaan...' : 'Enregistrement...') : (text.saveOrder || 'Opslaan Bon')}
+                          {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> {lang === 'NL' ? 'Opslaan...' : 'Enregistrement...'}</> : <><Save className="w-5 h-5" /> {text.saveOrder || 'Opslaan Bon'}</>}
                         </button>
-                        {isSuccess && (
-                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
-                            <p className="text-emerald-700 font-bold">✅ {lang === 'NL' ? 'Bon succesvol opgeslagen!' : 'Bon enregistré avec succès!'}</p>
-                          </motion.div>
-                        )}
                       </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* STEP 6 (final): Success + Dossier Code */}
+                {currentStep > totalSteps && isSuccess && (
+                  <motion.div key="step-success" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }} className="w-full max-w-lg">
+                    <div className="bg-white rounded-[clamp(2rem,4vh,3rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 overflow-hidden text-center p-[clamp(2rem,5vh,3rem)]">
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.4, delay: 0.2 }}>
+                        <div className="w-20 h-20 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-6">
+                          <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                        </div>
+                      </motion.div>
+                      <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="text-[clamp(1.5rem,4vh,2rem)] font-black text-slate-700 mb-2">
+                        {lang === 'NL' ? 'Bon Opgeslagen!' : 'Bon Enregistré!'}
+                      </motion.h2>
+                      <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="text-slate-400 font-medium mb-8">
+                        {lang === 'NL' ? 'Het dossier is succesvol aangemaakt.' : 'Le dossier a été créé avec succès.'}
+                      </motion.p>
+
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 mb-8">
+                        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{lang === 'NL' ? 'Dossiernummer' : 'Numéro de dossier'}</p>
+                        <p className="text-[clamp(1.5rem,4vh,2.5rem)] font-black text-eneco-gradient tracking-wider">{dossierCode}</p>
+                      </motion.div>
+
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="space-y-3">
+                        <p className="text-sm text-slate-400 mb-4">
+                          <span className="font-bold">{customerData.firstName} {customerData.lastName}</span>
+                          {customerType === 'SOHO' && customerData.companyName && <><br/><span className="text-slate-500">{customerData.companyName}</span></>}
+                          <br/><span className="text-slate-400">{connectionAddress.street} {connectionAddress.houseNumber}, {connectionAddress.postalCode} {connectionAddress.city}</span>
+                        </p>
+                        <button
+                          onClick={() => { setIsSuccess(false); setDossierCode(''); setCurrentStep(1); setCustomerType(null); setEnergyType(null); }}
+                          className="w-full py-4 rounded-2xl font-bold transition-all bg-eneco-gradient text-white hover:shadow-lg hover:shadow-[#E5394C]/20"
+                        >
+                          {lang === 'NL' ? 'Nieuw Dossier Starten' : 'Commencer un Nouveau Dossier'}
+                        </button>
+                      </motion.div>
                     </div>
                   </motion.div>
                 )}
@@ -1585,18 +1570,15 @@ export default function App() {
             {/* Navigation Controls */}
             <div className="w-full relative flex items-center justify-center mt-8">
               <AnimatePresence initial={false} custom={direction} mode="wait">
-                {currentStep === 1 ? (
-                  <motion.div key="nav-1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="opacity-0 pointer-events-none h-0" />
+                {currentStep === 1 || currentStep > totalSteps ? (
+                  <motion.div key="nav-hide" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="opacity-0 pointer-events-none h-0" />
                 ) : (
                   <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-50">
                     <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
                       <button onClick={prevStep} className="group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
                       <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
                       <div className="flex flex-col items-end relative">
-                        <AnimatePresence>
-                          {validationError && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute bottom-full mb-4 right-0 bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-sm border border-rose-100 whitespace-nowrap">{validationError}</motion.div>)}
-                        </AnimatePresence>
-                        <button onClick={nextStep} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                        <button onClick={nextStep} disabled={!isStepValid() || currentStep === totalSteps} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
                       </div>
                     </div>
                   </motion.div>

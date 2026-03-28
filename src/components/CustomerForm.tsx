@@ -11,6 +11,56 @@ export interface AddressData {
   street: string; houseNumber: string; busNumber: string; postalCode: string; city: string;
 }
 
+/* ─── Phone Country Code Options ─── */
+const phoneOptions = [
+  { value: '+32', label: '+32', img: 'https://flagcdn.com/w40/be.png' },
+  { value: '+31', label: '+31', img: 'https://flagcdn.com/w40/nl.png' },
+  { value: '+33', label: '+33', img: 'https://flagcdn.com/w40/fr.png' },
+  { value: '+49', label: '+49', img: 'https://flagcdn.com/w40/de.png' },
+  { value: '+352', label: '+352', img: 'https://flagcdn.com/w40/lu.png' },
+  { value: '+44', label: '+44', img: 'https://flagcdn.com/w40/gb.png' }
+];
+
+/* ─── Custom Phone Dropdown (Eneco-themed) ─── */
+const PhoneCountrySelect = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: any) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
+  const selected = phoneOptions.find(o => o.value === value);
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen(!open)}
+        className="w-[90px] h-full bg-slate-50 border border-slate-200 rounded-[clamp(0.75rem,2vh,1rem)] px-2 py-[clamp(0.625rem,1.5vh,0.875rem)] font-bold text-slate-600 text-[clamp(13px,1.5vh,16px)] focus:ring-2 focus:ring-[#E5394C]/50 outline-none transition-all flex items-center justify-between gap-1"
+      >
+        <div className="flex items-center gap-1.5">
+          {selected?.img && <img src={selected.img} className="w-5 h-4 rounded-sm object-cover shadow-sm" alt="flag" />}
+          <span className="text-xs font-bold">{selected?.label || '+32'}</span>
+        </div>
+        <svg className={`w-3 h-3 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute z-50 bottom-full left-0 mb-2 w-max min-w-[120px] bg-white border border-slate-200 rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] overflow-hidden max-h-60 overflow-y-auto">
+            {phoneOptions.map((o) => (
+              <button key={o.value} type="button" onClick={() => { onChange(o.value); setOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors hover:bg-slate-50 ${value === o.value ? 'bg-[#E5394C]/10 text-[#E5394C] font-black' : 'text-slate-500 font-bold'}`}>
+                {o.img && <img src={o.img} className="w-5 h-4 rounded-sm object-cover shadow-sm" alt="flag" />}
+                {o.label}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 /* ─── Custom Date Picker (Eneco-themed) ─── */
 const CustomDatePicker = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
   const [open, setOpen] = useState(false);
@@ -87,7 +137,7 @@ const CustomDatePicker = ({ value, onChange }: { value: string; onChange: (val: 
   return (
     <div ref={ref} className="relative w-full" onBlur={handleBlur}>
       <div className="relative">
-        <input type="text" autoComplete="off" className={inputCls} placeholder="DD/MM/YYYY" value={inputValue} onChange={handleInputChange} onClick={() => setOpen(true)} onFocus={() => setOpen(true)} />
+        <input type="text" autoComplete="bday" name="bday_display" className={inputCls} placeholder="DD/MM/YYYY" value={inputValue} onChange={handleInputChange} onClick={() => setOpen(true)} onFocus={() => setOpen(true)} />
         <svg onClick={() => setOpen(!open)} className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#E5394C] cursor-pointer hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
       </div>
       <AnimatePresence>
@@ -179,7 +229,7 @@ export default function CustomerForm({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[clamp(1rem,2vh,1.25rem)] mb-6">
               <div>
                 <label className={labelCls}>{text.companyName} *</label>
-                <input type="text" autoComplete="organization" className={inputCls} placeholder="Bedrijfsnaam BV" value={customerData.companyName} onChange={e => setCustomerData(prev => ({ ...prev, companyName: e.target.value }))} />
+                <input type="text" autoComplete="organization" name="org_name" className={inputCls} placeholder="Bedrijfsnaam BV" value={customerData.companyName} onChange={e => setCustomerData(prev => ({ ...prev, companyName: e.target.value }))} />
               </div>
               <div>
                 <div className="flex justify-between">
@@ -189,7 +239,7 @@ export default function CustomerForm({
                     {text.inAanvraag}
                   </label>
                 </div>
-                <input type="text" autoComplete="off" disabled={customerData.vatPending} className={`${inputCls} uppercase ${!isVatValid && !customerData.vatPending && customerData.vatNumber.length > 2 ? 'ring-2 ring-rose-400 border-rose-400' : ''}`} value={customerData.vatNumber} onChange={e => setCustomerData(prev => ({ ...prev, vatNumber: formatVatNumber(e.target.value) }))} />
+                <input type="text" autoComplete="nope" name="vat_reg_number" disabled={customerData.vatPending} className={`${inputCls} uppercase ${!isVatValid && !customerData.vatPending && customerData.vatNumber.length > 2 ? 'ring-2 ring-rose-400 border-rose-400' : ''}`} value={customerData.vatNumber} onChange={e => setCustomerData(prev => ({ ...prev, vatNumber: formatVatNumber(e.target.value) }))} />
               </div>
             </div>
           </>
@@ -197,17 +247,17 @@ export default function CustomerForm({
 
         <h3 className="font-bold text-slate-600 mb-4 border-b border-slate-200 pb-2">Persoonsgegevens</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-[clamp(1rem,2vh,1.25rem)]">
-          <div><label className={labelCls}>{text.firstName} *</label><input type="text" autoComplete="given-name" className={inputCls} value={customerData.firstName} onChange={e => setCustomerData(prev => ({ ...prev, firstName: e.target.value }))} /></div>
-          <div><label className={labelCls}>{text.lastName} *</label><input type="text" autoComplete="family-name" className={inputCls} value={customerData.lastName} onChange={e => setCustomerData(prev => ({ ...prev, lastName: e.target.value }))} /></div>
+          <div><label className={labelCls}>{text.firstName} *</label><input type="text" autoComplete="given-name" name="first_name" className={inputCls} value={customerData.firstName} onChange={e => setCustomerData(prev => ({ ...prev, firstName: e.target.value }))} /></div>
+          <div><label className={labelCls}>{text.lastName} *</label><input type="text" autoComplete="family-name" name="last_name" className={inputCls} value={customerData.lastName} onChange={e => setCustomerData(prev => ({ ...prev, lastName: e.target.value }))} /></div>
           <div>
             <label className={labelCls}>{text.birthDate} *</label>
             <CustomDatePicker value={customerData.birthDate} onChange={(val: string) => setCustomerData(prev => ({ ...prev, birthDate: val }))} />
           </div>
           <div>
             <label className={labelCls}>{text.phone} *</label>
-            <div className="flex gap-2">
-              <input type="text" autoComplete="off" value={customerData.phoneCountry} onChange={e => setCustomerData(prev => ({ ...prev, phoneCountry: e.target.value }))} className={`${inputCls} w-20 text-center px-1`} />
-              <input type="tel" autoComplete="tel" className={`${inputCls} flex-1`} placeholder="4XX XX XX XX" value={customerData.phone} onChange={e => {
+            <div className="flex gap-2 items-stretch">
+              <PhoneCountrySelect value={customerData.phoneCountry} onChange={(val: string) => setCustomerData(prev => ({ ...prev, phoneCountry: val }))} />
+              <input type="tel" autoComplete="tel-national" name="phone_number" className={`${inputCls} flex-1`} placeholder="4XX XX XX XX" value={customerData.phone} onChange={e => {
                 let raw = e.target.value.replace(/[^0-9 ]/g, '');
                 setCustomerData(prev => ({ ...prev, phone: raw }));
               }} />
@@ -217,7 +267,7 @@ export default function CustomerForm({
 
         <h3 className="font-bold text-slate-600 mt-6 mb-4 border-b border-slate-200 pb-2">Communicatie</h3>
         <div className="grid grid-cols-1 gap-[clamp(1rem,2vh,1.25rem)]">
-          <div><label className={labelCls}>{text.email} *</label><input type="email" autoComplete="email" className={inputCls} value={customerData.email} onChange={e => setCustomerData(prev => ({ ...prev, email: e.target.value }))} /></div>
+          <div><label className={labelCls}>{text.email} *</label><input type="email" autoComplete="email" name="email_address" className={inputCls} value={customerData.email} onChange={e => setCustomerData(prev => ({ ...prev, email: e.target.value }))} /></div>
           <div className="flex items-center gap-3">
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="checkbox" className="sr-only peer" checked={customerData.billingEmailSame} onChange={e => setCustomerData(prev => ({ ...prev, billingEmailSame: e.target.checked }))} />
@@ -226,9 +276,9 @@ export default function CustomerForm({
             <span className="text-[11px] sm:text-[13px] font-bold text-slate-400 uppercase tracking-widest">{text.billingEmailToggle}</span>
           </div>
           {!customerData.billingEmailSame && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-2">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-2">
               <label className={labelCls}>{text.billingEmail} *</label>
-              <input type="email" autoComplete="email" className={inputCls} value={customerData.billingEmail} onChange={e => setCustomerData(prev => ({ ...prev, billingEmail: e.target.value }))} />
+              <input type="email" autoComplete="email" name="billing_email" className={inputCls} value={customerData.billingEmail} onChange={e => setCustomerData(prev => ({ ...prev, billingEmail: e.target.value }))} />
             </motion.div>
           )}
         </div>
@@ -242,20 +292,20 @@ export default function CustomerForm({
         <div className="grid grid-cols-1 md:grid-cols-12 gap-[clamp(0.75rem,1.5vh,1rem)] mb-[clamp(1rem,2vh,1.25rem)]">
           <div className="md:col-span-8">
             <label className={labelCls}>{text.street} *</label>
-            <input ref={streetRef} type="text" autoComplete="off" className={inputCls} placeholder="Typ straat..." value={connectionAddress.street} onChange={e => { typedStreetRef.current = e.target.value; setConnectionAddress(prev => ({ ...prev, street: e.target.value })); }} />
+            <input ref={streetRef} type="text" autoComplete="nope" name="conn_street" className={inputCls} placeholder="Typ straat..." value={connectionAddress.street} onChange={e => { typedStreetRef.current = e.target.value; setConnectionAddress(prev => ({ ...prev, street: e.target.value })); }} />
           </div>
           <div className="md:col-span-2">
             <label className={labelCls}>{text.houseNr} *</label>
-            <input type="text" autoComplete="off" className={inputCls} value={connectionAddress.houseNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
+            <input type="text" autoComplete="nope" name="conn_house" className={inputCls} value={connectionAddress.houseNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
           </div>
           <div className="md:col-span-2">
             <label className={labelCls}>{text.bus}</label>
-            <input type="text" autoComplete="off" className={inputCls} value={connectionAddress.busNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
+            <input type="text" autoComplete="nope" name="conn_bus" className={inputCls} value={connectionAddress.busNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-[clamp(0.75rem,1.5vh,1rem)]">
-          <div className="md:col-span-4"><label className={labelCls}>{text.postalCode} *</label><input type="text" autoComplete="off" className={inputCls} value={connectionAddress.postalCode} onChange={e => setConnectionAddress(prev => ({ ...prev, postalCode: e.target.value }))} /></div>
-          <div className="md:col-span-8"><label className={labelCls}>{text.city} *</label><input ref={cityRef} type="text" autoComplete="off" className={inputCls} value={connectionAddress.city} onChange={e => setConnectionAddress(prev => ({ ...prev, city: e.target.value }))} /></div>
+          <div className="md:col-span-4"><label className={labelCls}>{text.postalCode} *</label><input type="text" autoComplete="nope" name="conn_postal" className={inputCls} value={connectionAddress.postalCode} onChange={e => setConnectionAddress(prev => ({ ...prev, postalCode: e.target.value }))} /></div>
+          <div className="md:col-span-8"><label className={labelCls}>{text.city} *</label><input ref={cityRef} type="text" autoComplete="nope" name="conn_city" className={inputCls} value={connectionAddress.city} onChange={e => setConnectionAddress(prev => ({ ...prev, city: e.target.value }))} /></div>
         </div>
 
         <div className="mt-8 mb-6 border-t border-slate-200 pt-6">
@@ -267,25 +317,25 @@ export default function CustomerForm({
         </div>
 
         {!billingAddressSame && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="pt-2">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="pt-2">
             <h3 className="font-bold text-slate-600 mb-6 border-b border-slate-200 pb-2">{text.billingAddress}</h3>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-[clamp(0.75rem,1.5vh,1rem)] mb-[clamp(1rem,2vh,1.25rem)]">
               <div className="md:col-span-8">
                 <label className={labelCls}>{text.street} *</label>
-                <input ref={billingStreetRef} type="text" autoComplete="off" className={inputCls} placeholder="Typ straat..." value={billingAddress.street} onChange={e => { typedBillingStreetRef.current = e.target.value; setBillingAddress(prev => ({ ...prev, street: e.target.value })); }} />
+                <input ref={billingStreetRef} type="text" autoComplete="nope" name="bill_street" className={inputCls} placeholder="Typ straat..." value={billingAddress.street} onChange={e => { typedBillingStreetRef.current = e.target.value; setBillingAddress(prev => ({ ...prev, street: e.target.value })); }} />
               </div>
               <div className="md:col-span-2">
                 <label className={labelCls}>{text.houseNr} *</label>
-                <input type="text" autoComplete="off" className={inputCls} value={billingAddress.houseNumber} onChange={e => setBillingAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
+                <input type="text" autoComplete="nope" name="bill_house" className={inputCls} value={billingAddress.houseNumber} onChange={e => setBillingAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
               </div>
               <div className="md:col-span-2">
                 <label className={labelCls}>{text.bus}</label>
-                <input type="text" autoComplete="off" className={inputCls} value={billingAddress.busNumber} onChange={e => setBillingAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
+                <input type="text" autoComplete="nope" name="bill_bus" className={inputCls} value={billingAddress.busNumber} onChange={e => setBillingAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-[clamp(0.75rem,1.5vh,1rem)]">
-              <div className="md:col-span-4"><label className={labelCls}>{text.postalCode} *</label><input type="text" autoComplete="off" className={inputCls} value={billingAddress.postalCode} onChange={e => setBillingAddress(prev => ({ ...prev, postalCode: e.target.value }))} /></div>
-              <div className="md:col-span-8"><label className={labelCls}>{text.city} *</label><input ref={billingCityRef} type="text" autoComplete="off" className={inputCls} value={billingAddress.city} onChange={e => setBillingAddress(prev => ({ ...prev, city: e.target.value }))} /></div>
+              <div className="md:col-span-4"><label className={labelCls}>{text.postalCode} *</label><input type="text" autoComplete="nope" name="bill_postal" className={inputCls} value={billingAddress.postalCode} onChange={e => setBillingAddress(prev => ({ ...prev, postalCode: e.target.value }))} /></div>
+              <div className="md:col-span-8"><label className={labelCls}>{text.city} *</label><input ref={billingCityRef} type="text" autoComplete="nope" name="bill_city" className={inputCls} value={billingAddress.city} onChange={e => setBillingAddress(prev => ({ ...prev, city: e.target.value }))} /></div>
             </div>
           </motion.div>
         )}
