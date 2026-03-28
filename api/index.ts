@@ -157,15 +157,16 @@ app.post('/api/admin/update-user', express.json(), async (req, res) => {
   const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
   const adminClient = createClient(supabaseUrl, serviceKey);
-  const { id, firstName, lastName, avatarId } = req.body;
+  const { id, firstName, lastName, avatarId, role } = req.body;
   try {
     const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(id);
     if (userError || !userData?.user) throw new Error('Gebruiker niet gevonden.');
     const { data: existingProfile } = await adminClient.from('profiles').select('*').eq('id', id).single();
+    const resolvedRole = role || existingProfile?.role || (userData.user.user_metadata?.role || 'user');
     const { error } = await adminClient.from('profiles').upsert({
       id, email: existingProfile?.email || userData.user.email,
       first_name: firstName, last_name: lastName, avatar_id: avatarId,
-      role: existingProfile?.role || (userData.user.user_metadata?.role || 'user'),
+      role: resolvedRole,
       is_active: existingProfile?.is_active ?? true,
       is_archived: existingProfile?.is_archived ?? false,
     }, { onConflict: 'id' });

@@ -740,7 +740,7 @@ async function startServer() {
     if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
     const adminClient = createClient(supabaseUrl, serviceKey);
     
-    const { id, firstName, lastName, avatarId } = req.body;
+    const { id, firstName, lastName, avatarId, role } = req.body;
     try {
       // Check if user exists in Auth system to derive email for new records
       const { data: userData, error: userError } = await adminClient.auth.admin.getUserById(id);
@@ -751,13 +751,16 @@ async function startServer() {
       // Pull current permissions if they exist
       const { data: existingProfile } = await adminClient.from('profiles').select('*').eq('id', id).single();
       
+      // Determine role: use explicitly provided role, fall back to existing, then default
+      const resolvedRole = role || existingProfile?.role || (userData.user.user_metadata?.role || 'user');
+      
       const { error } = await adminClient.from('profiles').upsert({
         id: id,
         email: existingProfile?.email || userEmail,
         first_name: firstName,
         last_name: lastName,
         avatar_id: avatarId,
-        role: existingProfile?.role || (userData.user.user_metadata?.role || 'user'),
+        role: resolvedRole,
         is_active: existingProfile?.is_active ?? true,
         is_archived: existingProfile?.is_archived ?? false,
       }, { onConflict: 'id' });

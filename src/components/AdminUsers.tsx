@@ -34,6 +34,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
   const [formFirst, setFormFirst] = useState('');
   const [formLast, setFormLast] = useState('');
   const [formAvatar, setFormAvatar] = useState('');
+  const [formRole, setFormRole] = useState<'user' | 'admin'>('user');
   const [errorError, setErrorError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
@@ -74,8 +75,14 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
     } catch { /* silently ignore */ }
   };
 
+  // Combined refresh: always fetch profiles + auth status together
+  const refreshAll = async () => {
+    await fetchUsers();
+    await fetchAuthStatus();
+  };
+
   useEffect(() => {
-    fetchUsers().then(() => fetchAuthStatus());
+    refreshAll();
   }, []);
 
   const handleToggleStatus = async (id: string, is_active: boolean, is_archived: boolean) => {
@@ -86,7 +93,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         body: JSON.stringify({ id, is_active, is_archived })
       });
       if (!res.ok) throw new Error(await res.text());
-      fetchUsers();
+      refreshAll();
     } catch (err: any) {
       alert('Fout bij updaten: ' + err.message);
     }
@@ -101,7 +108,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         body: JSON.stringify({ id })
       });
       if (!res.ok) throw new Error(await res.text());
-      fetchUsers();
+      refreshAll();
     } catch (err: any) {
       alert('Fout bij verwijderen: ' + err.message);
     }
@@ -149,7 +156,8 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
             id: editingUser.id,
             firstName: formFirst,
             lastName: formLast,
-            avatarId: formAvatar
+            avatarId: formAvatar,
+            role: formRole
           })
         });
         const data = await res.json();
@@ -167,7 +175,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
             password: 'WelkomTelenco123!',
             firstName: formFirst,
             lastName: formLast,
-            role: 'user',
+            role: formRole,
             avatarId: formAvatar,
             adminName: adminName || 'Een beheerder'
           })
@@ -178,7 +186,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
 
       setShowModal(false);
       setEditingUser(null);
-      fetchUsers();
+      refreshAll();
     } catch (err: any) {
       setErrorError(err.message);
     } finally {
@@ -189,6 +197,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
   const openCreateModal = () => {
     setEditingUser(null);
     setFormEmail('');
+    setFormRole('user');
     setFormFirst('');
     setFormLast('');
     setFormAvatar('');
@@ -202,6 +211,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
     setFormFirst(user.first_name || '');
     setFormLast(user.last_name || '');
     setFormAvatar(user.avatar_id || '');
+    setFormRole((user.role === 'admin' ? 'admin' : 'user') as 'user' | 'admin');
     setErrorError(null);
     setShowModal(true);
   };
@@ -241,7 +251,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
             className="w-full bg-white border border-slate-200 rounded-xl pl-12 pr-4 py-3 text-sm font-bold text-slate-600 placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-[#91C848]/30 focus:border-[#91C848] transition-all shadow-sm"
           />
         </div>
-        <button onClick={fetchUsers} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-500 shadow-sm transition-colors">
+        <button onClick={refreshAll} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-500 shadow-sm transition-colors">
           <RefreshCwIcon className="w-5 h-5" />
         </button>
         <button
@@ -470,6 +480,35 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                         <img src={TELENCO_LOGO} alt="Telenco" className="w-full h-full object-contain p-2 opacity-20 grayscale brightness-0" />
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Role Toggle */}
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Rol</label>
+                  <div className="flex rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                    <button
+                      type="button"
+                      onClick={() => setFormRole('user')}
+                      className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
+                        formRole === 'user'
+                          ? 'bg-white text-slate-600 shadow-sm border-r border-slate-200'
+                          : 'text-slate-400 hover:text-slate-500'
+                      }`}
+                    >
+                      Gebruiker
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormRole('admin')}
+                      className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
+                        formRole === 'admin'
+                          ? 'bg-blue-500 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-500'
+                      }`}
+                    >
+                      Admin
+                    </button>
                   </div>
                 </div>
 
