@@ -1024,17 +1024,15 @@ export default function App() {
                             />
                             <button
                               onClick={() => setComparisonView('ENECO')}
-                              className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ENECO' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                              className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center ${comparisonView === 'ENECO' ? '' : 'hover:opacity-80'}`}
                             >
-                              <img src="./eneco-grey.png" alt="Eneco" className={`h-5 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
-                              Eneco
+                              <img src="./eneco-grey.png" alt="Eneco" className={`h-7 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
                             </button>
                             <button
                               onClick={() => setComparisonView('ELINDUS')}
-                              className={`flex-1 py-3 text-sm font-bold z-10 transition-colors flex items-center justify-center gap-2 ${comparisonView === 'ELINDUS' ? 'text-slate-700' : 'text-slate-400 hover:text-slate-600'}`}
+                              className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center ${comparisonView === 'ELINDUS' ? '' : 'hover:opacity-80'}`}
                             >
-                              <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
-                              Elindus
+                              <img src="./elindus-grey.png" alt="Elindus" className={`h-7 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0 flex items-center' : 'opacity-40 grayscale'}`} />
                             </button>
                           </div>
                         </div>
