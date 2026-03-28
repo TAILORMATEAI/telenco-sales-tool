@@ -37,48 +37,48 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
   const [formRole, setFormRole] = useState<'user' | 'admin'>('user');
   const [errorError, setErrorError] = useState<string | null>(null);
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from('profiles').select('*');
-
-    let fetched: Profile[] = (data as Profile[]) || [];
-
-    // Failsafe: Als het ingelogde profiel (jijzelf) verborgen wordt door database-rechten (RLS) of query-fout, injecteer het dan handmatig in de UI.
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user && !fetched.find(u => u.email === user.email)) {
-      fetched = [{
-        id: user.id,
-        email: user.email || currentUserEmail,
-        first_name: 'Admin',
-        last_name: '(Jij)',
-        avatar_id: '',
-        is_active: true,
-        is_archived: false,
-        role: 'admin',
-        created_at: new Date().toISOString()
-      }, ...fetched];
-    }
-
-    setUsers(fetched);
-    setLoading(false);
-  };
-
-  const fetchAuthStatus = async () => {
-    try {
-      const res = await fetch('/api/admin/auth-users');
-      if (!res.ok) return;
-      const authUsers: { id: string; email: string; email_confirmed_at: string | null; last_sign_in_at: string | null }[] = await res.json();
-      setUsers(prev => prev.map(u => {
-        const authUser = authUsers.find(a => a.email.toLowerCase() === u.email.toLowerCase());
-        return authUser ? { ...u, email_confirmed_at: authUser.email_confirmed_at, last_sign_in_at: authUser.last_sign_in_at } : u;
-      }));
-    } catch { /* silently ignore */ }
-  };
-
-  // Combined refresh: always fetch profiles + auth status together
+  // Combined refresh: always fetch profiles + auth status together to prevent UI flickering
   const refreshAll = async () => {
-    await fetchUsers();
-    await fetchAuthStatus();
+    setLoading(true);
+
+    try {
+      // 1. Fetch profiles
+      const { data, error } = await supabase.from('profiles').select('*');
+      let fetched: Profile[] = (data as Profile[]) || [];
+
+      // Failsafe: Als het ingelogde profiel (jijzelf) verborgen wordt door database-rechten (RLS) of query-fout, injecteer het dan handmatig in de UI.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && !fetched.find(u => u.email === user.email)) {
+        fetched = [{
+          id: user.id,
+          email: user.email || currentUserEmail,
+          first_name: 'Admin',
+          last_name: '(Jij)',
+          avatar_id: '',
+          is_active: true,
+          is_archived: false,
+          role: 'admin',
+          created_at: new Date().toISOString()
+        }, ...fetched];
+      }
+
+      // 2. Fetch auth status concurrently without blocking UI with false data
+      try {
+        const res = await fetch('/api/admin/auth-users');
+        if (res.ok) {
+          const authUsers: { id: string; email: string; email_confirmed_at: string | null; last_sign_in_at: string | null }[] = await res.json();
+          fetched = fetched.map(u => {
+            const authUser = authUsers.find(a => a.email.toLowerCase() === u.email.toLowerCase());
+            return authUser ? { ...u, email_confirmed_at: authUser.email_confirmed_at, last_sign_in_at: authUser.last_sign_in_at } : u;
+          });
+        }
+      } catch { /* silently ignore auth errors */ }
+
+      // 3. Set standard complete state all at once! No flickering!
+      setUsers(fetched);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
