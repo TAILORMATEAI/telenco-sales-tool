@@ -19,7 +19,8 @@ import {
   ZapIcon as Zap,
   FlameIcon as Flame,
   HomeIcon,
-  TrophyIcon
+  TrophyIcon,
+  SaveIcon as Save
 } from '../components/Icons';
 
 interface MarketData {
@@ -41,6 +42,21 @@ interface MarketData {
   enecoSohoGasVar?: number;
   enecoResElecInj?: number;
   enecoSohoElecInj?: number;
+  // Dag/Nacht Eneco Elektriciteit
+  enecoResElecDagVast?: number;
+  enecoResElecNachtVast?: number;
+  enecoResElecDagVar?: number;
+  enecoResElecNachtVar?: number;
+  enecoSohoElecDagVast?: number;
+  enecoSohoElecNachtVast?: number;
+  enecoSohoElecDagVar?: number;
+  enecoSohoElecNachtVar?: number;
+  // Dag/Nacht Eneco Injectie
+  enecoResInjElecDag?: number;
+  enecoResInjElecNacht?: number;
+  enecoSohoInjElecDag?: number;
+  enecoSohoInjElecNacht?: number;
+  // Vaste Vergoedingen
   enecoResVvElec?: number;
   enecoResVvGas?: number;
   enecoSohoVvElec?: number;
@@ -73,7 +89,7 @@ interface UserProfile {
   last_name?: string;
 }
 
-type Tab = 'overview' | 'elindus' | 'eneco' | 'activity' | 'users';
+type Tab = 'overview' | 'elindus' | 'eneco' | 'activity' | 'users' | 'orders';
 
 export default function AdminDashboard() {
   const { signOut, profile, user } = useAuth();
@@ -110,8 +126,12 @@ export default function AdminDashboard() {
     injMultiplier: 0.9, injAdder: 15,
     enecoResElecVast: 0, enecoResElecVar: 0, enecoResGasVast: 0, enecoResGasVar: 0,
     enecoSohoElecVast: 0, enecoSohoElecVar: 0, enecoSohoGasVast: 0, enecoSohoGasVar: 0,
-    enecoResElecInj: 0, enecoSohoElecInj: 0, enecoResVvElec: 65, enecoResVvGas: 65,
-    enecoSohoVvElec: 90, enecoSohoVvGas: 90, enecoResVvInj: 0, enecoSohoVvInj: 0,
+    enecoResElecInj: 0, enecoSohoElecInj: 0,
+    enecoResElecDagVast: 0, enecoResElecNachtVast: 0, enecoResElecDagVar: 0, enecoResElecNachtVar: 0,
+    enecoSohoElecDagVast: 0, enecoSohoElecNachtVast: 0, enecoSohoElecDagVar: 0, enecoSohoElecNachtVar: 0,
+    enecoResInjElecDag: 0, enecoResInjElecNacht: 0, enecoSohoInjElecDag: 0, enecoSohoInjElecNacht: 0,
+    enecoResVvElec: 65, enecoResVvGas: 65, enecoSohoVvElec: 90, enecoSohoVvGas: 90,
+    enecoResVvInj: 0, enecoSohoVvInj: 0,
     elindusVvElec: 60, elindusVvGas: 60, elindusVvInj: 0
   });
   const [overrideData, setOverrideData] = useState<MarketData>({ ...marketData });
@@ -157,6 +177,18 @@ export default function AdminDashboard() {
         enecoSohoGasVar: rp(find('ENECO_SOHO_GAS_VARIABEL')?.value, 0),
         enecoResElecInj: rp(find('ENECO_RES_INJ_ELEC')?.value, 0),
         enecoSohoElecInj: rp(find('ENECO_SOHO_INJ_ELEC')?.value, 0),
+        enecoResElecDagVast: rp(find('ENECO_RES_ELEC_DAG_VAST')?.value, 0),
+        enecoResElecNachtVast: rp(find('ENECO_RES_ELEC_NACHT_VAST')?.value, 0),
+        enecoResElecDagVar: rp(find('ENECO_RES_ELEC_DAG_VAR')?.value, 0),
+        enecoResElecNachtVar: rp(find('ENECO_RES_ELEC_NACHT_VAR')?.value, 0),
+        enecoSohoElecDagVast: rp(find('ENECO_SOHO_ELEC_DAG_VAST')?.value, 0),
+        enecoSohoElecNachtVast: rp(find('ENECO_SOHO_ELEC_NACHT_VAST')?.value, 0),
+        enecoSohoElecDagVar: rp(find('ENECO_SOHO_ELEC_DAG_VAR')?.value, 0),
+        enecoSohoElecNachtVar: rp(find('ENECO_SOHO_ELEC_NACHT_VAR')?.value, 0),
+        enecoResInjElecDag: rp(find('ENECO_RES_INJ_ELEC_DAG')?.value, 0),
+        enecoResInjElecNacht: rp(find('ENECO_RES_INJ_ELEC_NACHT')?.value, 0),
+        enecoSohoInjElecDag: rp(find('ENECO_SOHO_INJ_ELEC_DAG')?.value, 0),
+        enecoSohoInjElecNacht: rp(find('ENECO_SOHO_INJ_ELEC_NACHT')?.value, 0),
         enecoResVvElec: rp(find('ENECO_RES_VV_ELEC')?.value, 65),
         enecoResVvGas: rp(find('ENECO_RES_VV_GAS')?.value, 65),
         enecoSohoVvElec: rp(find('ENECO_SOHO_VV_ELEC')?.value, 90),
@@ -216,21 +248,21 @@ export default function AdminDashboard() {
 
   const fetchSyncStatus = async () => {
     const { data } = await supabase
-       .from('sync_logs')
-       .select('*')
-       .order('created_at', { ascending: false })
-       .limit(1);
-    
+      .from('sync_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
     if (data && data.length > 0 && data[0].status === 'error') {
-       const logDate = new Date(data[0].created_at);
-       const now = new Date();
-       if ((now.getTime() - logDate.getTime()) < 48 * 60 * 60 * 1000) {
-         setSyncError({ message: data[0].message, time: data[0].created_at });
-       } else {
-         setSyncError(null);
-       }
+      const logDate = new Date(data[0].created_at);
+      const now = new Date();
+      if ((now.getTime() - logDate.getTime()) < 48 * 60 * 60 * 1000) {
+        setSyncError({ message: data[0].message, time: data[0].created_at });
+      } else {
+        setSyncError(null);
+      }
     } else {
-       setSyncError(null);
+      setSyncError(null);
     }
   };
 
@@ -264,6 +296,18 @@ export default function AdminDashboard() {
       ['ENECO_SOHO_GAS_VARIABEL', overrideData.enecoSohoGasVar ?? 0],
       ['ENECO_RES_INJ_ELEC', overrideData.enecoResElecInj ?? 0],
       ['ENECO_SOHO_INJ_ELEC', overrideData.enecoSohoElecInj ?? 0],
+      ['ENECO_RES_ELEC_DAG_VAST', overrideData.enecoResElecDagVast ?? 0],
+      ['ENECO_RES_ELEC_NACHT_VAST', overrideData.enecoResElecNachtVast ?? 0],
+      ['ENECO_RES_ELEC_DAG_VAR', overrideData.enecoResElecDagVar ?? 0],
+      ['ENECO_RES_ELEC_NACHT_VAR', overrideData.enecoResElecNachtVar ?? 0],
+      ['ENECO_SOHO_ELEC_DAG_VAST', overrideData.enecoSohoElecDagVast ?? 0],
+      ['ENECO_SOHO_ELEC_NACHT_VAST', overrideData.enecoSohoElecNachtVast ?? 0],
+      ['ENECO_SOHO_ELEC_DAG_VAR', overrideData.enecoSohoElecDagVar ?? 0],
+      ['ENECO_SOHO_ELEC_NACHT_VAR', overrideData.enecoSohoElecNachtVar ?? 0],
+      ['ENECO_RES_INJ_ELEC_DAG', overrideData.enecoResInjElecDag ?? 0],
+      ['ENECO_RES_INJ_ELEC_NACHT', overrideData.enecoResInjElecNacht ?? 0],
+      ['ENECO_SOHO_INJ_ELEC_DAG', overrideData.enecoSohoInjElecDag ?? 0],
+      ['ENECO_SOHO_INJ_ELEC_NACHT', overrideData.enecoSohoInjElecNacht ?? 0],
       ['ENECO_RES_VV_ELEC', overrideData.enecoResVvElec ?? 65],
       ['ENECO_RES_VV_GAS', overrideData.enecoResVvGas ?? 65],
       ['ENECO_SOHO_VV_ELEC', overrideData.enecoSohoVvElec ?? 90],
@@ -306,6 +350,7 @@ export default function AdminDashboard() {
     { key: 'overview', label: 'Overzicht', icon: HomeIcon },
     { key: 'elindus', label: 'Elindus', icon: Zap },
     { key: 'eneco', label: 'Eneco', icon: Flame },
+    { key: 'orders', label: 'Bonnen', icon: Save },
     { key: 'activity', label: 'Activiteiten', icon: ChartBarIcon },
     { key: 'users', label: 'Gebruikers', icon: UsersIcon },
   ];
@@ -321,23 +366,43 @@ export default function AdminDashboard() {
     { key: 'ttfDam', label: 'TTF DAM', desc: 'Gas Variabel', color: 'bg-rose-500' },
   ];
 
-  const enecoPriceFields: { group: string; fields: { key: keyof MarketData; label: string; type: string; icon: 'elec' | 'gas' }[] }[] = [
+  const enecoPriceFields: { group: string; subGroups: { subLabel: string; fields: { key: keyof MarketData; label: string; type: string; icon: 'elec' | 'gas' }[] }[] }[] = [
     {
       group: 'Residentieel (Particulier)',
-      fields: [
-        { key: 'enecoResElecVast', label: 'Vast', type: 'Elektriciteit', icon: 'elec' },
-        { key: 'enecoResElecVar', label: 'Variabel', type: 'Elektriciteit', icon: 'elec' },
-        { key: 'enecoResGasVast', label: 'Vast', type: 'Gas', icon: 'gas' },
-        { key: 'enecoResGasVar', label: 'Variabel', type: 'Gas', icon: 'gas' },
+      subGroups: [
+        { subLabel: 'Enkelvoudige Meter', fields: [
+          { key: 'enecoResElecVast', label: 'Vast', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoResElecVar', label: 'Variabel', type: 'Elektriciteit', icon: 'elec' },
+        ]},
+        { subLabel: 'Tweevoudige Meter (Dag/Nacht)', fields: [
+          { key: 'enecoResElecDagVast', label: 'Dag Vast', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoResElecNachtVast', label: 'Nacht Vast', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoResElecDagVar', label: 'Dag Variabel', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoResElecNachtVar', label: 'Nacht Variabel', type: 'Elektriciteit', icon: 'elec' },
+        ]},
+        { subLabel: 'Aardgas', fields: [
+          { key: 'enecoResGasVast', label: 'Vast', type: 'Gas', icon: 'gas' },
+          { key: 'enecoResGasVar', label: 'Variabel', type: 'Gas', icon: 'gas' },
+        ]},
       ]
     },
     {
       group: 'SME (Zakelijk)',
-      fields: [
-        { key: 'enecoSohoElecVast', label: 'Vast', type: 'Elektriciteit', icon: 'elec' },
-        { key: 'enecoSohoElecVar', label: 'Variabel', type: 'Elektriciteit', icon: 'elec' },
-        { key: 'enecoSohoGasVast', label: 'Vast', type: 'Gas', icon: 'gas' },
-        { key: 'enecoSohoGasVar', label: 'Variabel', type: 'Gas', icon: 'gas' },
+      subGroups: [
+        { subLabel: 'Enkelvoudige Meter', fields: [
+          { key: 'enecoSohoElecVast', label: 'Vast', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoSohoElecVar', label: 'Variabel', type: 'Elektriciteit', icon: 'elec' },
+        ]},
+        { subLabel: 'Tweevoudige Meter (Dag/Nacht)', fields: [
+          { key: 'enecoSohoElecDagVast', label: 'Dag Vast', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoSohoElecNachtVast', label: 'Nacht Vast', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoSohoElecDagVar', label: 'Dag Variabel', type: 'Elektriciteit', icon: 'elec' },
+          { key: 'enecoSohoElecNachtVar', label: 'Nacht Variabel', type: 'Elektriciteit', icon: 'elec' },
+        ]},
+        { subLabel: 'Aardgas', fields: [
+          { key: 'enecoSohoGasVast', label: 'Vast', type: 'Gas', icon: 'gas' },
+          { key: 'enecoSohoGasVar', label: 'Variabel', type: 'Gas', icon: 'gas' },
+        ]},
       ]
     }
   ];
@@ -444,13 +509,13 @@ export default function AdminDashboard() {
 
         {/* Main Content Area */}
         <main className="flex-1 h-full min-h-0 overflow-y-auto relative bg-transparent w-full overflow-x-hidden flex flex-col">
-          <div className="flex-1 w-full max-w-[clamp(45rem,110vh,65rem)] min-[2000px]:max-w-[clamp(65rem,130vh,80rem)] mx-auto px-4 sm:px-[clamp(1.5rem,3vw,3.5rem)] py-[clamp(1.5rem,4vh,4rem)] relative z-20">
+          <div className="flex-1 w-full max-w-[clamp(50rem,130vh,85rem)] min-[2000px]:max-w-[clamp(75rem,150vh,110rem)] mx-auto px-4 sm:px-[clamp(1.5rem,3vw,3.5rem)] py-[clamp(1.5rem,4vh,4rem)] relative z-20">
 
             {syncError && (
               <div className="mb-6 bg-rose-50 border border-rose-200 p-5 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl -translate-y-16 translate-x-16 pointer-events-none" />
                 <div className="p-3 bg-white rounded-xl shadow-sm border border-rose-100 shrink-0 relative z-10">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-rose-500"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-rose-500"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
                 </div>
                 <div className="relative z-10">
                   <h3 className="text-rose-600 font-extrabold text-sm tracking-widest uppercase mb-1">Pas op: Automatische Scan Vastgelopen</h3>
@@ -577,9 +642,9 @@ export default function AdminDashboard() {
                                   <div key={log.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                                     <div className="flex items-center gap-3">
                                       <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold ${log.action === 'CALCULATION' ? 'bg-blue-50 text-blue-600' :
-                                          log.action === 'LOGIN' ? 'bg-emerald-50 text-emerald-600' :
-                                            log.action === 'TELENET_WIZARD' ? 'bg-amber-50 text-amber-600' :
-                                              'bg-slate-100 text-slate-500'
+                                        log.action === 'LOGIN' ? 'bg-emerald-50 text-emerald-600' :
+                                          log.action === 'TELENET_WIZARD' ? 'bg-amber-50 text-amber-600' :
+                                            'bg-slate-100 text-slate-500'
                                         }`}>{log.action}</span>
                                       <span className="text-sm font-medium text-slate-500">{name}</span>
                                     </div>
@@ -602,7 +667,7 @@ export default function AdminDashboard() {
                   {/* Action bar */}
                   <div className="flex flex-col items-center w-full mb-10 mt-4 relative">
                     <img src="./elindus-grey.png" alt="Elindus" className="h-16 object-contain opacity-70 mb-8" />
-                    
+
                     <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 border-b border-slate-100 pb-4">
                       <div className="text-center sm:text-left">
                         <h2 className="text-2xl font-black text-slate-500 mb-1">Marktprijzen</h2>
@@ -623,143 +688,177 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-black text-slate-500 mb-4">Huidige Marktprijzen (automatisch via API)</h3>
-                  {/* Market Price Cards */}
-                  <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 sm:gap-4 mb-8">
-                    {priceFields.map(field => (
-                      <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.color} shadow-sm`}>
-                            {field.desc.includes('Elek') ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
+                  <div className="mb-12 relative">
+                    <div className="hidden lg:flex absolute -left-[4.5rem] top-0 w-12 h-12 rounded-full bg-slate-100 items-center justify-center font-black text-2xl text-slate-400 shadow-sm border border-slate-200 z-10">1</div>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="text-lg font-black text-slate-500 mb-4 flex items-center gap-3 w-full">
+                        <span className="lg:hidden w-8 h-8 rounded-full bg-slate-100 flex flex-shrink-0 items-center justify-center font-black text-base text-slate-400">1</span>
+                        Huidige Marktprijzen (automatisch via API)
+                      </h3>
+                      {/* Market Price Cards */}
+                      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
+                        {priceFields.map(field => (
+                          <div key={field.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${field.color === 'bg-amber-500' ? 'hover:shadow-amber-500/20 hover:shadow-lg' : 'hover:shadow-rose-500/20 hover:shadow-lg'}`}>
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.color} shadow-sm`}>
+                                {field.desc.includes('Elek') ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-black text-slate-600 truncate">{field.label}</p>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-rose-500">Variabel</p>
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={inputStrings[field.key] ?? String(overrideData[field.key] ?? '')}
+                              onChange={e => setInputStrings(prev => ({ ...prev, [field.key]: e.target.value }))}
+                              onBlur={e => {
+                                const parsed = parseFloat(e.target.value);
+                                const val = isNaN(parsed) ? 0 : parsed;
+                                setOverrideData(prev => ({ ...prev, [field.key]: val }));
+                                setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
+                              }}
+                              className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 outline-none transition-all ${field.color === 'bg-amber-500' ? 'focus:ring-amber-500/50' : 'focus:ring-rose-500/50'}`}
+                            />
+                            <p className="text-[10px] text-slate-300 mt-2 text-right">€/MWh</p>
                           </div>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-black text-slate-600 truncate">{field.label}</p>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-rose-500">Variabel</p>
-                          </div>
-                        </div>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={inputStrings[field.key] ?? String(overrideData[field.key] ?? '')}
-                          onChange={e => setInputStrings(prev => ({ ...prev, [field.key]: e.target.value }))}
-                          onBlur={e => {
-                            const parsed = parseFloat(e.target.value);
-                            const val = isNaN(parsed) ? 0 : parsed;
-                            setOverrideData(prev => ({ ...prev, [field.key]: val }));
-                            setInputStrings(prev => ({ ...prev, [field.key]: String(val) }));
-                          }}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
-                        />
-                        <p className="text-[10px] text-slate-300 mt-2 text-right">€/MWh</p>
+                        ))}
                       </div>
-                    ))}
+                    </div>
                   </div>
 
                   {/* Elindus Pricing Formula */}
-                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Prijsformules (25 – 99 MWh)</h3>
-                  <p className="text-xs text-slate-400 mb-5">De verkoopprijs in de wizard wordt berekend als: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Marktprijs × Multiplier + Marge</span></p>
+                  <div className="mb-12 pt-6 border-t border-slate-100 relative">
+                    <div className="hidden lg:flex absolute -left-[4.5rem] top-6 w-12 h-12 rounded-full bg-slate-100 items-center justify-center font-black text-2xl text-slate-400 shadow-sm border border-slate-200 z-10">2</div>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="text-lg font-black text-slate-500 mb-2 flex items-center gap-3">
+                        <span className="lg:hidden w-8 h-8 rounded-full bg-slate-100 flex flex-shrink-0 items-center justify-center font-black text-base text-slate-400">2</span>
+                        Prijsformules (25 – 99 MWh)
+                      </h3>
+                      <p className="text-xs text-slate-400 mb-5">De verkoopprijs in de wizard wordt berekend als: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Marktprijs × Multiplier + Marge</span></p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    {/* Elektriciteit Formula Card */}
-                    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-amber-500 shadow-sm">
-                          <Zap className="w-4 h-4 text-white" />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        {/* Elektriciteit Formula Card */}
+                        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-amber-500 shadow-sm">
+                              <Zap className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-600">Elektriciteit (EPEX SPOT)</p>
+                              <p className="text-[10px] font-mono text-slate-400">EPEX × {overrideData.elecMultiplier} + €{overrideData.elecAdder}/MWh</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 truncate">EPEX</p>
+                              <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-500 text-sm text-center truncate">
+                                {overrideData.epexSpot.toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 text-slate-300 font-black mt-4">×</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 text-center truncate">Multi</p>
+                              <input type="number" step="0.01"
+                                value={inputStrings['elecMultiplier'] ?? String(overrideData.elecMultiplier)}
+                                onChange={e => setInputStrings(prev => ({ ...prev, elecMultiplier: e.target.value }))}
+                                onBlur={e => { const v = parseFloat(e.target.value) || 1; setOverrideData(p => ({ ...p, elecMultiplier: v })); setInputStrings(p => ({ ...p, elecMultiplier: String(v) })); }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-600 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none transition-all text-center" />
+                            </div>
+                            <div className="flex-shrink-0 text-slate-300 font-black mt-4">+</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 text-right truncate">Marge</p>
+                              <input type="number" step="0.5"
+                                value={inputStrings['elecAdder'] ?? String(overrideData.elecAdder)}
+                                onChange={e => setInputStrings(prev => ({ ...prev, elecAdder: e.target.value }))}
+                                onBlur={e => { const v = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, elecAdder: v })); setInputStrings(p => ({ ...p, elecAdder: String(v) })); }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-600 text-sm focus:ring-2 focus:ring-amber-500/50 outline-none transition-all text-center" />
+                            </div>
+                          </div>
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Resultaat</p>
+                            <p className="font-black text-slate-700 text-lg">{simElecResult.toFixed(2)} <span className="text-xs text-slate-500">€/MWh</span></p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-black text-slate-600">Elektriciteit (EPEX SPOT)</p>
-                          <p className="text-[10px] font-mono text-slate-400">EPEX × {overrideData.elecMultiplier} + €{overrideData.elecAdder}/MWh</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Multiplier</p>
-                          <input type="number" step="0.01"
-                            value={inputStrings['elecMultiplier'] ?? String(overrideData.elecMultiplier)}
-                            onChange={e => setInputStrings(prev => ({ ...prev, elecMultiplier: e.target.value }))}
-                            onBlur={e => { const v = parseFloat(e.target.value) || 1; setOverrideData(p => ({ ...p, elecMultiplier: v })); setInputStrings(p => ({ ...p, elecMultiplier: String(v) })); }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
-                          <p className="text-[10px] text-slate-300 mt-1 text-right">×</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Marge</p>
-                          <input type="number" step="0.5"
-                            value={inputStrings['elecAdder'] ?? String(overrideData.elecAdder)}
-                            onChange={e => setInputStrings(prev => ({ ...prev, elecAdder: e.target.value }))}
-                            onBlur={e => { const v = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, elecAdder: v })); setInputStrings(p => ({ ...p, elecAdder: String(v) })); }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
-                          <p className="text-[10px] text-slate-300 mt-1 text-right">€/MWh</p>
-                        </div>
-                      </div>
-                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-slate-700 text-base">{simElecResult.toFixed(2)} €/MWh</span></p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">= {overrideData.epexSpot.toFixed(2)} × {overrideData.elecMultiplier} + {overrideData.elecAdder}</p>
-                      </div>
-                    </div>
 
-                    {/* Gas Formula Card */}
-                    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-rose-500 shadow-sm">
-                          <Flame className="w-4 h-4 text-white" />
+                        {/* Gas Formula Card */}
+                        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-rose-500 shadow-sm">
+                              <Flame className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-600">Aardgas (TTF DAM)</p>
+                              <p className="text-[10px] font-mono text-slate-400">TTF × {overrideData.gasMultiplier} + €{overrideData.gasAdder}/MWh</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 truncate">TTF</p>
+                              <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-500 text-sm text-center truncate">
+                                {overrideData.ttfDam.toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 text-slate-300 font-black mt-4">×</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 text-center truncate">Multi</p>
+                              <input type="number" step="0.01"
+                                value={inputStrings['gasMultiplier'] ?? String(overrideData.gasMultiplier)}
+                                onChange={e => setInputStrings(prev => ({ ...prev, gasMultiplier: e.target.value }))}
+                                onBlur={e => { const v = parseFloat(e.target.value) || 1; setOverrideData(p => ({ ...p, gasMultiplier: v })); setInputStrings(p => ({ ...p, gasMultiplier: String(v) })); }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-600 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none transition-all text-center" />
+                            </div>
+                            <div className="flex-shrink-0 text-slate-300 font-black mt-4">+</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 text-right truncate">Marge</p>
+                              <input type="number" step="0.5"
+                                value={inputStrings['gasAdder'] ?? String(overrideData.gasAdder)}
+                                onChange={e => setInputStrings(prev => ({ ...prev, gasAdder: e.target.value }))}
+                                onBlur={e => { const v = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, gasAdder: v })); setInputStrings(p => ({ ...p, gasAdder: String(v) })); }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-600 text-sm focus:ring-2 focus:ring-rose-500/50 outline-none transition-all text-center" />
+                            </div>
+                          </div>
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Resultaat</p>
+                            <p className="font-black text-slate-700 text-lg">{simGasResult.toFixed(2)} <span className="text-xs text-slate-500">€/MWh</span></p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-black text-slate-600">Aardgas (TTF DAM)</p>
-                          <p className="text-[10px] font-mono text-slate-400">TTF × {overrideData.gasMultiplier} + €{overrideData.gasAdder}/MWh</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Multiplier</p>
-                          <input type="number" step="0.01"
-                            value={inputStrings['gasMultiplier'] ?? String(overrideData.gasMultiplier)}
-                            onChange={e => setInputStrings(prev => ({ ...prev, gasMultiplier: e.target.value }))}
-                            onBlur={e => { const v = parseFloat(e.target.value) || 1; setOverrideData(p => ({ ...p, gasMultiplier: v })); setInputStrings(p => ({ ...p, gasMultiplier: String(v) })); }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
-                          <p className="text-[10px] text-slate-300 mt-1 text-right">×</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Marge</p>
-                          <input type="number" step="0.5"
-                            value={inputStrings['gasAdder'] ?? String(overrideData.gasAdder)}
-                            onChange={e => setInputStrings(prev => ({ ...prev, gasAdder: e.target.value }))}
-                            onBlur={e => { const v = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, gasAdder: v })); setInputStrings(p => ({ ...p, gasAdder: String(v) })); }}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
-                          <p className="text-[10px] text-slate-300 mt-1 text-right">€/MWh</p>
-                        </div>
-                      </div>
-                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-slate-700 text-base">{simGasResult.toFixed(2)} €/MWh</span></p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">= {overrideData.ttfDam.toFixed(2)} × {overrideData.gasMultiplier} + {overrideData.gasAdder}</p>
-                      </div>
-                    </div>
 
-                    {/* Injectie Formula Card (Elindus) */}
-                    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500 shadow-sm">
-                          <Zap className="w-4 h-4 text-white" />
+                        {/* Injectie Formula Card (Elindus) */}
+                        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500 shadow-sm">
+                              <Zap className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-600">Injectie (EPEX SPOT)</p>
+                              <p className="text-[10px] font-mono text-slate-400">EPEX × {overrideData.injMultiplier} + €{overrideData.injAdder}/MWh</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 mb-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 truncate">EPEX</p>
+                              <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-500 text-sm text-center truncate">
+                                {overrideData.epexSpot.toFixed(2)}
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 text-slate-300 font-black mt-4">×</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 text-center truncate">Multi</p>
+                              <input type="number" step="0.01" value={inputStrings['injMultiplier'] ?? String(overrideData.injMultiplier)} onChange={e => setInputStrings(prev => ({ ...prev, injMultiplier: e.target.value }))} onBlur={e => { const v = parseFloat(e.target.value) || 1; setOverrideData(p => ({ ...p, injMultiplier: v })); setInputStrings(p => ({ ...p, injMultiplier: String(v) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-600 text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all text-center" />
+                            </div>
+                            <div className="flex-shrink-0 text-slate-300 font-black mt-4">+</div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 text-right truncate">Marge</p>
+                              <input type="number" step="0.5" value={inputStrings['injAdder'] ?? String(overrideData.injAdder)} onChange={e => setInputStrings(prev => ({ ...prev, injAdder: e.target.value }))} onBlur={e => { const v = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, injAdder: v })); setInputStrings(p => ({ ...p, injAdder: String(v) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-1 py-2 font-bold text-slate-600 text-sm focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all text-center" />
+                            </div>
+                          </div>
+                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Resultaat</p>
+                            <p className="font-black text-slate-700 text-lg">{((overrideData.epexSpot || 0) * (overrideData.injMultiplier ?? 0.9) + (overrideData.injAdder ?? 15)).toFixed(2)} <span className="text-xs text-slate-500">€/MWh</span></p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-black text-slate-600">Injectie (EPEX SPOT)</p>
-                          <p className="text-[10px] font-mono text-slate-400">EPEX × {overrideData.injMultiplier} + €{overrideData.injAdder}/MWh</p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Multiplier</p>
-                          <input type="number" step="0.01" value={inputStrings['injMultiplier'] ?? String(overrideData.injMultiplier)} onChange={e => setInputStrings(prev => ({ ...prev, injMultiplier: e.target.value }))} onBlur={e => { const v = parseFloat(e.target.value) || 1; setOverrideData(p => ({ ...p, injMultiplier: v })); setInputStrings(p => ({ ...p, injMultiplier: String(v) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
-                          <p className="text-[10px] text-slate-300 mt-1 text-right">×</p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Marge</p>
-                          <input type="number" step="0.5" value={inputStrings['injAdder'] ?? String(overrideData.injAdder)} onChange={e => setInputStrings(prev => ({ ...prev, injAdder: e.target.value }))} onBlur={e => { const v = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, injAdder: v })); setInputStrings(p => ({ ...p, injAdder: String(v) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
-                          <p className="text-[10px] text-slate-300 mt-1 text-right">€/MWh</p>
-                        </div>
-                      </div>
-                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-slate-700 text-base">{((overrideData.epexSpot || 0) * (overrideData.injMultiplier ?? 0.9) + (overrideData.injAdder ?? 15)).toFixed(2)} €/MWh</span></p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">= {overrideData.epexSpot.toFixed(2)} × {overrideData.injMultiplier} + {overrideData.injAdder}</p>
                       </div>
                     </div>
                   </div>
@@ -768,8 +867,8 @@ export default function AdminDashboard() {
                   <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Vaste Vergoedingen</h3>
                   <p className="text-xs text-slate-400 mb-5">Vaste jaarlijkse kost (in €, per jaar) afhankelijk van het type verbruik.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    {[{ key: 'elindusVvElec', label: 'Elektriciteit', icon: 'elec', color: 'bg-amber-500' }, { key: 'elindusVvGas', label: 'Aardgas', icon: 'gas', color: 'bg-rose-500' }, { key: 'elindusVvInj', label: 'Injectie (Zonnepanelen)', icon: 'inj', color: 'bg-emerald-500' }].map(f => (
-                      <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm">
+                    {[{ key: 'elindusVvElec', label: 'Elektriciteit', icon: 'elec', color: 'bg-amber-500', focusRing: 'focus:ring-amber-500/50', hoverShadow: 'hover:shadow-amber-500/20 hover:shadow-lg' }, { key: 'elindusVvGas', label: 'Aardgas', icon: 'gas', color: 'bg-rose-500', focusRing: 'focus:ring-rose-500/50', hoverShadow: 'hover:shadow-rose-500/20 hover:shadow-lg' }, { key: 'elindusVvInj', label: 'Injectie (Zonnepanelen)', icon: 'inj', color: 'bg-emerald-500', focusRing: 'focus:ring-emerald-500/50', hoverShadow: 'hover:shadow-emerald-500/20 hover:shadow-lg' }].map(f => (
+                      <div key={f.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${f.hoverShadow}`}>
                         <div className="flex items-center gap-3 mb-4">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color} shadow-sm`}>
                             {f.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : f.icon === 'gas' ? <Flame className="w-4 h-4 text-white" /> : <Zap className="w-4 h-4 text-white" />}
@@ -779,7 +878,7 @@ export default function AdminDashboard() {
                             <p className="text-[10px] font-bold tracking-wider text-slate-400">Vaste Vergoeding</p>
                           </div>
                         </div>
-                        <input type="number" step="0.5" value={inputStrings[f.key] ?? String(overrideData[f.key as keyof MarketData] ?? '')} onChange={e => setInputStrings(prev => ({ ...prev, [f.key]: e.target.value }))} onBlur={e => { const val = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, [f.key]: val })); setInputStrings(p => ({ ...p, [f.key]: String(val) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                        <input type="number" step="0.5" value={inputStrings[f.key] ?? String(overrideData[f.key as keyof MarketData] ?? '')} onChange={e => setInputStrings(prev => ({ ...prev, [f.key]: e.target.value }))} onBlur={e => { const val = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, [f.key]: val })); setInputStrings(p => ({ ...p, [f.key]: String(val) })); }} className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 ${f.focusRing} outline-none transition-all`} />
                         <p className="text-[10px] text-slate-300 mt-2 text-right">€/jaar</p>
                       </div>
                     ))}
@@ -793,7 +892,7 @@ export default function AdminDashboard() {
                       <input type="number" step="1" min="25" max="99"
                         value={simMwh}
                         onChange={e => setSimMwh(Math.max(0, parseFloat(e.target.value) || 0))}
-                        className="w-full max-w-[200px] bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                        className="w-full max-w-[200px] bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/50 outline-none transition-all" />
                       {simMwh >= 100 && <p className="text-xs text-rose-500 font-bold mt-1">⚠ Vanaf 100 MWh → contact team coach (geen prijs getoond in wizard)</p>}
                       {simMwh < 25 && simMwh > 0 && <p className="text-xs text-amber-500 font-bold mt-1">⚠ Onder 25 MWh wordt enkel Eneco getoond</p>}
                     </div>
@@ -840,7 +939,7 @@ export default function AdminDashboard() {
                 <motion.div key="eneco" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
                   <div className="flex flex-col items-center w-full mb-10 mt-4 relative">
                     <img src="./eneco-grey.png" alt="Eneco" className="h-20 object-contain opacity-70 mb-8" />
-                    
+
                     <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 border-b border-slate-100 pb-4">
                       <div className="text-center sm:text-left">
                         <h2 className="text-2xl font-black text-slate-500 mb-1">Tarieven</h2>
@@ -862,61 +961,79 @@ export default function AdminDashboard() {
                   </div>
 
                   {enecoPriceFields.map(group => (
-                    <div key={group.group} className="mb-6">
-                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{group.group}</p>
-                      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-                        {group.fields.map(field => (
-                          <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-500' : 'bg-rose-500'} shadow-sm`}>
-                                {field.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
+                    <div key={group.group} className="mb-8">
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">{group.group}</p>
+                      {group.subGroups.map(sub => (
+                        <div key={sub.subLabel} className="mb-5">
+                          <p className="text-xs font-bold text-slate-400 mb-2 pl-1">{sub.subLabel}</p>
+                          <div className={`grid gap-3 sm:gap-4 ${sub.fields.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 xl:grid-cols-4'}`}>
+                            {sub.fields.map(field => (
+                              <div key={field.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${field.icon === 'elec' ? 'hover:shadow-amber-500/20 hover:shadow-lg' : 'hover:shadow-rose-500/20 hover:shadow-lg'}`}>
+                                <div className="flex items-center gap-3 mb-4">
+                                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-500' : 'bg-rose-500'} shadow-sm`}>
+                                    {field.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-[11px] font-black text-slate-500 truncate">{field.type}</p>
+                                    <p className={`text-[10px] font-bold uppercase tracking-wider ${field.label.includes('Vast') ? 'text-emerald-500' : field.label.includes('Nacht') ? 'text-indigo-500' : 'text-blue-500'}`}>{field.label}</p>
+                                  </div>
+                                </div>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={inputStrings[`${field.key}_ctkwh`] ?? String(Number(((overrideData[field.key] as number) || 0) / 10).toFixed(2))}
+                                  onChange={e => setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: e.target.value }))}
+                                  onBlur={e => {
+                                    const parsed = parseFloat(e.target.value);
+                                    const centKwh = isNaN(parsed) ? 0 : parsed;
+                                    const mwhVal = centKwh * 10;
+                                    setOverrideData(prev => ({ ...prev, [field.key]: mwhVal }));
+                                    setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: String(centKwh), [field.key]: String(mwhVal) }));
+                                  }}
+                                  className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 outline-none transition-all ${field.icon === 'elec' ? 'focus:ring-amber-500/50' : 'focus:ring-rose-500/50'}`}
+                                />
+                                <p className="text-[10px] text-slate-300 mt-2 text-right">€cent/kWh</p>
                               </div>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-black text-slate-500 truncate">{field.type}</p>
-                                <p className={`text-[10px] font-bold uppercase tracking-wider ${field.label === 'Vast' ? 'text-emerald-500' : 'text-blue-500'}`}>{field.label}</p>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+
+                  {/* Eneco - Injectie Tarieven */}
+                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Injectie Tarieven (Zonnepanelen)</h3>
+                  <p className="text-xs text-slate-400 mb-5">Vergoeding per MWh voor geïnjecteerde stroom. Enkelvoudig = één tarief. Dag/Nacht = tweevoudige meter.</p>
+                  {[{ group: 'Particulier', fields: [
+                    { key: 'enecoResElecInj', label: 'Enkelvoudig' },
+                    { key: 'enecoResInjElecDag', label: 'Dag' },
+                    { key: 'enecoResInjElecNacht', label: 'Nacht' },
+                  ]}, { group: 'SOHO', fields: [
+                    { key: 'enecoSohoElecInj', label: 'Enkelvoudig' },
+                    { key: 'enecoSohoInjElecDag', label: 'Dag' },
+                    { key: 'enecoSohoInjElecNacht', label: 'Nacht' },
+                  ]}].map(g => (
+                    <div key={g.group} className="mb-6">
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{g.group}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {g.fields.map(f => (
+                          <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-emerald-500/20 hover:shadow-lg transition-all">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500 shadow-sm">
+                                <Zap className="w-4 h-4 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-black text-slate-500 uppercase">{f.label}</p>
+                                <p className="text-[10px] font-bold tracking-wider text-emerald-500">Injectie</p>
                               </div>
                             </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={inputStrings[`${field.key}_ctkwh`] ?? String(Number(((overrideData[field.key] as number) || 0) / 10).toFixed(2))}
-                              onChange={e => setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: e.target.value }))}
-                              onBlur={e => {
-                                const parsed = parseFloat(e.target.value);
-                                const centKwh = isNaN(parsed) ? 0 : parsed;
-                                const mwhVal = centKwh * 10;
-                                setOverrideData(prev => ({ ...prev, [field.key]: mwhVal }));
-                                setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: String(centKwh), [field.key]: String(mwhVal) }));
-                              }}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
-                            />
+                            <input type="number" step="0.01" value={inputStrings[`${f.key}_ctkwh`] ?? String(Number(((overrideData[f.key as keyof MarketData] as number) || 0) / 10).toFixed(2))} onChange={e => setInputStrings(prev => ({ ...prev, [`${f.key}_ctkwh`]: e.target.value }))} onBlur={e => { const centKwh = parseFloat(e.target.value) || 0; const mwhVal = centKwh * 10; setOverrideData(p => ({ ...p, [f.key]: mwhVal })); setInputStrings(p => ({ ...p, [`${f.key}_ctkwh`]: String(centKwh), [f.key]: String(mwhVal) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-emerald-500/50 outline-none transition-all" />
                             <p className="text-[10px] text-slate-300 mt-2 text-right">€cent/kWh</p>
                           </div>
                         ))}
                       </div>
                     </div>
                   ))}
-
-                  {/* Eneco - Injectie Tarieven */}
-                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Injectie Tarieven (Zonnepanelen)</h3>
-                  <p className="text-xs text-slate-400 mb-5">Vergoeding per MWh voor geïnjecteerde stroom. Wordt gebruikt i.p.v. het standaard elektriciteitstarief als de klant zonnepanelen heeft.</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                    {[{ key: 'enecoResElecInj', label: 'Particulier' }, { key: 'enecoSohoElecInj', label: 'SOHO' }].map(f => (
-                      <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500 shadow-sm`}>
-                            <Zap className="w-4 h-4 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-[11px] font-black text-slate-500 uppercase">{f.label}</p>
-                            <p className="text-[10px] font-bold tracking-wider text-emerald-500">Injectie Variabel</p>
-                          </div>
-                        </div>
-                        <input type="number" step="0.01" value={inputStrings[`${f.key}_ctkwh`] ?? String(Number(((overrideData[f.key as keyof MarketData] as number) || 0) / 10).toFixed(2))} onChange={e => setInputStrings(prev => ({ ...prev, [`${f.key}_ctkwh`]: e.target.value }))} onBlur={e => { const centKwh = parseFloat(e.target.value) || 0; const mwhVal = centKwh * 10; setOverrideData(p => ({ ...p, [f.key]: mwhVal })); setInputStrings(p => ({ ...p, [`${f.key}_ctkwh`]: String(centKwh), [f.key]: String(mwhVal) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
-                        <p className="text-[10px] text-slate-300 mt-2 text-right">€cent/kWh (opgeslagen als €/MWh)</p>
-                      </div>
-                    ))}
-                  </div>
 
                   {/* Eneco - Vaste Vergoedingen */}
                   <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Vaste Vergoedingen</h3>
@@ -925,8 +1042,8 @@ export default function AdminDashboard() {
                     <div key={g.group} className="mb-6">
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{g.group}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {[{ key: `eneco${g.type}VvElec`, label: 'Elektriciteit', color: 'bg-amber-500' }, { key: `eneco${g.type}VvGas`, label: 'Aardgas', color: 'bg-rose-500' }, { key: `eneco${g.type}VvInj`, label: 'Injectie', color: 'bg-emerald-500' }].map(f => (
-                          <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm">
+                        {[{ key: `eneco${g.type}VvElec`, label: 'Elektriciteit', color: 'bg-amber-500', focusRing: 'focus:ring-amber-500/50', hoverShadow: 'hover:shadow-amber-500/20 hover:shadow-lg' }, { key: `eneco${g.type}VvGas`, label: 'Aardgas', color: 'bg-rose-500', focusRing: 'focus:ring-rose-500/50', hoverShadow: 'hover:shadow-rose-500/20 hover:shadow-lg' }, { key: `eneco${g.type}VvInj`, label: 'Injectie', color: 'bg-emerald-500', focusRing: 'focus:ring-emerald-500/50', hoverShadow: 'hover:shadow-emerald-500/20 hover:shadow-lg' }].map(f => (
+                          <div key={f.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${f.hoverShadow}`}>
                             <div className="flex items-center gap-3 mb-4">
                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color} shadow-sm`}>
                                 <span className="text-white font-bold text-xs">VV</span>
@@ -936,7 +1053,7 @@ export default function AdminDashboard() {
                                 <p className="text-[10px] font-bold tracking-wider text-slate-400">Vaste Vergoeding</p>
                               </div>
                             </div>
-                            <input type="number" step="0.5" value={inputStrings[f.key] ?? String(overrideData[f.key as keyof MarketData] ?? '')} onChange={e => setInputStrings(prev => ({ ...prev, [f.key]: e.target.value }))} onBlur={e => { const val = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, [f.key]: val })); setInputStrings(p => ({ ...p, [f.key]: String(val) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                            <input type="number" step="0.5" value={inputStrings[f.key] ?? String(overrideData[f.key as keyof MarketData] ?? '')} onChange={e => setInputStrings(prev => ({ ...prev, [f.key]: e.target.value }))} onBlur={e => { const val = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, [f.key]: val })); setInputStrings(p => ({ ...p, [f.key]: String(val) })); }} className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 ${f.focusRing} outline-none transition-all`} />
                             <p className="text-[10px] text-slate-300 mt-2 text-right">€/jaar</p>
                           </div>
                         ))}
