@@ -1009,28 +1009,29 @@ export default function App() {
 
                       {/* Vergelijking Slider — Alleen voor SOHO */}
                       {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
-                        <div className="pt-6 pb-2 border-t border-slate-100 flex items-center justify-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
-                          <div className="bg-slate-100/50 p-1.5 rounded-2xl flex relative w-full max-w-sm shadow-inner border border-slate-200/60">
+                        <div className={`pt-6 pb-2 border-t border-slate-100 flex items-center relative transition-all duration-500 ease-in-out h-20 ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto justify-end gap-0' : 'w-[calc(50%-1.5rem)] ml-auto justify-start gap-0') : 'w-full justify-center gap-3 sm:gap-4'}`}>
+                          <div className={`bg-slate-100/50 rounded-2xl flex relative w-full shadow-inner border transition-all duration-500 ease-in-out ${globalCalcOpen ? 'max-w-0 p-0 m-0 opacity-0 overflow-hidden border-transparent flex-shrink-0' : 'max-w-sm p-1.5 border-slate-200/60 opacity-100 flex-shrink'}`}>
                             <div
                               className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
                               style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
                             />
                             <button
                               onClick={() => setComparisonView('ENECO')}
-                              className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center ${comparisonView === 'ENECO' ? '' : 'hover:opacity-80'}`}
+                              className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center whitespace-nowrap min-w-[50%] ${comparisonView === 'ENECO' ? '' : 'hover:opacity-80'}`}
                             >
                               <img src="./eneco-grey.png" alt="Eneco" className={`h-7 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
                             </button>
                             <button
                               onClick={() => setComparisonView('ELINDUS')}
-                              className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center ${comparisonView === 'ELINDUS' ? '' : 'hover:opacity-80'}`}
+                              className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center whitespace-nowrap min-w-[50%] ${comparisonView === 'ELINDUS' ? '' : 'hover:opacity-80'}`}
                             >
                               <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0 flex items-center' : 'opacity-40 grayscale'}`} />
                             </button>
                           </div>
                           
-                          <button onClick={() => setShowLinksModal(true)} className="flex items-center justify-center w-14 h-[3.25rem] bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-[#E74B4D] hover:bg-slate-50 shadow-sm flex-shrink-0 transition-colors">
-                            <Info className="w-6 h-6" />
+                          <button onClick={() => setShowLinksModal(true)} className={`flex items-center justify-center h-[3.25rem] bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-[#E74B4D] hover:bg-slate-50 shadow-sm transition-all duration-500 flex-shrink-0 whitespace-nowrap overflow-hidden ${globalCalcOpen ? 'w-full' : 'w-14'}`}>
+                            <Info className="w-6 h-6 flex-shrink-0" />
+                            <span className={`font-bold transition-all duration-500 overflow-hidden ${globalCalcOpen ? 'max-w-[200px] opacity-100 pl-2' : 'max-w-0 opacity-0 pl-0'}`}>Handige Links</span>
                           </button>
                         </div>
                       )}
