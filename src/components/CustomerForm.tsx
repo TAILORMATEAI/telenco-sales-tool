@@ -265,8 +265,7 @@ export default function CustomerForm({
           </div>
         </div>
 
-        <h3 className="font-bold text-slate-600 mt-6 mb-4 border-b border-slate-200 pb-2">Communicatie</h3>
-        <div className="grid grid-cols-1 gap-[clamp(1rem,2vh,1.25rem)]">
+        <div className="grid grid-cols-1 gap-[clamp(1rem,2vh,1.25rem)] mt-6 pt-6 border-t border-slate-200">
           <div><label className={labelCls}>{text.email} *</label><input type="email" autoComplete="email" name="email_address" className={inputCls} value={customerData.email} onChange={e => setCustomerData(prev => ({ ...prev, email: e.target.value }))} /></div>
           <div className="flex items-center gap-3">
             <label className="relative inline-flex items-center cursor-pointer">

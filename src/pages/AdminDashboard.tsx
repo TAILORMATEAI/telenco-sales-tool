@@ -154,6 +154,10 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
 
+  // Energy Orders (Bonnen)
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+
   const fetchMarketData = async () => {
     const { data, error } = await supabase.from('market_prices').select('*');
     if (!error && data && data.length > 0) {
@@ -275,14 +279,27 @@ export default function AdminDashboard() {
     fetchLogs();
     fetchUsers();
     fetchSyncStatus();
+    fetchOrders();
   }, []);
+
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    const { data, error } = await supabase.from('energy_orders').select('*').order('created_at', { ascending: false }).limit(100);
+    if (!error && data) setOrders(data);
+    setOrdersLoading(false);
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
     setSaveSuccess(false);
     const nowIso = new Date().toISOString();
     const updaterName = `${profile?.first_name || 'Admin'} ${profile?.last_name || ''}`.trim();
-    const updaterAvatar = profile?.avatar_id || null;
+    // Fetch avatar directly from profiles table for most up-to-date value
+    let updaterAvatar = profile?.avatar_id || null;
+    if (!updaterAvatar && user) {
+      const { data: freshProfile } = await supabase.from('profiles').select('avatar_id').eq('id', user.id).single();
+      if (freshProfile?.avatar_id) updaterAvatar = freshProfile.avatar_id;
+    }
 
     const indicators: [string, number][] = [
       ['EPEX_SPOT', overrideData.epexSpot],
@@ -1086,6 +1103,58 @@ export default function AdminDashboard() {
                     </div>
                   ))}
 
+                </motion.div>
+              )}
+
+              {/* BONNEN (ORDERS) TAB */}
+              {activeTab === 'orders' && (
+                <motion.div key="orders" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-2xl font-black text-slate-500">Bonnen</h2>
+                      <p className="text-sm text-slate-400 mt-1">{orders.length} opgeslagen bonnen</p>
+                    </div>
+                    <button onClick={fetchOrders} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#E5394C] to-[#EA704F] hover:shadow-lg transition-all shadow-sm">
+                      <RefreshCw className="w-4 h-4" /> Vernieuwen
+                    </button>
+                  </div>
+                  
+                  {ordersLoading ? (
+                    <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#E5394C] rounded-full animate-spin" /></div>
+                  ) : orders.length === 0 ? (
+                    <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm">
+                      <Save className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                      <p className="font-bold text-slate-400">Nog geen bonnen opgeslagen</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {orders.map((order) => (
+                        <div key={order.id} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${order.energy_type === 'ELEC' ? 'bg-amber-500' : order.energy_type === 'GAS' ? 'bg-rose-500' : 'bg-purple-500'} shadow-sm`}>
+                                {order.energy_type === 'ELEC' ? <Zap className="w-5 h-5 text-white" /> : order.energy_type === 'GAS' ? <Flame className="w-5 h-5 text-white" /> : <Calculator className="w-5 h-5 text-white" />}
+                              </div>
+                              <div>
+                                <p className="font-black text-slate-600">{order.first_name} {order.last_name}</p>
+                                <p className="text-xs text-slate-400">{order.email} · {order.customer_type}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">{order.commission_code}</span>
+                              <span className="text-xs text-slate-400">{order.created_at ? formatDate(order.created_at) : ''}</span>
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div><span className="text-slate-400 font-medium">Type</span><p className="font-bold text-slate-600">{order.energy_type}</p></div>
+                            <div><span className="text-slate-400 font-medium">Meter</span><p className="font-bold text-slate-600">{order.meter_type || '—'}</p></div>
+                            <div><span className="text-slate-400 font-medium">Adres</span><p className="font-bold text-slate-600 truncate">{order.connection_street} {order.connection_house_number}</p></div>
+                            <div><span className="text-slate-400 font-medium">Postcode</span><p className="font-bold text-slate-600">{order.connection_postal_code} {order.connection_city}</p></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
 

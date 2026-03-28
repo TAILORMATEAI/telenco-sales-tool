@@ -877,7 +877,7 @@ export default function App() {
                 {isElec ? (
                   <>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-4">
-                      <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">Type Meter</label>
+                      <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{text.consumption || 'Type Meter'}</label>
                     </div>
                     <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4 mb-6">
                       <button onClick={() => setElecMeterType('ENKEL')} className={`flex-1 min-w-[120px] py-3 rounded-2xl font-bold transition-all ${elecMeterType === 'ENKEL' ? 'bg-eneco-gradient text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>Enkelvoudig</button>
@@ -902,19 +902,19 @@ export default function App() {
                           
                           {/* Dag */}
                           <div className="space-y-4">
-                            <label className="block text-xs font-bold text-amber-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3"/> Dag Verbruik</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3"/> Dag Verbruik</label>
                             <div className="flex items-center gap-4">
-                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecDagMWh === 0 ? '' : Math.round(elecDagMWh * 1000)) : (elecDagMWh === 0 ? '' : elecDagMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecDagMWh(m); setConsMWh(m + elecNachtMWh); if ((m + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-amber-500" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-amber-500/50 text-sm">{inputUnit}</span></div>
-                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecDagMWh} onChange={(v) => { setElecDagMWh(v); setConsMWh(v + elecNachtMWh); if ((v + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} color="#f59e0b" className="flex-1" />}
+                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecDagMWh === 0 ? '' : Math.round(elecDagMWh * 1000)) : (elecDagMWh === 0 ? '' : elecDagMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecDagMWh(m); setConsMWh(m + elecNachtMWh); if ((m + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecDagMWh} onChange={(v) => { setElecDagMWh(v); setConsMWh(v + elecNachtMWh); if ((v + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
                             </div>
                           </div>
 
                           {/* Nacht */}
                           <div className="space-y-4">
-                            <label className="block text-xs font-bold text-indigo-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3"/> Nacht Verbruik</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3"/> Nacht Verbruik</label>
                             <div className="flex items-center gap-4">
-                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecNachtMWh === 0 ? '' : Math.round(elecNachtMWh * 1000)) : (elecNachtMWh === 0 ? '' : elecNachtMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecNachtMWh(m); setConsMWh(m + elecDagMWh); if ((m + elecDagMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-indigo-500" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-500/50 text-sm">{inputUnit}</span></div>
-                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecNachtMWh} onChange={(v) => { setElecNachtMWh(v); setConsMWh(v + elecDagMWh); if ((v + elecDagMWh) >= 25) setTariff('VARIABEL'); }} color="#6366f1" className="flex-1" />}
+                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecNachtMWh === 0 ? '' : Math.round(elecNachtMWh * 1000)) : (elecNachtMWh === 0 ? '' : elecNachtMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecNachtMWh(m); setConsMWh(m + elecDagMWh); if ((m + elecDagMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecNachtMWh} onChange={(v) => { setElecNachtMWh(v); setConsMWh(v + elecDagMWh); if ((v + elecDagMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
                             </div>
                           </div>
                           
@@ -1208,7 +1208,7 @@ export default function App() {
 
                 {/* STEP 3: Current Price */}
                 {currentStep === 3 && (
-                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
+                  <motion.div key="step3" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
                     <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
                       {getRequiredTypes().map(type => (
                         <React.Fragment key={type}>{renderCurrentPriceInput(type)}</React.Fragment>
