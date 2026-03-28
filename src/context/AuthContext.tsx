@@ -11,6 +11,7 @@ interface Profile {
   first_name?: string;
   last_name?: string;
   last_login?: string;
+  avatar_id?: string;
 }
 
 interface AuthContextType {

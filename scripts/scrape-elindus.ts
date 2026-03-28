@@ -133,6 +133,8 @@ async function saveToSupabase(markets: ScrapedMarket[]) {
     value: m.value,
     unit: m.unit,
     last_updated: nowIso,
+    updated_by: 'Automatische market scan',
+    updated_by_avatar: null
   }));
 
   const { error: upsertError } = await supabase

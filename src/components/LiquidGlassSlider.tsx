@@ -61,14 +61,14 @@ export default function LiquidGlassSlider({
   }, [min, max, step, onChange]);
 
   return (
-    <div className={`relative py-6 z-10 ${className}`}>
+    <div className={`relative py-6 z-10 overflow-visible ${className}`}>
       <div 
         ref={containerRef}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="relative w-full h-2.5 bg-[#D6D6DA] rounded-full cursor-pointer select-none touch-none"
+        className="relative w-full h-2.5 bg-[#D6D6DA] rounded-full cursor-pointer select-none touch-none overflow-visible"
       >
         <div 
           className="absolute h-full rounded-full z-[1]"
@@ -76,7 +76,7 @@ export default function LiquidGlassSlider({
         ></div>
         
         <div 
-          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-10 sm:w-16 sm:h-10 rounded-full cursor-pointer z-[2] bg-white shadow-[0_1px_8px_0_rgba(0,30,63,0.1),0_0_2px_0_rgba(0,9,20,0.1)] ${isDragging ? 'scale-y-[0.96] scale-x-[1.1] shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : ''}`}
+          className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-6 sm:w-10 sm:h-7 rounded-full cursor-pointer z-[2] bg-white shadow-[0_1px_8px_0_rgba(0,30,63,0.1),0_0_2px_0_rgba(0,9,20,0.1)] ${isDragging ? 'scale-y-[0.96] scale-x-[1.1] shadow-[0_6px_16px_rgba(0,0,0,0.15)]' : ''}`}
           style={{ 
             left: `${percent}%`, 
             transition: 'transform 0.15s ease, box-shadow 0.15s ease' 

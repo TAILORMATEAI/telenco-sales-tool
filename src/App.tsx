@@ -21,6 +21,7 @@ import axios from 'axios';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import { supabase } from './supabase';
 import Header from './components/Header';
+import CustomerForm from './components/CustomerForm';
 
 type EnergyType = 'ELEC' | 'GAS' | 'BOTH' | null;
 type CustomerType = 'PARTICULIER' | 'SOHO' | null;
@@ -44,6 +45,21 @@ interface MarketData {
   enecoSohoGasVar?: number;
   enecoResElecInj?: number;
   enecoSohoElecInj?: number;
+  // Dag/Nacht Eneco Elektriciteit
+  enecoResElecDagVast?: number;
+  enecoResElecNachtVast?: number;
+  enecoResElecDagVar?: number;
+  enecoResElecNachtVar?: number;
+  enecoSohoElecDagVast?: number;
+  enecoSohoElecNachtVast?: number;
+  enecoSohoElecDagVar?: number;
+  enecoSohoElecNachtVar?: number;
+  // Dag/Nacht Eneco Injectie
+  enecoResInjElecDag?: number;
+  enecoResInjElecNacht?: number;
+  enecoSohoInjElecDag?: number;
+  enecoSohoInjElecNacht?: number;
+  // Vaste Vergoedingen
   enecoResVvElec?: number;
   enecoResVvGas?: number;
   enecoSohoVvElec?: number;
@@ -83,11 +99,16 @@ export default function App() {
 
   // Electricity State
   const [hasSolarPanels, setHasSolarPanels] = useState<boolean | null>(null);
+  const [elecMeterType, setElecMeterType] = useState<'ENKEL' | 'TWEEVOUDIG' | null>(null);
   const [elecKnowsConsumption, setElecKnowsConsumption] = useState<boolean | null>(null);
-  const [elecConsumptionMWh, setElecConsumptionMWh] = useState<number>(50);
+  const [elecConsumptionMWh, setElecConsumptionMWh] = useState<number>(50); // Total
+  const [elecDagMWh, setElecDagMWh] = useState<number>(25);
+  const [elecNachtMWh, setElecNachtMWh] = useState<number>(25);
   const [elecIsOver30MWh, setElecIsOver30MWh] = useState<boolean | null>(null);
-  const [elecCurrentPriceMWh, setElecCurrentPriceMWh] = useState<number>(120);
-  const [elecEnecoOfferPriceMWh, setElecEnecoOfferPriceMWh] = useState<number>(85);
+  const [elecCurrentPriceMWh, setElecCurrentPriceMWh] = useState<number>(120); // Single current price
+  const [elecCurrentPriceDagMWh, setElecCurrentPriceDagMWh] = useState<number>(130);
+  const [elecCurrentPriceNachtMWh, setElecCurrentPriceNachtMWh] = useState<number>(110);
+  const [elecEnecoOfferPriceMWh, setElecEnecoOfferPriceMWh] = useState<number>(85); // Note: Offer calculation will be split
   const [elecTariff, setElecTariff] = useState<'VAST' | 'VARIABEL' | null>(null);
 
   // Gas State
@@ -117,11 +138,32 @@ export default function App() {
 
   // Wizard State
   const [currentStep, setCurrentStep] = useState<number>(1);
-  const totalSteps = 4;
+  const totalSteps = 5;
   const [direction, setDirection] = useState<number>(1);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // UI State
+  // Step 5: Customer Data & Address
+  const [customerData, setCustomerData] = useState({
+    companyName: '', vatNumber: 'BE', vatPending: false, firstName: '', lastName: '',
+    birthDate: '', phoneCountry: '+32', phone: '',
+    email: '',
+    billingEmailSame: true, billingEmail: '',
+    language: 'NL'
+  });
+  const [connectionAddress, setConnectionAddress] = useState({
+    street: '', houseNumber: '', busNumber: '', postalCode: '', city: ''
+  });
+  const [billingAddressSame, setBillingAddressSame] = useState(true);
+  const [billingAddress, setBillingAddress] = useState({
+    street: '', houseNumber: '', busNumber: '', postalCode: '', city: ''
+  });
+
+  const streetRef = React.useRef<HTMLInputElement>(null);
+  const cityRef = React.useRef<HTMLInputElement>(null);
+  const billingStreetRef = React.useRef<HTMLInputElement>(null);
+  const billingCityRef = React.useRef<HTMLInputElement>(null);
+  const typedStreetRef = React.useRef('');
+
   const [showAdminSettings, setShowAdminSettings] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
@@ -179,6 +221,18 @@ export default function App() {
           enecoSohoGasVar: find('ENECO_SOHO_GAS_VARIABEL')?.value || 0,
           enecoResElecInj: find('ENECO_RES_INJ_ELEC')?.value || 0,
           enecoSohoElecInj: find('ENECO_SOHO_INJ_ELEC')?.value || 0,
+          enecoResElecDagVast: find('ENECO_RES_ELEC_DAG_VAST')?.value || 0,
+          enecoResElecNachtVast: find('ENECO_RES_ELEC_NACHT_VAST')?.value || 0,
+          enecoResElecDagVar: find('ENECO_RES_ELEC_DAG_VAR')?.value || 0,
+          enecoResElecNachtVar: find('ENECO_RES_ELEC_NACHT_VAR')?.value || 0,
+          enecoSohoElecDagVast: find('ENECO_SOHO_ELEC_DAG_VAST')?.value || 0,
+          enecoSohoElecNachtVast: find('ENECO_SOHO_ELEC_NACHT_VAST')?.value || 0,
+          enecoSohoElecDagVar: find('ENECO_SOHO_ELEC_DAG_VAR')?.value || 0,
+          enecoSohoElecNachtVar: find('ENECO_SOHO_ELEC_NACHT_VAR')?.value || 0,
+          enecoResInjElecDag: find('ENECO_RES_INJ_ELEC_DAG')?.value || 0,
+          enecoResInjElecNacht: find('ENECO_RES_INJ_ELEC_NACHT')?.value || 0,
+          enecoSohoInjElecDag: find('ENECO_SOHO_INJ_ELEC_DAG')?.value || 0,
+          enecoSohoInjElecNacht: find('ENECO_SOHO_INJ_ELEC_NACHT')?.value || 0,
           enecoResVvElec: find('ENECO_RES_VV_ELEC')?.value || 65,
           enecoResVvGas: find('ENECO_RES_VV_GAS')?.value || 65,
           enecoSohoVvElec: find('ENECO_SOHO_VV_ELEC')?.value || 90,
@@ -202,22 +256,149 @@ export default function App() {
 
   useEffect(() => { fetchMarketData(); }, []);
 
+  const GOOGLE_API_KEY = (import.meta as any).env.VITE_GOOGLE_PLACES_API_KEY || '';
+  
+  const handlePlace = (ac: any, setter: React.Dispatch<React.SetStateAction<any>>, isBilling: boolean = false) => {
+    const place = ac.getPlace();
+    if (!place?.address_components) return;
+    let street = '', number = '', postal = '', city = '', bus = '';
+
+    for (const comp of place.address_components) {
+      if (comp.types.includes('route')) street = comp.long_name;
+      if (comp.types.includes('street_number')) number = comp.long_name;
+      if (comp.types.includes('postal_code')) postal = comp.long_name;
+      if (comp.types.includes('locality')) city = comp.long_name;
+      if (comp.types.includes('subpremise') || comp.types.includes('room')) bus = comp.long_name;
+    }
+
+    setter(prev => ({ ...prev, street, houseNumber: number, busNumber: bus, postalCode: postal, city }));
+  };
+
+  useEffect(() => {
+    if (currentStep !== 5) return;
+    if (!GOOGLE_API_KEY) return;
+    let timer: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+
+    const tryInit = () => {
+      attempts++;
+      if (attempts > 50) return; // give up after 5 seconds
+      if (!(window as any).google?.maps?.places) {
+        timer = setTimeout(tryInit, 100);
+        return;
+      }
+      // Wait for street ref to be available in the DOM
+      if (!streetRef.current) {
+        timer = setTimeout(tryInit, 100);
+        return;
+      }
+      initAutocomplete();
+    };
+
+    const scriptId = 'google-maps-script';
+    if (document.getElementById(scriptId)) {
+      timer = setTimeout(tryInit, 200); // small delay for DOM to mount
+      return () => clearTimeout(timer);
+    }
+
+    const script = document.createElement('script');
+    script.id = scriptId;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
+    script.async = true;
+    script.onload = () => { timer = setTimeout(tryInit, 200); };
+    document.head.appendChild(script);
+
+    return () => clearTimeout(timer);
+  }, [currentStep, billingAddressSame]);
+
+  const initAutocomplete = () => {
+    if (!(window as any).google?.maps?.places) return;
+    const opts = { types: ['address'], componentRestrictions: { country: 'be' } };
+
+    if (streetRef.current && !streetRef.current.dataset.acInit) {
+      const ac = new (window as any).google.maps.places.Autocomplete(streetRef.current, opts);
+      streetRef.current.dataset.acInit = 'true';
+      ac.addListener('place_changed', () => handlePlace(ac, setConnectionAddress));
+    }
+    if (cityRef.current && !cityRef.current.dataset.acInit) {
+      const ac2 = new (window as any).google.maps.places.Autocomplete(cityRef.current, { types: ['(cities)'], componentRestrictions: { country: 'be' } });
+      cityRef.current.dataset.acInit = 'true';
+      ac2.addListener('place_changed', () => {
+        const p = ac2.getPlace();
+        if (p?.address_components) {
+          const city = p.address_components.find((c: any) => c.types.includes('locality'));
+          const postal = p.address_components.find((c: any) => c.types.includes('postal_code'));
+          setConnectionAddress(prev => ({ ...prev, city: city?.long_name || prev.city, postalCode: postal?.long_name || prev.postalCode }));
+        }
+      });
+    }
+
+    if (!billingAddressSame && billingStreetRef.current && !billingStreetRef.current.dataset.acInit) {
+      const ac3 = new (window as any).google.maps.places.Autocomplete(billingStreetRef.current, opts);
+      billingStreetRef.current.dataset.acInit = 'true';
+      ac3.addListener('place_changed', () => handlePlace(ac3, setBillingAddress));
+    }
+    if (!billingAddressSame && billingCityRef.current && !billingCityRef.current.dataset.acInit) {
+      const ac4 = new (window as any).google.maps.places.Autocomplete(billingCityRef.current, { types: ['(cities)'], componentRestrictions: { country: 'be' } });
+      billingCityRef.current.dataset.acInit = 'true';
+      ac4.addListener('place_changed', () => {
+        const p = ac4.getPlace();
+        if (p?.address_components) {
+          const city = p.address_components.find((c: any) => c.types.includes('locality'));
+          const postal = p.address_components.find((c: any) => c.types.includes('postal_code'));
+          setBillingAddress(prev => ({ ...prev, city: city?.long_name || prev.city, postalCode: postal?.long_name || prev.postalCode }));
+        }
+      });
+    }
+  };
+
+
   // Auto-fill Eneco offer prices from admin-set values
   useEffect(() => {
     if (!marketData || !customerType) return;
     const isSoho = customerType === 'SOHO';
-    const getPrice = (type: 'ELEC' | 'GAS', tariff: 'VAST' | 'VARIABEL' | null) => {
-      if (type === 'ELEC' && hasSolarPanels) {
-        return isSoho ? marketData.enecoSohoElecInj : marketData.enecoResElecInj;
+
+    const getElecPrice = () => {
+      if (elecMeterType === 'TWEEVOUDIG') {
+        const total = elecDagMWh + elecNachtMWh;
+        if (total === 0) return 0;
+        let dagPrice = 0;
+        let nachtPrice = 0;
+
+        if (hasSolarPanels) {
+          dagPrice = isSoho ? (marketData.enecoSohoInjElecDag || 0) : (marketData.enecoResInjElecDag || 0);
+          nachtPrice = isSoho ? (marketData.enecoSohoInjElecNacht || 0) : (marketData.enecoResInjElecNacht || 0);
+        } else if (elecTariff === 'VAST') {
+          dagPrice = isSoho ? (marketData.enecoSohoElecDagVast || 0) : (marketData.enecoResElecDagVast || 0);
+          nachtPrice = isSoho ? (marketData.enecoSohoElecNachtVast || 0) : (marketData.enecoResElecNachtVast || 0);
+        } else {
+          dagPrice = isSoho ? (marketData.enecoSohoElecDagVar || 0) : (marketData.enecoResElecDagVar || 0);
+          nachtPrice = isSoho ? (marketData.enecoSohoElecNachtVar || 0) : (marketData.enecoResElecNachtVar || 0);
+        }
+        
+        return ((dagPrice * elecDagMWh) + (nachtPrice * elecNachtMWh)) / total;
       }
-      if (tariff === 'VAST') return type === 'ELEC' ? (isSoho ? marketData.enecoSohoElecVast : marketData.enecoResElecVast) : (isSoho ? marketData.enecoSohoGasVast : marketData.enecoResGasVast);
-      return type === 'ELEC' ? (isSoho ? marketData.enecoSohoElecVar : marketData.enecoResElecVar) : (isSoho ? marketData.enecoSohoGasVar : marketData.enecoResGasVar);
+
+      if (hasSolarPanels) {
+        return isSoho ? (marketData.enecoSohoElecInj || 0) : (marketData.enecoResElecInj || 0);
+      }
+      if (elecTariff === 'VAST') {
+        return isSoho ? (marketData.enecoSohoElecVast || 0) : (marketData.enecoResElecVast || 0);
+      }
+      return isSoho ? (marketData.enecoSohoElecVar || 0) : (marketData.enecoResElecVar || 0);
     };
-    const elecPrice = getPrice('ELEC', elecTariff) || 0;
-    const gasPrice = getPrice('GAS', gasTariff) || 0;
+
+    const getGasPrice = () => {
+      if (gasTariff === 'VAST') return isSoho ? (marketData.enecoSohoGasVast || 0) : (marketData.enecoResGasVast || 0);
+      return isSoho ? (marketData.enecoSohoGasVar || 0) : (marketData.enecoResGasVar || 0);
+    };
+
+    const elecPrice = getElecPrice();
+    const gasPrice = getGasPrice();
+    
     if (elecPrice > 0) setElecEnecoOfferPriceMWh(elecPrice);
     if (gasPrice > 0) setGasEnecoOfferPriceMWh(gasPrice);
-  }, [customerType, elecTariff, gasTariff, marketData, hasSolarPanels]);
+  }, [customerType, elecTariff, gasTariff, marketData, hasSolarPanels, elecMeterType, elecDagMWh, elecNachtMWh]);
 
   const handleSaveOverride = async () => {
     setIsSavingOverride(true);
@@ -320,7 +501,15 @@ export default function App() {
       marginLocked: 'Marge is vastgezet op',
       backToHome: 'Terug naar overzicht',
       na: 'NVT',
-      imbalance: 'Onbalans'
+      imbalance: 'Onbalans',
+      step7Title: 'Klantgegevens & Opslaan',
+      companyName: 'Bedrijfsnaam', vatNumber: 'BTW Nummer', firstName: 'Voornaam', lastName: 'Familienaam',
+      birthDate: 'Geboortedatum', phone: 'Contactnummer', email: 'E-mailadres', billingEmailToggle: 'Hetzelfde facturatie e-mailadres?', billingEmail: 'Facturatie e-mailadres',
+      connectionAddress: 'Aansluitingsadres', billingAddress: 'Facturatieadres',
+      street: 'Straat', houseNr: 'Nr', bus: 'Bus', postalCode: 'Postcode', city: 'Gemeente',
+      addressHint: 'Tip: Typ "5A" voor extensie. Voor bus, gebruik "5/A", "5/1" of "5/001".',
+      sameAddress: 'Is het aansluitingsadres gelijk aan het facturatieadres?',
+      jaSimple: 'Ja', neeSimple: 'Nee', inAanvraag: 'In aanvraag', saveOrder: 'Opslaan Bon'
     },
     FR: {
       title: "Telenco Energy",
@@ -375,7 +564,15 @@ export default function App() {
       marginLocked: 'Marge fixée à',
       backToHome: 'Retour',
       na: 'N/A',
-      imbalance: 'Déséquilibre'
+      imbalance: 'Déséquilibre',
+      step7Title: 'Données Client',
+      companyName: 'Nom de l\'entreprise', vatNumber: 'Numéro TVA', firstName: 'Prénom', lastName: 'Nom',
+      birthDate: 'Date de naissance', phone: 'Numéro de contact', email: 'Adresse e-mail', billingEmailToggle: 'Même e-mail de facturation ?', billingEmail: 'E-mail de facturation',
+      connectionAddress: 'Adresse de connexion', billingAddress: 'Adresse de facturation',
+      street: 'Rue', houseNr: 'N°', bus: 'Boîte', postalCode: 'Code postal', city: 'Commune',
+      addressHint: 'Astuce : Tapez "5A" pour une extension. Pour une boîte, utilisez "5/A", "5/1" ou "5/001".',
+      sameAddress: 'L\'adresse de connexion est-elle identique à l\'adresse de facturation ?',
+      jaSimple: 'Oui', neeSimple: 'Non', inAanvraag: 'En demande', saveOrder: 'Enregistrer'
     }
   };
 
@@ -399,7 +596,11 @@ export default function App() {
   // Savings Logic helper per type
   const calculateTypeOutcome = (type: 'ELEC' | 'GAS') => {
     const cons = getActualConsumption(type);
-    const currPrice = type === 'ELEC' ? elecCurrentPriceMWh : gasCurrentPriceMWh;
+    let currPrice = type === 'ELEC' ? elecCurrentPriceMWh : gasCurrentPriceMWh;
+    if (type === 'ELEC' && elecMeterType === 'TWEEVOUDIG') {
+      const total = elecDagMWh + elecNachtMWh;
+      currPrice = total > 0 ? ((elecCurrentPriceDagMWh * elecDagMWh) + (elecCurrentPriceNachtMWh * elecNachtMWh)) / total : 0;
+    }
 
     // Eneco
     const enecoPrice = type === 'ELEC' ? elecEnecoOfferPriceMWh : gasEnecoOfferPriceMWh;
@@ -502,12 +703,19 @@ export default function App() {
         if (gasKnowsConsumption === false && gasIsOver30MWh === false && gasTariff === null) return false;
       }
     }
-    if (currentStep === 3) {
-      if (req.includes('ELEC') && elecCurrentPriceMWh <= 0) return false;
-      if (req.includes('GAS') && gasCurrentPriceMWh <= 0) return false;
+    
+    if (currentStep === 4) {
+      return true; // Just viewing
+    }
+    if (currentStep === 5) {
+      if (!customerData.companyName || !customerData.firstName || !customerData.lastName || !customerData.birthDate || !customerData.email) return false;
+      if (!customerData.billingEmailSame && !customerData.billingEmail) return false;
+      if (!connectionAddress.street || !connectionAddress.houseNumber || !connectionAddress.postalCode || !connectionAddress.city) return false;
+      if (!billingAddressSame && (!billingAddress.street || !billingAddress.houseNumber || !billingAddress.postalCode || !billingAddress.city)) return false;
     }
     return true;
   };
+
 
   const validateStep = () => {
     const req = getRequiredTypes();
@@ -515,6 +723,7 @@ export default function App() {
       if (req.includes('ELEC')) {
         if (elecKnowsConsumption === null) { setValidationError(lang === 'NL' ? 'Beantwoord eerst alle vragen voor Elektriciteit.' : 'Répondez d\'abord à toutes les questions.'); return false; }
         if (elecKnowsConsumption === true && elecConsumptionMWh <= 0) { setValidationError(lang === 'NL' ? 'Vul een geldig Elektriciteitsverbruik in (> 0).' : 'Veuillez entrer une conso Elec valide (> 0).'); return false; }
+        if (elecKnowsConsumption === true && elecMeterType === null) { setValidationError(lang === 'NL' ? 'Selecteer het type meter.' : 'Sélectionnez le type de compteur.'); return false; }
         if (elecKnowsConsumption === true && elecConsumptionMWh < 25 && elecTariff === null) { setValidationError(lang === 'NL' ? 'Selecteer een tarief type voor Elektriciteit.' : 'Sélectionnez un type de tarif.'); return false; }
         if (elecKnowsConsumption === false && elecIsOver30MWh === null) { setValidationError(lang === 'NL' ? 'Beantwoord de verbruiksvraag voor Elektriciteit.' : 'Répondez à la question de consommation.'); return false; }
       }
@@ -525,13 +734,19 @@ export default function App() {
         if (gasKnowsConsumption === false && gasIsOver30MWh === null) { setValidationError(lang === 'NL' ? 'Beantwoord de verbruiksvraag voor Aardgas.' : 'Répondez à la question de consommation.'); return false; }
       }
     }
-    if (currentStep === 3) {
-      if (req.includes('ELEC') && elecCurrentPriceMWh <= 0) { setValidationError(lang === 'NL' ? 'Vul een geldige Elec prijs in (> 0).' : 'Veuillez entrer un prix Elec valide (> 0).'); return false; }
-      if (req.includes('GAS') && gasCurrentPriceMWh <= 0) { setValidationError(lang === 'NL' ? 'Vul een geldige Gaz prijs in (> 0).' : 'Veuillez entrer un prix Gaz valide (> 0).'); return false; }
+    
+    if (currentStep === 4) {
+      return true; // Just viewing
     }
-    setValidationError(null);
+    if (currentStep === 5) {
+      if (!customerData.companyName || !customerData.firstName || !customerData.lastName || !customerData.birthDate || !customerData.email) return false;
+      if (!customerData.billingEmailSame && !customerData.billingEmail) return false;
+      if (!connectionAddress.street || !connectionAddress.houseNumber || !connectionAddress.postalCode || !connectionAddress.city) return false;
+      if (!billingAddressSame && (!billingAddress.street || !billingAddress.houseNumber || !billingAddress.postalCode || !billingAddress.city)) return false;
+    }
     return true;
   };
+
 
   const [isTranslating, setIsTranslating] = useState(false);
 
@@ -566,9 +781,11 @@ export default function App() {
     exit: { zIndex: 0, opacity: 0, transition: { duration: 0.45, ease: 'easeIn' } }
   };
 
-  const handleSendEmail = async () => {
+  
+  const handleSaveOrder = async () => {
     setIsSubmitting(true);
     try {
+      // 1. Log to sales_logs / activity_logs
       await supabase.from('sales_logs').insert({
         commission_code: commissionCode,
         energy_type: energyType,
@@ -577,28 +794,55 @@ export default function App() {
         fixed_fee_chosen: elindusFixedFee,
         commission_calculated: commission
       });
-      // Log activity
       if (user) {
         await supabase.from('activity_logs').insert({
+          user_id: user.id, user_email: user.email, action: 'CALCULATION',
+          energy_type: energyType, consumption_mwh: totalConsumption, commission_code: commissionCode
+        });
+        
+        // 2. Save pure bon to energy_orders
+        await supabase.from('energy_orders').insert({
           user_id: user.id,
           user_email: user.email,
-          action: 'CALCULATION',
           energy_type: energyType,
-          consumption_mwh: totalConsumption,
-          commission_code: commissionCode
+          customer_type: customerType,
+          meter_type: elecMeterType,
+          elec_consumption_mwh: elecConsumptionMWh,
+          elec_dag_mwh: elecDagMWh,
+          elec_nacht_mwh: elecNachtMWh,
+          gas_consumption_mwh: gasConsumptionMWh,
+          has_solar: hasSolarPanels,
+          comparison_view: comparisonView,
+          commission_code: commissionCode,
+          company_name: customerData.companyName,
+          vat_number: customerData.vatNumber,
+          first_name: customerData.firstName,
+          last_name: customerData.lastName,
+          birth_date: customerData.birthDate,
+          phone: customerData.phoneCountry + ' ' + customerData.phone,
+          email: customerData.email,
+          connection_street: connectionAddress.street,
+          connection_house_number: connectionAddress.houseNumber,
+          connection_bus: connectionAddress.busNumber,
+          connection_postal_code: connectionAddress.postalCode,
+          connection_city: connectionAddress.city,
+          billing_same: billingAddressSame,
+          billing_street: billingAddress.street,
+          billing_house_number: billingAddress.houseNumber,
+          billing_bus: billingAddress.busNumber,
+          billing_postal_code: billingAddress.postalCode,
+          billing_city: billingAddress.city
         });
       }
       setIsSuccess(true);
-      const subject = encodeURIComponent(`Nieuwe Elindus Commissie Code: ${commissionCode}`);
-      const body = encodeURIComponent(`Beste coach,\n\nHierbij de nieuwe commissie code voor de klant:\nCode: ${commissionCode}\nVerbruik: ${totalConsumption} MWh\n\nMet vriendelijke groet.`);
-      window.location.href = `mailto:coach@telenco.be?subject=${subject}&body=${body}`;
-      setTimeout(() => { setIsSuccess(false); }, 3000);
     } catch (err) {
       console.error('Failed to log sale', err);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+
 
   if (isLoading) {
     return (
@@ -648,39 +892,94 @@ export default function App() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="overflow-hidden"
+              className="overflow-visible"
             >
               <div className="space-y-8 pt-8 mt-8 border-t border-slate-100">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-4">
-                  <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{text.consumption}</label>
-                  <div className="flex bg-slate-100 p-1 rounded-full">
-                    <button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>kWh</button>
-                    <button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>MWh</button>
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  <div className="flex justify-center">
-                    <div className="relative w-full max-w-[200px] group">
-                      <input type="number" step="0.01" value={inputUnit === 'kWh' ? (consMWh === 0 ? '' : Math.round(consMWh * 1000)) : (consMWh === 0 ? '' : consMWh)} onChange={(e) => {
-                        const raw = e.target.value;
-                        if (raw === '') { setConsMWh(0); return; }
-                        const val = Number(raw);
-                        const newMWh = inputUnit === 'kWh' ? val / 1000 : val;
-                        setConsMWh(newMWh);
-                        // Auto-set tariff to VARIABEL if >= 25 MWh
-                        if (newMWh >= 25) { setTariff('VARIABEL'); }
-                      }} className="block w-full pr-16 py-[clamp(0.75rem,2.5vh,1rem)] text-[clamp(1.5rem,3vh,1.875rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1rem,2vh,1.5rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-eneco-gradient outline-none" />
-                      <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-eneco-gradient/50 font-bold text-[clamp(1rem,2vh,1.125rem)] pointer-events-none">{inputUnit}</span>
+                {isElec ? (
+                  <>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-4">
+                      <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">Type Meter</label>
                     </div>
-                  </div>
-                  {inputUnit === 'MWh' && (
-                    <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(val) => { setConsMWh(val); if (val >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full mb-2" />
-                  )}
-                </div>
+                    <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4 mb-6">
+                      <button onClick={() => setElecMeterType('ENKEL')} className={`flex-1 min-w-[120px] py-3 rounded-2xl font-bold transition-all ${elecMeterType === 'ENKEL' ? 'bg-eneco-gradient text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>Enkelvoudig</button>
+                      <button onClick={() => setElecMeterType('TWEEVOUDIG')} className={`flex-1 min-w-[120px] py-3 rounded-2xl font-bold transition-all ${elecMeterType === 'TWEEVOUDIG' ? 'bg-eneco-gradient text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>Tweevoudig (Dag/Nacht)</button>
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                      {elecMeterType === 'ENKEL' && (
+                        <motion.div key="enkel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                          <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">Verbruik Totaal</label>
+                            <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
+                          </div>
+                          <div className="flex justify-center"><div className="relative w-full max-w-[200px]"><input type="number" value={inputUnit === 'kWh' ? (consMWh === 0 ? '' : Math.round(consMWh * 1000)) : (consMWh === 0 ? '' : consMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setConsMWh(m); if (m >= 25) setTariff('VARIABEL'); }} className="block w-full pr-16 py-3 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-4 flex items-center text-eneco-gradient/50">{inputUnit}</span></div></div>
+                          {inputUnit === 'MWh' && <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(v) => { setConsMWh(v); if (v >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full" />}
+                        </motion.div>
+                      )}
+                      {elecMeterType === 'TWEEVOUDIG' && (
+                        <motion.div key="twee" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+                          <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">Verdeling Verbruik</label>
+                            <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
+                          </div>
+                          
+                          {/* Dag */}
+                          <div className="space-y-4">
+                            <label className="block text-xs font-bold text-amber-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3"/> Dag Verbruik</label>
+                            <div className="flex items-center gap-4">
+                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecDagMWh === 0 ? '' : Math.round(elecDagMWh * 1000)) : (elecDagMWh === 0 ? '' : elecDagMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecDagMWh(m); setConsMWh(m + elecNachtMWh); if ((m + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-amber-500" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-amber-500/50 text-sm">{inputUnit}</span></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecDagMWh} onChange={(v) => { setElecDagMWh(v); setConsMWh(v + elecNachtMWh); if ((v + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} color="#f59e0b" className="flex-1" />}
+                            </div>
+                          </div>
+
+                          {/* Nacht */}
+                          <div className="space-y-4">
+                            <label className="block text-xs font-bold text-indigo-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3"/> Nacht Verbruik</label>
+                            <div className="flex items-center gap-4">
+                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecNachtMWh === 0 ? '' : Math.round(elecNachtMWh * 1000)) : (elecNachtMWh === 0 ? '' : elecNachtMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecNachtMWh(m); setConsMWh(m + elecDagMWh); if ((m + elecDagMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-indigo-500" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-500/50 text-sm">{inputUnit}</span></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecNachtMWh} onChange={(v) => { setElecNachtMWh(v); setConsMWh(v + elecDagMWh); if ((v + elecDagMWh) >= 25) setTariff('VARIABEL'); }} color="#6366f1" className="flex-1" />}
+                            </div>
+                          </div>
+                          
+                          <div className="bg-slate-50 p-4 rounded-xl flex justify-between items-center text-sm font-bold text-slate-500 border border-slate-100">
+                            <span>Totaal Berekend Verbruik:</span>
+                            <span className="text-lg text-slate-700">{inputUnit === 'kWh' ? Math.round(consMWh * 1000) : consMWh.toFixed(2)} {inputUnit}</span>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-4">
+                      <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{text.consumption}</label>
+                      <div className="flex bg-slate-100 p-1 rounded-full">
+                        <button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>kWh</button>
+                        <button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient shadow-sm' : 'text-slate-500 hover:bg-slate-200'}`}>MWh</button>
+                      </div>
+                    </div>
+                    <div className="space-y-6">
+                      <div className="flex justify-center">
+                        <div className="relative w-full max-w-[200px] group">
+                          <input type="number" step="0.01" value={inputUnit === 'kWh' ? (consMWh === 0 ? '' : Math.round(consMWh * 1000)) : (consMWh === 0 ? '' : consMWh)} onChange={(e) => {
+                            const raw = e.target.value;
+                            if (raw === '') { setConsMWh(0); return; }
+                            const val = Number(raw);
+                            const newMWh = inputUnit === 'kWh' ? val / 1000 : val;
+                            setConsMWh(newMWh);
+                            if (newMWh >= 25) { setTariff('VARIABEL'); }
+                          }} className="block w-full pr-16 py-[clamp(0.75rem,2.5vh,1rem)] text-[clamp(1.5rem,3vh,1.875rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1rem,2vh,1.5rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-eneco-gradient outline-none" />
+                          <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-eneco-gradient/50 font-bold text-[clamp(1rem,2vh,1.125rem)] pointer-events-none">{inputUnit}</span>
+                        </div>
+                      </div>
+                      {inputUnit === 'MWh' && (
+                        <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(val) => { setConsMWh(val); if (val >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full mb-2" />
+                      )}
+                    </div>
+                  </>
+                )}
 
                 {/* Tariff type — only if consumption < 25 MWh */}
                 <AnimatePresence>
-                  {consMWh > 0 && consMWh < 25 && (
+                  {consMWh > 0 && consMWh < 25 && (!isElec || (isElec && elecMeterType)) && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
@@ -698,7 +997,6 @@ export default function App() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
               </div>
             </motion.div>
           )}
@@ -754,6 +1052,7 @@ export default function App() {
     const cons = isElec ? elecCurrentPriceMWh : gasCurrentPriceMWh;
     const setCons = isElec ? setElecCurrentPriceMWh : setGasCurrentPriceMWh;
     const Icon = isElec ? Zap : Flame;
+    const isTweevoudig = isElec && elecMeterType === 'TWEEVOUDIG';
 
     return (
       <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 space-y-8 flex-1">
@@ -773,22 +1072,62 @@ export default function App() {
           </label>
         </div>
 
-        <div className="relative group">
-          <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-3xl">€</span>
-          <input
-            type="number"
-            step="0.01"
-            value={showInMWh ? (cons === 0 ? '' : cons) : (cons === 0 ? '' : cons / 1000)}
-            onChange={(e) => {
-              const raw = e.target.value;
-              if (raw === '') { setCons(0); return; }
-              const val = Number(raw);
-              setCons(showInMWh ? val : val * 1000);
-            }}
-            className="block w-full pl-16 pr-24 py-[clamp(1rem,4vh,2rem)] text-[clamp(1.5rem,4vh,2.25rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1.25rem,3vh,2rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
-          />
-          <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-[clamp(1rem,2vh,1.25rem)] hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
-        </div>
+        {isTweevoudig ? (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-amber-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Dag Tarief</label>
+              <div className="relative group">
+                <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-2xl">€</span>
+                <input
+                  type="number" step="0.01"
+                  value={showInMWh ? (elecCurrentPriceDagMWh === 0 ? '' : elecCurrentPriceDagMWh) : (elecCurrentPriceDagMWh === 0 ? '' : elecCurrentPriceDagMWh / 1000)}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') { setElecCurrentPriceDagMWh(0); return; }
+                    setElecCurrentPriceDagMWh(showInMWh ? Number(raw) : Number(raw) * 1000);
+                  }}
+                  className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-amber-50 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all text-amber-500 outline-none"
+                />
+                <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-amber-500/50 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-indigo-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Nacht Tarief</label>
+              <div className="relative group">
+                <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-2xl">€</span>
+                <input
+                  type="number" step="0.01"
+                  value={showInMWh ? (elecCurrentPriceNachtMWh === 0 ? '' : elecCurrentPriceNachtMWh) : (elecCurrentPriceNachtMWh === 0 ? '' : elecCurrentPriceNachtMWh / 1000)}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (raw === '') { setElecCurrentPriceNachtMWh(0); return; }
+                    setElecCurrentPriceNachtMWh(showInMWh ? Number(raw) : Number(raw) * 1000);
+                  }}
+                  className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-indigo-50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-indigo-500 outline-none"
+                />
+                <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-indigo-500/50 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="relative group">
+            <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-3xl">€</span>
+            <input
+              type="number"
+              step="0.01"
+              value={showInMWh ? (cons === 0 ? '' : cons) : (cons === 0 ? '' : cons / 1000)}
+              onChange={(e) => {
+                const raw = e.target.value;
+                if (raw === '') { setCons(0); return; }
+                const val = Number(raw);
+                setCons(showInMWh ? val : val * 1000);
+              }}
+              className="block w-full pl-16 pr-24 py-[clamp(1rem,4vh,2rem)] text-[clamp(1.5rem,4vh,2.25rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1.25rem,3vh,2rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
+            />
+            <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-[clamp(1rem,2vh,1.25rem)] hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+          </div>
+        )}
 
       </div>
     );
@@ -836,7 +1175,7 @@ export default function App() {
 
                 {/* STEP 1: Customer Type + Energy Type (combined) */}
                 {currentStep === 1 && (
-                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl space-y-4">
+                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl space-y-4">
                     {/* Customer Type */}
                     <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
                       {(['PARTICULIER', 'SOHO'] as const).map((type) => {
@@ -906,7 +1245,7 @@ export default function App() {
 
                 {/* STEP 2: Consumption */}
                 {currentStep === 2 && (
-                  <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step2" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
                     <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
                       {getRequiredTypes().map(type => (
                         <React.Fragment key={type}>{renderConsumptionInput(type)}</React.Fragment>
@@ -917,7 +1256,7 @@ export default function App() {
 
                 {/* STEP 3: Current Price */}
                 {currentStep === 3 && (
-                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
                     <div className="flex flex-col md:flex-row gap-[clamp(1rem,2vh,1.5rem)] w-full">
                       {getRequiredTypes().map(type => (
                         <React.Fragment key={type}>{renderCurrentPriceInput(type)}</React.Fragment>
@@ -926,9 +1265,9 @@ export default function App() {
                   </motion.div>
                 )}
 
-                {/* LAST STEP: Vergelijking & Afronden */}
-                {currentStep === totalSteps && (
-                  <motion.div key="stepFinal" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ type: "spring", bounce: 0, duration: 0.6 }} className="w-full max-w-3xl">
+                {/* STEP 4: Vergelijking & Afronden */}
+                {currentStep === 4 && (
+                  <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
                     <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-[clamp(1rem,3vh,1.5rem)] relative overflow-hidden">
 
                       {/* Inner Slide Buttons (Eneco / Elindus) */}
@@ -1129,12 +1468,7 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Verstuur knop */}
-                      <div className={`flex relative z-40 transition-all duration-500 ease-in-out ${globalCalcOpen && customerType === 'SOHO' ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto' : 'w-[calc(50%-1.5rem)] ml-auto') : 'w-full'}`}>
-                        <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
-                          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isSuccess ? <><CheckCircle2 className="w-5 h-5" /> Verzonden</> : <><Send className="w-5 h-5" /> {text.send}</>}
-                        </button>
-                      </div>
+
 
                       {/* GLOBAL CALCULATION OVERLAY */}
                       <AnimatePresence>
@@ -1205,6 +1539,42 @@ export default function App() {
                           </motion.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* STEP 5: Customer Form & Save */}
+                {currentStep === 5 && (
+                  <motion.div key="step5customer" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
+                    <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 overflow-visible">
+                      <div className="p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)]">
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-[clamp(1rem,3vh,1.5rem)] mb-[clamp(1rem,3vh,2rem)]">
+                          <Save className="w-6 h-6 text-eneco-gradient" />
+                          <h3 className="text-xl font-bold text-slate-600">{text.step7Title}</h3>
+                        </div>
+                        <CustomerForm
+                          customerData={customerData} setCustomerData={setCustomerData}
+                          connectionAddress={connectionAddress} setConnectionAddress={setConnectionAddress}
+                          billingAddressSame={billingAddressSame} setBillingAddressSame={setBillingAddressSame}
+                          billingAddress={billingAddress} setBillingAddress={setBillingAddress}
+                          streetRef={streetRef} cityRef={cityRef} billingStreetRef={billingStreetRef} billingCityRef={billingCityRef}
+                          typedStreetRef={typedStreetRef} typedBillingStreetRef={{current: ''}}
+                          text={text}
+                          customerType={customerType}
+                        />
+                        <button
+                          onClick={handleSaveOrder}
+                          disabled={isSubmitting || !customerData.firstName || !customerData.lastName || !customerData.email || !connectionAddress.street || !connectionAddress.houseNumber || !connectionAddress.postalCode || !connectionAddress.city || (customerType === 'SOHO' && !customerData.companyName)}
+                          className="w-full mt-8 py-4 rounded-[clamp(1rem,2vh,1.25rem)] bg-eneco-gradient text-white font-black text-[clamp(14px,2vh,18px)] transition-all hover:shadow-lg hover:shadow-[#E5394C]/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {isSubmitting ? (lang === 'NL' ? 'Opslaan...' : 'Enregistrement...') : (text.saveOrder || 'Opslaan Bon')}
+                        </button>
+                        {isSuccess && (
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center">
+                            <p className="text-emerald-700 font-bold">✅ {lang === 'NL' ? 'Bon succesvol opgeslagen!' : 'Bon enregistré avec succès!'}</p>
+                          </motion.div>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 )}

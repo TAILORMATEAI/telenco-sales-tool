@@ -67,6 +67,8 @@ interface MarketData {
   elindusVvGas?: number;
   elindusVvInj?: number;
   lastUpdated?: string;
+  updatedBy?: string;
+  updatedByAvatar?: string;
 }
 
 interface ActivityLog {
@@ -198,12 +200,14 @@ export default function AdminDashboard() {
         elindusVvElec: rp(find('ELINDUS_VV_ELEC')?.value, 60),
         elindusVvGas: rp(find('ELINDUS_VV_GAS')?.value, 60),
         elindusVvInj: rp(find('ELINDUS_VV_INJ')?.value, 0),
-        lastUpdated: data[0].last_updated
+        lastUpdated: data[0].last_updated,
+        updatedBy: data[0].updated_by || 'Systeem',
+        updatedByAvatar: data[0].updated_by_avatar
       };
       setMarketData(fetched);
       setOverrideData(fetched);
       const s: Record<string, string> = {};
-      for (const [k, v] of Object.entries(fetched)) { if (k !== 'lastUpdated') s[k] = String(v); }
+      for (const [k, v] of Object.entries(fetched)) { if (k !== 'lastUpdated' && k !== 'updatedBy' && k !== 'updatedByAvatar') s[k] = String(v); }
       setInputStrings(s);
     }
   };
@@ -277,6 +281,9 @@ export default function AdminDashboard() {
     setIsSaving(true);
     setSaveSuccess(false);
     const nowIso = new Date().toISOString();
+    const updaterName = `${profile?.first_name || 'Admin'} ${profile?.last_name || ''}`.trim();
+    const updaterAvatar = profile?.avatar_id || null;
+
     const indicators: [string, number][] = [
       ['EPEX_SPOT', overrideData.epexSpot],
       ['TTF_DAM', overrideData.ttfDam],
@@ -319,7 +326,7 @@ export default function AdminDashboard() {
       ['ELINDUS_VV_INJ', overrideData.elindusVvInj ?? 0],
     ];
     const updates = indicators.map(([name, value]) => ({
-      indicator_name: name, value, unit: (name.includes('MULTIPLIER') ? 'x' : name.includes('ADDER') ? '€/MWh' : name.includes('VV') ? '€/jaar' : '€/MWh'), last_updated: nowIso
+      indicator_name: name, value, unit: (name.includes('MULTIPLIER') ? 'x' : name.includes('ADDER') ? '€/MWh' : name.includes('VV') ? '€/jaar' : '€/MWh'), last_updated: nowIso, updated_by: updaterName, updated_by_avatar: updaterAvatar
     }));
     const { error } = await supabase.from('market_prices').upsert(updates, { onConflict: 'indicator_name' });
     if (error) {
@@ -430,7 +437,7 @@ export default function AdminDashboard() {
               <img
                 src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png"
                 alt="Telenco"
-                className="h-5 sm:h-6 opacity-80 grayscale object-contain"
+                className="h-[clamp(1.25rem,6vw,2.25rem)] 2xl:h-[clamp(2.25rem,1.5vw,4rem)] opacity-80 grayscale object-contain"
               />
             </div>
 
@@ -673,6 +680,17 @@ export default function AdminDashboard() {
                         <h2 className="text-2xl font-black text-slate-500 mb-1">Marktprijzen</h2>
                         <p className="text-sm text-slate-400">
                           Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                          {marketData.updatedBy && (
+                            <span className="inline-flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-200">
+                              door: 
+                              {marketData.updatedByAvatar ? (
+                                <img src={marketData.updatedByAvatar} alt={marketData.updatedBy} className="w-4 h-4 rounded-full object-cover inline-block" />
+                              ) : (
+                                <span className="text-slate-500 font-bold ml-1">{marketData.updatedBy}</span>
+                              )}
+                              {marketData.updatedByAvatar && <span className="text-slate-500 font-bold">{marketData.updatedBy}</span>}
+                            </span>
+                          )}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
@@ -945,6 +963,17 @@ export default function AdminDashboard() {
                         <h2 className="text-2xl font-black text-slate-500 mb-1">Tarieven</h2>
                         <p className="text-sm text-slate-400">
                           Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                          {marketData.updatedBy && (
+                            <span className="inline-flex items-center gap-1.5 ml-2 pl-2 border-l border-slate-200">
+                              door: 
+                              {marketData.updatedByAvatar ? (
+                                <img src={marketData.updatedByAvatar} alt={marketData.updatedBy} className="w-4 h-4 rounded-full object-cover inline-block" />
+                              ) : (
+                                <span className="text-slate-500 font-bold ml-1">{marketData.updatedBy}</span>
+                              )}
+                              {marketData.updatedByAvatar && <span className="text-slate-500 font-bold">{marketData.updatedBy}</span>}
+                            </span>
+                          )}
                         </p>
                       </div>
                       <div className="flex items-center gap-3">

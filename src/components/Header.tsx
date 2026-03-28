@@ -90,20 +90,19 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
             <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className={`group flex items-center gap-1 2xl:gap-3 p-[4px] 2xl:p-1.5 pr-4 sm:pr-5 2xl:pr-7 bg-white ${isHome ? 'border border-slate-200 shadow-sm hover:bg-slate-50' : 'border border-white/80'} rounded-full hover:shadow-md cursor-pointer transition-all`}
+                className={`group flex items-center gap-1 2xl:gap-2 p-[2px] 2xl:p-1 pr-2.5 sm:pr-3 2xl:pr-5 bg-white ${isHome ? 'border border-slate-200 shadow-sm hover:bg-slate-50' : 'border border-white/80'} rounded-full hover:shadow-md cursor-pointer transition-all`}
               >
-                {/* Avatar with padding around it */}
-                <div className={`w-[clamp(1.75rem,7vw,2.5rem)] h-[clamp(1.75rem,7vw,2.5rem)] 2xl:w-[clamp(2.5rem,1.5vw,4rem)] 2xl:h-[clamp(2.5rem,1.5vw,4rem)] rounded-[100px] 2xl:rounded-full overflow-hidden shrink-0 ${themeBgClass} flex items-center justify-center`} >
+                <div className={`w-[clamp(1.25rem,5vw,1.625rem)] h-[clamp(1.25rem,5vw,1.625rem)] 2xl:w-[clamp(2rem,1.2vw,3rem)] 2xl:h-[clamp(2rem,1.2vw,3rem)] rounded-full overflow-hidden shrink-0 ${themeBgClass} flex items-center justify-center`} >
                   {profile?.avatar_id ? (
                     <img src={profile.avatar_id} alt={getDisplayName()} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-white text-[clamp(11px,1.5vh,15px)] 2xl:text-[clamp(15px,0.8vw,19px)] font-bold flex items-center leading-none mt-0.5">{getDisplayName().charAt(0).toUpperCase()}</span>
+                    <span className="text-white text-[clamp(9px,1vh,11px)] 2xl:text-[clamp(12px,0.7vw,16px)] font-bold flex items-center leading-none">{getDisplayName().charAt(0).toUpperCase()}</span>
                   )}
                 </div>
-                <span className="hidden sm:inline text-[clamp(13px,1.7vh,17px)] 2xl:text-[clamp(17px,0.8vw,19px)] font-bold text-slate-500 tracking-tight pl-2 pr-2 2xl:px-3">
+                <span className="hidden sm:inline text-[clamp(11px,1.3vh,13px)] 2xl:text-[clamp(14px,0.7vw,17px)] font-bold text-slate-500 tracking-tight pl-1 pr-0.5 2xl:px-2">
                   {getDisplayName().split(' ')[0]}
                 </span>
-                <ChevronDownIcon className={`w-[clamp(0.875rem,1.5vh,1.25rem)] h-[clamp(0.875rem,1.5vh,1.25rem)] 2xl:w-[clamp(1.25rem,1vw,2rem)] 2xl:h-[clamp(1.25rem,1vw,2rem)] transition-transform duration-300 ml-1 sm:ml-0 shrink-0 ${isProfileMenuOpen ? (isTelenet ? 'rotate-180 text-[#FFC421]' : 'rotate-180 text-[#E5394C]') : `text-slate-500 ${isTelenet ? 'group-hover:text-[#FFC421]' : 'group-hover:text-[#E5394C]'}`}`} />
+                <ChevronDownIcon className={`w-[clamp(0.75rem,1.2vh,1rem)] h-[clamp(0.75rem,1.2vh,1rem)] 2xl:w-[clamp(1rem,0.8vw,1.5rem)] 2xl:h-[clamp(1rem,0.8vw,1.5rem)] transition-transform duration-300 ml-0.5 sm:ml-0 shrink-0 ${isProfileMenuOpen ? (isTelenet ? 'rotate-180 text-[#FFC421]' : 'rotate-180 text-[#E5394C]') : `text-slate-500 ${isTelenet ? 'group-hover:text-[#FFC421]' : 'group-hover:text-[#E5394C]'}`}`} />
               </button>
 
               <AnimatePresence>
