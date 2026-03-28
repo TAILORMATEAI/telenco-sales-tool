@@ -26,10 +26,12 @@ interface MarketData {
   epexSpot: number;
   ttfDam: number;
   elecMultiplier: number;
-  elecAdder: number;
-  gasMultiplier: number;
-  gasAdder: number;
-  enecoResElecVast: number;
+  elecAdder?: number;
+  gasMultiplier?: number;
+  gasAdder?: number;
+  injMultiplier?: number;
+  injAdder?: number;
+  enecoResElecVast?: number;
   enecoResElecVar: number;
   enecoResGasVast: number;
   enecoResGasVar: number;
@@ -105,6 +107,7 @@ export default function AdminDashboard() {
   const [marketData, setMarketData] = useState<MarketData>({
     epexSpot: 65.40, ttfDam: 32.50,
     elecMultiplier: 1.1, elecAdder: 18, gasMultiplier: 1.05, gasAdder: 14,
+    injMultiplier: 0.9, injAdder: 15,
     enecoResElecVast: 0, enecoResElecVar: 0, enecoResGasVast: 0, enecoResGasVar: 0,
     enecoSohoElecVast: 0, enecoSohoElecVar: 0, enecoSohoGasVast: 0, enecoSohoGasVar: 0,
     enecoResElecInj: 0, enecoSohoElecInj: 0, enecoResVvElec: 65, enecoResVvGas: 65,
@@ -142,6 +145,8 @@ export default function AdminDashboard() {
         elecAdder: rp(find('ELEC_ADDER')?.value, 18),
         gasMultiplier: rp(find('GAS_MULTIPLIER')?.value, 1.05),
         gasAdder: rp(find('GAS_ADDER')?.value, 14),
+        injMultiplier: rp(find('INJ_MULTIPLIER')?.value, 0.9),
+        injAdder: rp(find('INJ_ADDER')?.value, 15),
         enecoResElecVast: rp(find('ENECO_RES_ELEC_VAST')?.value, 0),
         enecoResElecVar: rp(find('ENECO_RES_ELEC_VARIABEL')?.value, 0),
         enecoResGasVast: rp(find('ENECO_RES_GAS_VAST')?.value, 0),
@@ -243,11 +248,13 @@ export default function AdminDashboard() {
     const indicators: [string, number][] = [
       ['EPEX_SPOT', overrideData.epexSpot],
       ['TTF_DAM', overrideData.ttfDam],
-      ['ELEC_MULTIPLIER', overrideData.elecMultiplier],
-      ['ELEC_ADDER', overrideData.elecAdder],
-      ['GAS_MULTIPLIER', overrideData.gasMultiplier],
-      ['GAS_ADDER', overrideData.gasAdder],
-      ['ENECO_RES_ELEC_VAST', overrideData.enecoResElecVast],
+      ['ELEC_MULTIPLIER', overrideData.elecMultiplier ?? 1.1],
+      ['ELEC_ADDER', overrideData.elecAdder ?? 18],
+      ['GAS_MULTIPLIER', overrideData.gasMultiplier ?? 1.05],
+      ['GAS_ADDER', overrideData.gasAdder ?? 14],
+      ['INJ_MULTIPLIER', overrideData.injMultiplier ?? 0.9],
+      ['INJ_ADDER', overrideData.injAdder ?? 15],
+      ['ENECO_RES_ELEC_VAST', overrideData.enecoResElecVast ?? 0],
       ['ENECO_RES_ELEC_VARIABEL', overrideData.enecoResElecVar],
       ['ENECO_RES_GAS_VAST', overrideData.enecoResGasVast],
       ['ENECO_RES_GAS_VARIABEL', overrideData.enecoResGasVar],
@@ -649,10 +656,10 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Elindus Pricing Formula */}
-                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Prijsformule (25 – 99 MWh)</h3>
+                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Prijsformules (25 – 99 MWh)</h3>
                   <p className="text-xs text-slate-400 mb-5">De verkoopprijs in de wizard wordt berekend als: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Marktprijs × Multiplier + Marge</span></p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {/* Elektriciteit Formula Card */}
                     <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
                       <div className="flex items-center gap-3 mb-4">
@@ -726,6 +733,56 @@ export default function AdminDashboard() {
                         <p className="text-[10px] text-slate-400 mt-0.5">= {overrideData.ttfDam.toFixed(2)} × {overrideData.gasMultiplier} + {overrideData.gasAdder}</p>
                       </div>
                     </div>
+
+                    {/* Injectie Formula Card (Elindus) */}
+                    <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500 shadow-sm">
+                          <Zap className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-600">Injectie (EPEX SPOT)</p>
+                          <p className="text-[10px] font-mono text-slate-400">EPEX × {overrideData.injMultiplier} + €{overrideData.injAdder}/MWh</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Multiplier</p>
+                          <input type="number" step="0.01" value={inputStrings['injMultiplier'] ?? String(overrideData.injMultiplier)} onChange={e => setInputStrings(prev => ({ ...prev, injMultiplier: e.target.value }))} onBlur={e => { const v = parseFloat(e.target.value) || 1; setOverrideData(p => ({ ...p, injMultiplier: v })); setInputStrings(p => ({ ...p, injMultiplier: String(v) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                          <p className="text-[10px] text-slate-300 mt-1 text-right">×</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Marge</p>
+                          <input type="number" step="0.5" value={inputStrings['injAdder'] ?? String(overrideData.injAdder)} onChange={e => setInputStrings(prev => ({ ...prev, injAdder: e.target.value }))} onBlur={e => { const v = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, injAdder: v })); setInputStrings(p => ({ ...p, injAdder: String(v) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-slate-600 text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                          <p className="text-[10px] text-slate-300 mt-1 text-right">€/MWh</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-slate-700 text-base">{((overrideData.epexSpot || 0) * (overrideData.injMultiplier ?? 0.9) + (overrideData.injAdder ?? 15)).toFixed(2)} €/MWh</span></p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">= {overrideData.epexSpot.toFixed(2)} × {overrideData.injMultiplier} + {overrideData.injAdder}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Elindus Vaste Vergoedingen */}
+                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Vaste Vergoedingen</h3>
+                  <p className="text-xs text-slate-400 mb-5">Vaste jaarlijkse kost (in €, per jaar) afhankelijk van het type verbruik.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                    {[{ key: 'elindusVvElec', label: 'Elektriciteit', icon: 'elec', color: 'bg-amber-500' }, { key: 'elindusVvGas', label: 'Aardgas', icon: 'gas', color: 'bg-rose-500' }, { key: 'elindusVvInj', label: 'Injectie (Zonnepanelen)', icon: 'inj', color: 'bg-emerald-500' }].map(f => (
+                      <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color} shadow-sm`}>
+                            {f.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : f.icon === 'gas' ? <Flame className="w-4 h-4 text-white" /> : <Zap className="w-4 h-4 text-white" />}
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black text-slate-500 uppercase">{f.label}</p>
+                            <p className="text-[10px] font-bold tracking-wider text-slate-400">Vaste Vergoeding</p>
+                          </div>
+                        </div>
+                        <input type="number" step="0.5" value={inputStrings[f.key] ?? String(overrideData[f.key as keyof MarketData] ?? '')} onChange={e => setInputStrings(prev => ({ ...prev, [f.key]: e.target.value }))} onBlur={e => { const val = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, [f.key]: val })); setInputStrings(p => ({ ...p, [f.key]: String(val) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                        <p className="text-[10px] text-slate-300 mt-2 text-right">€/jaar</p>
+                      </div>
+                    ))}
                   </div>
 
                   {/* Simulation Calculator */}

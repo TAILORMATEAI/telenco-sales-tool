@@ -32,6 +32,8 @@ interface MarketData {
   elecAdder?: number;
   gasMultiplier?: number;
   gasAdder?: number;
+  injMultiplier?: number;
+  injAdder?: number;
   enecoResElecVast?: number;
   enecoResElecVar?: number;
   enecoResGasVast?: number;
@@ -165,6 +167,8 @@ export default function App() {
           elecAdder: find('ELEC_ADDER')?.value || 18,
           gasMultiplier: find('GAS_MULTIPLIER')?.value || 1.05,
           gasAdder: find('GAS_ADDER')?.value || 14,
+          injMultiplier: find('INJ_MULTIPLIER')?.value || 0.9,
+          injAdder: find('INJ_ADDER')?.value || 15,
           enecoResElecVast: find('ENECO_RES_ELEC_VAST')?.value || 0,
           enecoResElecVar: find('ENECO_RES_ELEC_VARIABEL')?.value || 0,
           enecoResGasVast: find('ENECO_RES_GAS_VAST')?.value || 0,
@@ -224,7 +228,9 @@ export default function App() {
       { indicator_name: 'ELEC_MULTIPLIER', value: overrideData.elecMultiplier ?? 1.1, unit: 'x', last_updated: nowIso },
       { indicator_name: 'ELEC_ADDER', value: overrideData.elecAdder ?? 18, unit: '€/MWh', last_updated: nowIso },
       { indicator_name: 'GAS_MULTIPLIER', value: overrideData.gasMultiplier ?? 1.05, unit: 'x', last_updated: nowIso },
-      { indicator_name: 'GAS_ADDER', value: overrideData.gasAdder ?? 14, unit: '€/MWh', last_updated: nowIso }
+      { indicator_name: 'GAS_ADDER', value: overrideData.gasAdder ?? 14, unit: '€/MWh', last_updated: nowIso },
+      { indicator_name: 'INJ_MULTIPLIER', value: overrideData.injMultiplier ?? 0.9, unit: 'x', last_updated: nowIso },
+      { indicator_name: 'INJ_ADDER', value: overrideData.injAdder ?? 15, unit: '€/MWh', last_updated: nowIso }
     ];
     try {
       await supabase.from('market_prices').upsert(updates, { onConflict: 'indicator_name' });
@@ -407,10 +413,10 @@ export default function App() {
 
     const multiplier = type === 'GAS'
       ? (marketData?.gasMultiplier ?? 1.05)
-      : (hasSolarPanels ? 0.9 : (marketData?.elecMultiplier ?? 1.1));
+      : (hasSolarPanels ? (marketData?.injMultiplier ?? 0.9) : (marketData?.elecMultiplier ?? 1.1));
     const adder = type === 'GAS'
       ? (marketData?.gasAdder ?? 14)
-      : (hasSolarPanels ? 15 : (marketData?.elecAdder ?? 18));
+      : (hasSolarPanels ? (marketData?.injAdder ?? 15) : (marketData?.elecAdder ?? 18));
 
     const elinEstimatedPrice = (baseMarkt * multiplier) + adder;
     const elindusSavingsVal = currPrice - elinEstimatedPrice;
@@ -458,7 +464,7 @@ export default function App() {
   const totalElindusSavings = outcomes.reduce((sum, o) => sum + (o.showElindus ? o.elindusSavingsTotal : 0), 0);
 
   // Commission calculation based on the new formula
-  const commissionElecPrice = ((marketData?.epexSpot || 0) * (hasSolarPanels ? 0.9 : (marketData?.elecMultiplier ?? 1.1))) + (hasSolarPanels ? 15 : (marketData?.elecAdder ?? 18));
+  const commissionElecPrice = ((marketData?.epexSpot || 0) * (hasSolarPanels ? (marketData?.injMultiplier ?? 0.9) : (marketData?.elecMultiplier ?? 1.1))) + (hasSolarPanels ? (marketData?.injAdder ?? 15) : (marketData?.elecAdder ?? 18));
   const commissionGasPrice = ((marketData?.ttfDam || 0) * (marketData?.gasMultiplier ?? 1.05)) + (marketData?.gasAdder ?? 14);
   const avgFormulaPrice = (commissionElecPrice + commissionGasPrice) / 2;
 
