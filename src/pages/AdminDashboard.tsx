@@ -36,7 +36,18 @@ interface MarketData {
   enecoSohoElecVast: number;
   enecoSohoElecVar: number;
   enecoSohoGasVast: number;
-  enecoSohoGasVar: number;
+  enecoSohoGasVar?: number;
+  enecoResElecInj?: number;
+  enecoSohoElecInj?: number;
+  enecoResVvElec?: number;
+  enecoResVvGas?: number;
+  enecoSohoVvElec?: number;
+  enecoSohoVvGas?: number;
+  enecoResVvInj?: number;
+  enecoSohoVvInj?: number;
+  elindusVvElec?: number;
+  elindusVvGas?: number;
+  elindusVvInj?: number;
   lastUpdated?: string;
 }
 
@@ -95,7 +106,10 @@ export default function AdminDashboard() {
     epexSpot: 65.40, ttfDam: 32.50,
     elecMultiplier: 1.1, elecAdder: 18, gasMultiplier: 1.05, gasAdder: 14,
     enecoResElecVast: 0, enecoResElecVar: 0, enecoResGasVast: 0, enecoResGasVar: 0,
-    enecoSohoElecVast: 0, enecoSohoElecVar: 0, enecoSohoGasVast: 0, enecoSohoGasVar: 0
+    enecoSohoElecVast: 0, enecoSohoElecVar: 0, enecoSohoGasVast: 0, enecoSohoGasVar: 0,
+    enecoResElecInj: 0, enecoSohoElecInj: 0, enecoResVvElec: 65, enecoResVvGas: 65,
+    enecoSohoVvElec: 90, enecoSohoVvGas: 90, enecoResVvInj: 0, enecoSohoVvInj: 0,
+    elindusVvElec: 60, elindusVvGas: 60, elindusVvInj: 0
   });
   const [overrideData, setOverrideData] = useState<MarketData>({ ...marketData });
   const [inputStrings, setInputStrings] = useState<Record<string, string>>({});
@@ -136,6 +150,17 @@ export default function AdminDashboard() {
         enecoSohoElecVar: rp(find('ENECO_SOHO_ELEC_VARIABEL')?.value, 0),
         enecoSohoGasVast: rp(find('ENECO_SOHO_GAS_VAST')?.value, 0),
         enecoSohoGasVar: rp(find('ENECO_SOHO_GAS_VARIABEL')?.value, 0),
+        enecoResElecInj: rp(find('ENECO_RES_INJ_ELEC')?.value, 0),
+        enecoSohoElecInj: rp(find('ENECO_SOHO_INJ_ELEC')?.value, 0),
+        enecoResVvElec: rp(find('ENECO_RES_VV_ELEC')?.value, 65),
+        enecoResVvGas: rp(find('ENECO_RES_VV_GAS')?.value, 65),
+        enecoSohoVvElec: rp(find('ENECO_SOHO_VV_ELEC')?.value, 90),
+        enecoSohoVvGas: rp(find('ENECO_SOHO_VV_GAS')?.value, 90),
+        enecoResVvInj: rp(find('ENECO_RES_VV_INJ')?.value, 0),
+        enecoSohoVvInj: rp(find('ENECO_SOHO_VV_INJ')?.value, 0),
+        elindusVvElec: rp(find('ELINDUS_VV_ELEC')?.value, 60),
+        elindusVvGas: rp(find('ELINDUS_VV_GAS')?.value, 60),
+        elindusVvInj: rp(find('ELINDUS_VV_INJ')?.value, 0),
         lastUpdated: data[0].last_updated
       };
       setMarketData(fetched);
@@ -228,11 +253,22 @@ export default function AdminDashboard() {
       ['ENECO_RES_GAS_VARIABEL', overrideData.enecoResGasVar],
       ['ENECO_SOHO_ELEC_VAST', overrideData.enecoSohoElecVast],
       ['ENECO_SOHO_ELEC_VARIABEL', overrideData.enecoSohoElecVar],
-      ['ENECO_SOHO_GAS_VAST', overrideData.enecoSohoGasVast],
-      ['ENECO_SOHO_GAS_VARIABEL', overrideData.enecoSohoGasVar],
+      ['ENECO_SOHO_GAS_VAST', overrideData.enecoSohoGasVast ?? 0],
+      ['ENECO_SOHO_GAS_VARIABEL', overrideData.enecoSohoGasVar ?? 0],
+      ['ENECO_RES_INJ_ELEC', overrideData.enecoResElecInj ?? 0],
+      ['ENECO_SOHO_INJ_ELEC', overrideData.enecoSohoElecInj ?? 0],
+      ['ENECO_RES_VV_ELEC', overrideData.enecoResVvElec ?? 65],
+      ['ENECO_RES_VV_GAS', overrideData.enecoResVvGas ?? 65],
+      ['ENECO_SOHO_VV_ELEC', overrideData.enecoSohoVvElec ?? 90],
+      ['ENECO_SOHO_VV_GAS', overrideData.enecoSohoVvGas ?? 90],
+      ['ENECO_RES_VV_INJ', overrideData.enecoResVvInj ?? 0],
+      ['ENECO_SOHO_VV_INJ', overrideData.enecoSohoVvInj ?? 0],
+      ['ELINDUS_VV_ELEC', overrideData.elindusVvElec ?? 60],
+      ['ELINDUS_VV_GAS', overrideData.elindusVvGas ?? 60],
+      ['ELINDUS_VV_INJ', overrideData.elindusVvInj ?? 0],
     ];
     const updates = indicators.map(([name, value]) => ({
-      indicator_name: name, value, unit: (name.includes('MULTIPLIER') ? 'x' : name.includes('ADDER') ? '€/MWh' : 'MWh'), last_updated: nowIso
+      indicator_name: name, value, unit: (name.includes('MULTIPLIER') ? 'x' : name.includes('ADDER') ? '€/MWh' : name.includes('VV') ? '€/jaar' : '€/MWh'), last_updated: nowIso
     }));
     const { error } = await supabase.from('market_prices').upsert(updates, { onConflict: 'indicator_name' });
     if (error) {
@@ -803,6 +839,54 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Eneco - Injectie Tarieven */}
+                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Injectie Tarieven (Zonnepanelen)</h3>
+                  <p className="text-xs text-slate-400 mb-5">Vergoeding per MWh voor geïnjecteerde stroom. Wordt gebruikt i.p.v. het standaard elektriciteitstarief als de klant zonnepanelen heeft.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                    {[{ key: 'enecoResElecInj', label: 'Particulier' }, { key: 'enecoSohoElecInj', label: 'SOHO' }].map(f => (
+                      <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500 shadow-sm`}>
+                            <Zap className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black text-slate-500 uppercase">{f.label}</p>
+                            <p className="text-[10px] font-bold tracking-wider text-emerald-500">Injectie Variabel</p>
+                          </div>
+                        </div>
+                        <input type="number" step="0.01" value={inputStrings[`${f.key}_ctkwh`] ?? String(Number(((overrideData[f.key as keyof MarketData] as number) || 0) / 10).toFixed(2))} onChange={e => setInputStrings(prev => ({ ...prev, [`${f.key}_ctkwh`]: e.target.value }))} onBlur={e => { const centKwh = parseFloat(e.target.value) || 0; const mwhVal = centKwh * 10; setOverrideData(p => ({ ...p, [f.key]: mwhVal })); setInputStrings(p => ({ ...p, [`${f.key}_ctkwh`]: String(centKwh), [f.key]: String(mwhVal) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                        <p className="text-[10px] text-slate-300 mt-2 text-right">€cent/kWh (opgeslagen als €/MWh)</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Eneco - Vaste Vergoedingen */}
+                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Vaste Vergoedingen</h3>
+                  <p className="text-xs text-slate-400 mb-5">Vaste jaarlijkse kost (in €, per jaar) per doelgroep.</p>
+                  {[{ group: 'Particulier', type: 'Res' }, { group: 'SOHO', type: 'Soho' }].map(g => (
+                    <div key={g.group} className="mb-6">
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{g.group}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {[{ key: `eneco${g.type}VvElec`, label: 'Elektriciteit', color: 'bg-amber-500' }, { key: `eneco${g.type}VvGas`, label: 'Aardgas', color: 'bg-rose-500' }, { key: `eneco${g.type}VvInj`, label: 'Injectie', color: 'bg-emerald-500' }].map(f => (
+                          <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color} shadow-sm`}>
+                                <span className="text-white font-bold text-xs">VV</span>
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-black text-slate-500 uppercase">{f.label}</p>
+                                <p className="text-[10px] font-bold tracking-wider text-slate-400">Vaste Vergoeding</p>
+                              </div>
+                            </div>
+                            <input type="number" step="0.5" value={inputStrings[f.key] ?? String(overrideData[f.key as keyof MarketData] ?? '')} onChange={e => setInputStrings(prev => ({ ...prev, [f.key]: e.target.value }))} onBlur={e => { const val = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, [f.key]: val })); setInputStrings(p => ({ ...p, [f.key]: String(val) })); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all" />
+                            <p className="text-[10px] text-slate-300 mt-2 text-right">€/jaar</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
                 </motion.div>
               )}
 

@@ -40,6 +40,17 @@ interface MarketData {
   enecoSohoElecVar?: number;
   enecoSohoGasVast?: number;
   enecoSohoGasVar?: number;
+  enecoResElecInj?: number;
+  enecoSohoElecInj?: number;
+  enecoResVvElec?: number;
+  enecoResVvGas?: number;
+  enecoSohoVvElec?: number;
+  enecoSohoVvGas?: number;
+  enecoResVvInj?: number;
+  enecoSohoVvInj?: number;
+  elindusVvElec?: number;
+  elindusVvGas?: number;
+  elindusVvInj?: number;
   lastUpdated?: string;
 }
 
@@ -69,6 +80,7 @@ export default function App() {
   };
 
   // Electricity State
+  const [hasSolarPanels, setHasSolarPanels] = useState<boolean | null>(null);
   const [elecKnowsConsumption, setElecKnowsConsumption] = useState<boolean | null>(null);
   const [elecConsumptionMWh, setElecConsumptionMWh] = useState<number>(50);
   const [elecIsOver30MWh, setElecIsOver30MWh] = useState<boolean | null>(null);
@@ -95,9 +107,7 @@ export default function App() {
   const [globalCalcOpen, setGlobalCalcOpen] = useState<'ENECO' | 'ELINDUS' | null>(null);
   const [showLinksModal, setShowLinksModal] = useState<boolean>(false);
 
-  // Fixed fee constants
-  const ENECO_FIXED_FEE = customerType === 'PARTICULIER' ? { ELEC: 65, GAS: 65 } : { ELEC: 90, GAS: 90 };
-  const ELINDUS_FIXED_FEE = { ELEC: 60, GAS: 60 };
+
 
   // Universal Commission
   const [elindusMargin, setElindusMargin] = useState<number>(15);
@@ -117,6 +127,18 @@ export default function App() {
 
   // Market Data
   const [marketData, setMarketData] = useState<MarketData | null>(null);
+
+  // Fixed fee Constants - Overridden dynamically if fetched!
+  const ENECO_FIXED_FEE = marketData && customerType === 'PARTICULIER'
+    ? { ELEC: marketData.enecoResVvElec ?? 65, GAS: marketData.enecoResVvGas ?? 65, INJ: marketData.enecoResVvInj ?? 0 }
+    : marketData && customerType === 'SOHO'
+    ? { ELEC: marketData.enecoSohoVvElec ?? 90, GAS: marketData.enecoSohoVvGas ?? 90, INJ: marketData.enecoSohoVvInj ?? 0 }
+    : (customerType === 'PARTICULIER' ? { ELEC: 65, GAS: 65, INJ: 0 } : { ELEC: 90, GAS: 90, INJ: 0 });
+
+  const ELINDUS_FIXED_FEE = marketData
+    ? { ELEC: marketData.elindusVvElec ?? 60, GAS: marketData.elindusVvGas ?? 60, INJ: marketData.elindusVvInj ?? 0 }
+    : { ELEC: 60, GAS: 60, INJ: 0 };
+
   const [overrideData, setOverrideData] = useState<MarketData>({
     epexSpot: 65.40,
     endex: 72.10,
@@ -151,6 +173,17 @@ export default function App() {
           enecoSohoElecVar: find('ENECO_SOHO_ELEC_VARIABEL')?.value || 0,
           enecoSohoGasVast: find('ENECO_SOHO_GAS_VAST')?.value || 0,
           enecoSohoGasVar: find('ENECO_SOHO_GAS_VARIABEL')?.value || 0,
+          enecoResElecInj: find('ENECO_RES_INJ_ELEC')?.value || 0,
+          enecoSohoElecInj: find('ENECO_SOHO_INJ_ELEC')?.value || 0,
+          enecoResVvElec: find('ENECO_RES_VV_ELEC')?.value || 65,
+          enecoResVvGas: find('ENECO_RES_VV_GAS')?.value || 65,
+          enecoSohoVvElec: find('ENECO_SOHO_VV_ELEC')?.value || 90,
+          enecoSohoVvGas: find('ENECO_SOHO_VV_GAS')?.value || 90,
+          enecoResVvInj: find('ENECO_RES_VV_INJ')?.value || 0,
+          enecoSohoVvInj: find('ENECO_SOHO_VV_INJ')?.value || 0,
+          elindusVvElec: find('ELINDUS_VV_ELEC')?.value || 60,
+          elindusVvGas: find('ELINDUS_VV_GAS')?.value || 60,
+          elindusVvInj: find('ELINDUS_VV_INJ')?.value || 0,
           lastUpdated: existingPrices[0].last_updated
         };
         setMarketData(fetchedData);
@@ -170,6 +203,9 @@ export default function App() {
     if (!marketData || !customerType) return;
     const isSoho = customerType === 'SOHO';
     const getPrice = (type: 'ELEC' | 'GAS', tariff: 'VAST' | 'VARIABEL' | null) => {
+      if (type === 'ELEC' && hasSolarPanels) {
+        return isSoho ? marketData.enecoSohoElecInj : marketData.enecoResElecInj;
+      }
       if (tariff === 'VAST') return type === 'ELEC' ? (isSoho ? marketData.enecoSohoElecVast : marketData.enecoResElecVast) : (isSoho ? marketData.enecoSohoGasVast : marketData.enecoResGasVast);
       return type === 'ELEC' ? (isSoho ? marketData.enecoSohoElecVar : marketData.enecoResElecVar) : (isSoho ? marketData.enecoSohoGasVar : marketData.enecoResGasVar);
     };
@@ -177,7 +213,7 @@ export default function App() {
     const gasPrice = getPrice('GAS', gasTariff) || 0;
     if (elecPrice > 0) setElecEnecoOfferPriceMWh(elecPrice);
     if (gasPrice > 0) setGasEnecoOfferPriceMWh(gasPrice);
-  }, [customerType, elecTariff, gasTariff, marketData]);
+  }, [customerType, elecTariff, gasTariff, marketData, hasSolarPanels]);
 
   const handleSaveOverride = async () => {
     setIsSavingOverride(true);
@@ -371,19 +407,23 @@ export default function App() {
 
     const multiplier = type === 'GAS'
       ? (marketData?.gasMultiplier ?? 1.05)
-      : (marketData?.elecMultiplier ?? 1.1);
+      : (hasSolarPanels ? 0.9 : (marketData?.elecMultiplier ?? 1.1));
     const adder = type === 'GAS'
       ? (marketData?.gasAdder ?? 14)
-      : (marketData?.elecAdder ?? 18);
+      : (hasSolarPanels ? 15 : (marketData?.elecAdder ?? 18));
 
     const elinEstimatedPrice = (baseMarkt * multiplier) + adder;
     const elindusSavingsVal = currPrice - elinEstimatedPrice;
     const elindusSavingsPercentage = currPrice > 0 ? (elindusSavingsVal / currPrice) * 100 : 0;
 
-    // Fixed fee savings
+    // Fixed fee savings logic
+    const fixedFeeKey = (type === 'ELEC' && hasSolarPanels) ? 'INJ' : type;
+    const enecoFixedFee = ENECO_FIXED_FEE[fixedFeeKey];
+    const elindusFixedFee = ELINDUS_FIXED_FEE[fixedFeeKey];
+
     const currentFixedFee = type === 'ELEC' ? elecCurrentFixedFee : gasCurrentFixedFee;
-    const enecoFixedFeeSaving = currentFixedFee - ENECO_FIXED_FEE[type];
-    const elindusFixedFeeSaving = currentFixedFee - ELINDUS_FIXED_FEE[type];
+    const enecoFixedFeeSaving = currentFixedFee - enecoFixedFee;
+    const elindusFixedFeeSaving = currentFixedFee - elindusFixedFee;
 
     // Volume-based visibility rules:
     // 0-25: Eneco only | 25-100: Both (SOHO) or Eneco only (Particulier) | 100+: Coach message
@@ -404,8 +444,8 @@ export default function App() {
       showEneco,
       showElindus,
       showCoachMessage,
-      enecoFixedFee: ENECO_FIXED_FEE[type],
-      elindusFixedFee: ELINDUS_FIXED_FEE[type],
+      enecoFixedFee,
+      elindusFixedFee,
       currentFixedFee,
       enecoFixedFeeSaving,
       elindusFixedFeeSaving,
@@ -418,9 +458,9 @@ export default function App() {
   const totalElindusSavings = outcomes.reduce((sum, o) => sum + (o.showElindus ? o.elindusSavingsTotal : 0), 0);
 
   // Commission calculation based on the new formula
-  const elecPrice = ((marketData?.epexSpot || 0) * (marketData?.elecMultiplier ?? 1.1)) + (marketData?.elecAdder ?? 18);
-  const gasPrice = ((marketData?.ttfDam || 0) * (marketData?.gasMultiplier ?? 1.05)) + (marketData?.gasAdder ?? 14);
-  const avgFormulaPrice = (elecPrice + gasPrice) / 2;
+  const commissionElecPrice = ((marketData?.epexSpot || 0) * (hasSolarPanels ? 0.9 : (marketData?.elecMultiplier ?? 1.1))) + (hasSolarPanels ? 15 : (marketData?.elecAdder ?? 18));
+  const commissionGasPrice = ((marketData?.ttfDam || 0) * (marketData?.gasMultiplier ?? 1.05)) + (marketData?.gasAdder ?? 14);
+  const avgFormulaPrice = (commissionElecPrice + commissionGasPrice) / 2;
 
   const effectiveElindusFixedFee = totalConsumption <= 100 ? Math.max(50, elindusFixedFee) : elindusFixedFee;
   const extraMargin = Math.max(0, avgFormulaPrice - 6);
@@ -821,17 +861,41 @@ export default function App() {
                               const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
                               const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
                               return (
-                                <button key={type} onClick={() => { setEnergyType(type); nextStep(); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                                <button key={type} onClick={() => { 
+                                  setEnergyType(type); 
+                                  if (type === 'GAS') {
+                                    setHasSolarPanels(null);
+                                    nextStep();
+                                  } else {
+                                    setHasSolarPanels(null); // Reset if changing between ELEC/BOTH
+                                  }
+                                }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
                                   <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
                                   <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
                                 </button>
                               );
                             })}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Solar Panels — appears after choosing ELEC or BOTH */}
+                      <AnimatePresence>
+                        {(energyType === 'ELEC' || energyType === 'BOTH') && (
+                          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }} className="w-full">
+                            <div className="bg-white mt-4 rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col items-center">
+                              <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">Heeft de klant zonnepanelen?</label>
+                              <div className="flex justify-center w-full gap-[clamp(0.75rem,1.5vh,1rem)] sm:max-w-md mx-auto">
+                                <button onClick={() => { setHasSolarPanels(true); nextStep(); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === true ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}>{text.yes}</button>
+                                <button onClick={() => { setHasSolarPanels(false); nextStep(); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === false ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'}`}>{text.no}</button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                    </motion.div>
                 )}
 
                 {/* STEP 2: Consumption */}
