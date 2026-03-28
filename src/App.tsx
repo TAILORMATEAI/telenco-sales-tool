@@ -28,8 +28,10 @@ type CustomerType = 'PARTICULIER' | 'SOHO' | null;
 interface MarketData {
   epexSpot: number;
   ttfDam: number;
-  margin30to80?: number;
-  margin80to100?: number;
+  elecMultiplier?: number;
+  elecAdder?: number;
+  gasMultiplier?: number;
+  gasAdder?: number;
   enecoResElecVast?: number;
   enecoResElecVar?: number;
   enecoResGasVast?: number;
@@ -119,8 +121,10 @@ export default function App() {
     endex: 72.10,
     ttfEndex: 35.20,
     ttfDam: 32.50,
-    margin30to80: 15,
-    margin80to100: 15
+    elecMultiplier: 1.1,
+    elecAdder: 18,
+    gasMultiplier: 1.05,
+    gasAdder: 14
   });
   const [isSavingOverride, setIsSavingOverride] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -134,8 +138,10 @@ export default function App() {
         const fetchedData = {
           epexSpot: find('EPEX_SPOT')?.value || 65.40,
           ttfDam: find('TTF_DAM')?.value || 32.50,
-          margin30to80: find('MARGIN_30_80')?.value || 15,
-          margin80to100: find('MARGIN_80_100')?.value || 15,
+          elecMultiplier: find('ELEC_MULTIPLIER')?.value || 1.1,
+          elecAdder: find('ELEC_ADDER')?.value || 18,
+          gasMultiplier: find('GAS_MULTIPLIER')?.value || 1.05,
+          gasAdder: find('GAS_ADDER')?.value || 14,
           enecoResElecVast: find('ENECO_RES_ELEC_VAST')?.value || 0,
           enecoResElecVar: find('ENECO_RES_ELEC_VARIABEL')?.value || 0,
           enecoResGasVast: find('ENECO_RES_GAS_VAST')?.value || 0,
@@ -178,8 +184,10 @@ export default function App() {
     const updates = [
       { indicator_name: 'EPEX_SPOT', value: overrideData.epexSpot, unit: 'MWh', last_updated: nowIso },
       { indicator_name: 'TTF_DAM', value: overrideData.ttfDam, unit: 'MWh', last_updated: nowIso },
-      { indicator_name: 'MARGIN_30_80', value: overrideData.margin30to80, unit: '€/MWh', last_updated: nowIso },
-      { indicator_name: 'MARGIN_80_100', value: overrideData.margin80to100, unit: '€/MWh', last_updated: nowIso }
+      { indicator_name: 'ELEC_MULTIPLIER', value: overrideData.elecMultiplier ?? 1.1, unit: 'x', last_updated: nowIso },
+      { indicator_name: 'ELEC_ADDER', value: overrideData.elecAdder ?? 18, unit: '€/MWh', last_updated: nowIso },
+      { indicator_name: 'GAS_MULTIPLIER', value: overrideData.gasMultiplier ?? 1.05, unit: 'x', last_updated: nowIso },
+      { indicator_name: 'GAS_ADDER', value: overrideData.gasAdder ?? 14, unit: '€/MWh', last_updated: nowIso }
     ];
     try {
       await supabase.from('market_prices').upsert(updates, { onConflict: 'indicator_name' });
@@ -355,16 +363,19 @@ export default function App() {
     const enecoSavingsVal = currPrice - enecoPrice;
     const enecoSavingsPercentage = currPrice > 0 ? (enecoSavingsVal / currPrice) * 100 : 0;
 
-    // Elindus
+    // Elindus formula: price × multiplier + adder
     const baseMarkt = type === 'GAS'
-      ? (gasTariff === 'VAST' ? (marketData?.ttfEndex || 0) : (marketData?.ttfDam || 0))
-      : (elecTariff === 'VAST' ? (marketData?.endex || 0) : (marketData?.epexSpot || 0));
+      ? (marketData?.ttfDam || 0)
+      : (marketData?.epexSpot || 0);
 
-    let effectiveElindusMargin = elindusMargin;
-    if (totalConsumption <= 80) effectiveElindusMargin = marketData?.margin30to80 ?? 15;
-    else if (totalConsumption <= 100) effectiveElindusMargin = marketData?.margin80to100 ?? 15;
+    const multiplier = type === 'GAS'
+      ? (marketData?.gasMultiplier ?? 1.05)
+      : (marketData?.elecMultiplier ?? 1.1);
+    const adder = type === 'GAS'
+      ? (marketData?.gasAdder ?? 14)
+      : (marketData?.elecAdder ?? 18);
 
-    const elinEstimatedPrice = baseMarkt + effectiveElindusMargin;
+    const elinEstimatedPrice = (baseMarkt * multiplier) + adder;
     const elindusSavingsVal = currPrice - elinEstimatedPrice;
     const elindusSavingsPercentage = currPrice > 0 ? (elindusSavingsVal / currPrice) * 100 : 0;
 
@@ -405,12 +416,13 @@ export default function App() {
   const totalEnecoSavings = outcomes.reduce((sum, o) => sum + (o.showEneco ? o.enecoSavingsTotal : 0), 0);
   const totalElindusSavings = outcomes.reduce((sum, o) => sum + (o.showElindus ? o.elindusSavingsTotal : 0), 0);
 
-  let effectiveElindusMargin = elindusMargin;
-  if (totalConsumption <= 80) effectiveElindusMargin = marketData?.margin30to80 ?? 15;
-  else if (totalConsumption <= 100) effectiveElindusMargin = marketData?.margin80to100 ?? 15;
+  // Commission calculation based on the new formula
+  const elecPrice = ((marketData?.epexSpot || 0) * (marketData?.elecMultiplier ?? 1.1)) + (marketData?.elecAdder ?? 18);
+  const gasPrice = ((marketData?.ttfDam || 0) * (marketData?.gasMultiplier ?? 1.05)) + (marketData?.gasAdder ?? 14);
+  const avgFormulaPrice = (elecPrice + gasPrice) / 2;
 
   const effectiveElindusFixedFee = totalConsumption <= 100 ? Math.max(50, elindusFixedFee) : elindusFixedFee;
-  const extraMargin = Math.max(0, effectiveElindusMargin - 6);
+  const extraMargin = Math.max(0, avgFormulaPrice - 6);
   const commission = (effectiveElindusFixedFee / 2) + (extraMargin * totalConsumption);
 
   const today = new Date();
