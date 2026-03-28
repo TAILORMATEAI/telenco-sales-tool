@@ -642,8 +642,8 @@ export default function AdminDashboard() {
                           <p className="text-[10px] text-slate-300 mt-1 text-right">€/MWh</p>
                         </div>
                       </div>
-                      <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-amber-600 text-base">{simElecResult.toFixed(2)} €/MWh</span></p>
+                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-slate-700 text-base">{simElecResult.toFixed(2)} €/MWh</span></p>
                         <p className="text-[10px] text-slate-400 mt-0.5">= {overrideData.epexSpot.toFixed(2)} × {overrideData.elecMultiplier} + {overrideData.elecAdder}</p>
                       </div>
                     </div>
@@ -679,8 +679,8 @@ export default function AdminDashboard() {
                           <p className="text-[10px] text-slate-300 mt-1 text-right">€/MWh</p>
                         </div>
                       </div>
-                      <div className="mt-4 p-3 bg-rose-50 rounded-xl border border-rose-100">
-                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-rose-600 text-base">{simGasResult.toFixed(2)} €/MWh</span></p>
+                      <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <p className="text-xs text-slate-500">Resultaat: <span className="font-black text-slate-700 text-base">{simGasResult.toFixed(2)} €/MWh</span></p>
                         <p className="text-[10px] text-slate-400 mt-0.5">= {overrideData.ttfDam.toFixed(2)} × {overrideData.gasMultiplier} + {overrideData.gasAdder}</p>
                       </div>
                     </div>
@@ -719,6 +719,17 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="mt-8 pt-8 border-t border-slate-200 relative z-20">
+                    <h3 className="text-lg font-black text-slate-500 mb-2">Automatische Market Scan</h3>
+                    <div className="bg-white rounded-xl p-4 border border-slate-100 mb-4 shadow-sm">
+                      <p className="text-xs text-slate-500 leading-relaxed mb-2 font-bold">
+                        De scanner haalt automatisch prijzen op via de Elindus API met volgende voorwaarden:
+                      </p>
+                      <ul className="text-[11px] text-slate-400 list-disc list-inside space-y-1.5 ml-1">
+                        <li>Toont van elke marktprijs het <span className="font-bold text-slate-500">gemiddelde van dagprijzen</span> (niet uur of maand)</li>
+                        <li>Maakt het gemiddelde vanaf de <span className="font-bold text-slate-500">1ste van de huidige maand</span> tot aan de meest recente datum</li>
+                        <li>Update automatisch elke maand mee voor de indicatoren <span className="font-bold text-slate-500">EPEX SPOT</span> en <span className="font-bold text-slate-500">TTF DAM</span></li>
+                      </ul>
+                    </div>
                     <LiveSyncTerminal onSyncComplete={fetchMarketData} />
                   </div>
                 </motion.div>
