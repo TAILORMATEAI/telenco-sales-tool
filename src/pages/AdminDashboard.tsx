@@ -557,21 +557,26 @@ export default function AdminDashboard() {
               {activeTab === 'elindus' && (
                 <motion.div key="elindus" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
                   {/* Action bar */}
-                  <div className="flex flex-col items-center text-center mb-10 mt-4 relative">
-                    <img src="./elindus-grey.png" alt="Elindus" className="h-20 object-contain opacity-70 mb-4" />
-                    <h2 className="text-3xl font-black text-slate-500 mb-1">Marktprijzen</h2>
-                    <p className="text-sm text-slate-400 mb-6">
-                      Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
-                    </p>
-                    <div className="flex items-center justify-center gap-3 w-full">
-                      {hasChanges && (
-                        <button onClick={() => { setOverrideData(marketData); setInputStrings({}); }} className="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-500 bg-white hover:bg-slate-50 transition-all border border-slate-200 shadow-sm">
-                          Annuleren
+                  <div className="flex flex-col items-center w-full mb-10 mt-4 relative">
+                    <img src="./elindus-grey.png" alt="Elindus" className="h-16 object-contain opacity-70 mb-8" />
+                    
+                    <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 border-b border-slate-100 pb-4">
+                      <div className="text-center sm:text-left">
+                        <h2 className="text-2xl font-black text-slate-500 mb-1">Marktprijzen</h2>
+                        <p className="text-sm text-slate-400">
+                          Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {hasChanges && (
+                          <button onClick={() => { setOverrideData(marketData); setInputStrings({}); }} className="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-500 bg-white hover:bg-slate-50 transition-all border border-slate-200 shadow-sm">
+                            Annuleren
+                          </button>
+                        )}
+                        <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${saveSuccess ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c] shadow-[#E74B4D]/20'} disabled:opacity-50`}>
+                          {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
                         </button>
-                      )}
-                      <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${saveSuccess ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c] shadow-[#E74B4D]/20'} disabled:opacity-50`}>
-                        {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
-                      </button>
+                      </div>
                     </div>
                   </div>
 
@@ -740,21 +745,26 @@ export default function AdminDashboard() {
               {/* ENECO TAB */}
               {activeTab === 'eneco' && (
                 <motion.div key="eneco" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                  <div className="flex flex-col items-center text-center mb-10 mt-4 relative">
-                    <img src="./eneco-grey.png" alt="Eneco" className="h-20 object-contain opacity-70 mb-4" />
-                    <h2 className="text-3xl font-black text-slate-500 mb-1">Tarieven</h2>
-                    <p className="text-sm text-slate-400 mb-6">
-                      Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
-                    </p>
-                    <div className="flex items-center justify-center gap-3 w-full">
-                      {hasChanges && (
-                        <button onClick={() => { setOverrideData(marketData); setInputStrings({}); }} className="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-500 bg-white hover:bg-slate-50 transition-all border border-slate-200 shadow-sm">
-                          Annuleren
+                  <div className="flex flex-col items-center w-full mb-10 mt-4 relative">
+                    <img src="./eneco-grey.png" alt="Eneco" className="h-20 object-contain opacity-70 mb-8" />
+                    
+                    <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4 border-b border-slate-100 pb-4">
+                      <div className="text-center sm:text-left">
+                        <h2 className="text-2xl font-black text-slate-500 mb-1">Tarieven</h2>
+                        <p className="text-sm text-slate-400">
+                          Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {hasChanges && (
+                          <button onClick={() => { setOverrideData(marketData); setInputStrings({}); }} className="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-500 bg-white hover:bg-slate-50 transition-all border border-slate-200 shadow-sm">
+                            Annuleren
+                          </button>
+                        )}
+                        <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${saveSuccess ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c] shadow-[#E74B4D]/20'} disabled:opacity-50`}>
+                          {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
                         </button>
-                      )}
-                      <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${saveSuccess ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c] shadow-[#E74B4D]/20'} disabled:opacity-50`}>
-                        {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
-                      </button>
+                      </div>
                     </div>
                   </div>
 
