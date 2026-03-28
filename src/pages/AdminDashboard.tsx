@@ -352,7 +352,7 @@ export default function AdminDashboard() {
                         transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                       />
                     )}
-                    <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3 w-full">
+                    <span className="relative z-10 flex items-center justify-center sm:justify-start gap-2 sm:gap-3 w-full px-2">
                       <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${isActive ? 'text-slate-600' : 'text-slate-400'}`} />
                       <span className="hidden sm:inline">{tab.label}</span>
                     </span>
