@@ -59,6 +59,11 @@ function PageTransition({ children, ...rest }: React.PropsWithChildren<{ key?: s
 export default function AppRouter() {
   const location = useLocation();
 
+  const hash = window.location.hash;
+  if ((hash.includes('type=invite') || hash.includes('type=recovery')) && location.pathname !== '/wachtwoord') {
+    return <Navigate to={`/wachtwoord${hash}`} replace />;
+  }
+
   return (
     <>
       {/* White overlay that covers during transition */}
