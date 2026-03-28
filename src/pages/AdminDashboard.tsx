@@ -557,18 +557,19 @@ export default function AdminDashboard() {
               {activeTab === 'elindus' && (
                 <motion.div key="elindus" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
                   {/* Action bar */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <img src="./elindus-grey.png" alt="Elindus" className="h-7 object-contain opacity-70" />
-                      <div>
-                        <h2 className="text-2xl font-black text-slate-500">Elindus Marktprijzen</h2>
-                        <p className="text-sm text-slate-400 mt-0.5">
-                          Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${saveSuccess ? 'bg-emerald-500 text-white' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c]'} disabled:opacity-50`}>
+                  <div className="flex flex-col items-center text-center mb-10 mt-4 relative">
+                    <img src="./elindus-grey.png" alt="Elindus" className="h-20 object-contain opacity-70 mb-4" />
+                    <h2 className="text-3xl font-black text-slate-500 mb-1">Elindus Marktprijzen</h2>
+                    <p className="text-sm text-slate-400 mb-6">
+                      Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                    </p>
+                    <div className="flex items-center justify-center gap-3 w-full">
+                      {hasChanges && (
+                        <button onClick={() => { setOverrideData(marketData); setInputStrings({}); }} className="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-500 bg-white hover:bg-slate-50 transition-all border border-slate-200 shadow-sm">
+                          Annuleren
+                        </button>
+                      )}
+                      <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${saveSuccess ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c] shadow-[#E74B4D]/20'} disabled:opacity-50`}>
                         {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
                       </button>
                     </div>
@@ -738,18 +739,19 @@ export default function AdminDashboard() {
               {/* ENECO TAB */}
               {activeTab === 'eneco' && (
                 <motion.div key="eneco" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <img src="./eneco-grey.png" alt="Eneco" className="h-7 object-contain opacity-70" />
-                      <div>
-                        <h2 className="text-2xl font-black text-slate-500">Eneco Tarieven</h2>
-                        <p className="text-sm text-slate-400 mt-0.5">
-                          Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${saveSuccess ? 'bg-emerald-500 text-white' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c]'} disabled:opacity-50`}>
+                  <div className="flex flex-col items-center text-center mb-10 mt-4 relative">
+                    <img src="./eneco-grey.png" alt="Eneco" className="h-20 object-contain opacity-70 mb-4" />
+                    <h2 className="text-3xl font-black text-slate-500 mb-1">Eneco Tarieven</h2>
+                    <p className="text-sm text-slate-400 mb-6">
+                      Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                    </p>
+                    <div className="flex items-center justify-center gap-3 w-full">
+                      {hasChanges && (
+                        <button onClick={() => { setOverrideData(marketData); setInputStrings({}); }} className="px-6 py-2.5 rounded-xl font-bold text-sm text-slate-500 bg-white hover:bg-slate-50 transition-all border border-slate-200 shadow-sm">
+                          Annuleren
+                        </button>
+                      )}
+                      <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-sm ${saveSuccess ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c] shadow-[#E74B4D]/20'} disabled:opacity-50`}>
                         {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
                       </button>
                     </div>
