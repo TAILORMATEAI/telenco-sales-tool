@@ -60,7 +60,7 @@ interface UserProfile {
   last_name?: string;
 }
 
-type Tab = 'overview' | 'prices' | 'activity' | 'users';
+type Tab = 'overview' | 'elindus' | 'eneco' | 'activity' | 'users';
 
 export default function AdminDashboard() {
   const { signOut, profile, user } = useAuth();
@@ -261,7 +261,8 @@ export default function AdminDashboard() {
 
   const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: 'overview', label: 'Overzicht', icon: HomeIcon },
-    { key: 'prices', label: 'Marktprijzen', icon: CurrencyEuroIcon },
+    { key: 'elindus', label: 'Elindus', icon: Zap },
+    { key: 'eneco', label: 'Eneco', icon: Flame },
     { key: 'activity', label: 'Activiteiten', icon: ChartBarIcon },
     { key: 'users', label: 'Gebruikers', icon: UsersIcon },
   ];
@@ -552,16 +553,19 @@ export default function AdminDashboard() {
                 </motion.div>
               )}
 
-              {/* PRICES TAB */}
-              {activeTab === 'prices' && (
-                <motion.div key="prices" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+              {/* ELINDUS TAB */}
+              {activeTab === 'elindus' && (
+                <motion.div key="elindus" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
                   {/* Action bar */}
                   <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-2xl font-black text-slate-500">Marktprijzen & Marges</h2>
-                      <p className="text-sm text-slate-400 mt-1">
-                        Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <img src="./elindus-grey.png" alt="Elindus" className="h-7 object-contain opacity-70" />
+                      <div>
+                        <h2 className="text-2xl font-black text-slate-500">Elindus Marktprijzen</h2>
+                        <p className="text-sm text-slate-400 mt-0.5">
+                          Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex gap-3">
                       <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${saveSuccess ? 'bg-emerald-500 text-white' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c]'} disabled:opacity-50`}>
@@ -570,11 +574,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-
-                  <h3 className="text-lg font-black text-slate-500 mb-4 mt-8 flex items-center gap-3">
-                    <img src="./elindus-grey.png" alt="Elindus" className="h-6 object-contain opacity-60" />
-                    <span className="opacity-90">Marktprijzen</span>
-                  </h3>
+                  <h3 className="text-lg font-black text-slate-500 mb-4">Huidige Marktprijzen (automatisch via API)</h3>
                   {/* Market Price Cards */}
                   <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 sm:gap-4 mb-8">
                     {priceFields.map(field => (
@@ -606,54 +606,8 @@ export default function AdminDashboard() {
                     ))}
                   </div>
 
-                  {/* Eneco Tarieven */}
-                  <h3 className="text-lg font-black text-slate-500 mb-4">
-                    <span className="inline-flex items-center gap-2">
-                      <img src="./eneco-grey.png" alt="Eneco" className="h-8 object-contain opacity-60" />
-                      Tarieven
-                    </span>
-                  </h3>
-                  {enecoPriceFields.map(group => (
-                    <div key={group.group} className="mb-6">
-                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{group.group}</p>
-                      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
-                        {group.fields.map(field => (
-                          <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                            <div className="flex items-center gap-3 mb-4">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-500' : 'bg-rose-500'} shadow-sm`}>
-                                {field.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-black text-slate-500 truncate">{field.type}</p>
-                                <p className={`text-[10px] font-bold uppercase tracking-wider ${field.label === 'Vast' ? 'text-emerald-500' : 'text-blue-500'}`}>{field.label}</p>
-                              </div>
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={inputStrings[`${field.key}_ctkwh`] ?? String(Number(((overrideData[field.key] as number) || 0) / 10).toFixed(2))}
-                              onChange={e => setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: e.target.value }))}
-                              onBlur={e => {
-                                const parsed = parseFloat(e.target.value);
-                                const centKwh = isNaN(parsed) ? 0 : parsed;
-                                const mwhVal = centKwh * 10;
-                                setOverrideData(prev => ({ ...prev, [field.key]: mwhVal }));
-                                setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: String(centKwh), [field.key]: String(mwhVal) }));
-                              }}
-                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
-                            />
-                            <p className="text-[10px] text-slate-300 mt-2 text-right">€cent/kWh</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-
                   {/* Elindus Pricing Formula */}
-                  <h3 className="text-lg font-black text-slate-500 mb-2 mt-6 pt-6 border-t border-slate-100 flex items-center gap-3">
-                    <img src="./elindus-grey.png" alt="Elindus" className="h-5 object-contain opacity-60" />
-                    <span className="opacity-90">Prijsformule (25 – 99 MWh)</span>
-                  </h3>
+                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Prijsformule (25 – 99 MWh)</h3>
                   <p className="text-xs text-slate-400 mb-5">De verkoopprijs in de wizard wordt berekend als: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Marktprijs × Multiplier + Opslag</span></p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -763,9 +717,68 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
+
                   <div className="mt-8 pt-8 border-t border-slate-200 relative z-20">
                     <LiveSyncTerminal onSyncComplete={fetchMarketData} />
                   </div>
+                </motion.div>
+              )}
+
+              {/* ENECO TAB */}
+              {activeTab === 'eneco' && (
+                <motion.div key="eneco" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <img src="./eneco-grey.png" alt="Eneco" className="h-7 object-contain opacity-70" />
+                      <div>
+                        <h2 className="text-2xl font-black text-slate-500">Eneco Tarieven</h2>
+                        <p className="text-sm text-slate-400 mt-0.5">
+                          Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button onClick={handleSave} disabled={isSaving || !hasChanges} className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${saveSuccess ? 'bg-emerald-500 text-white' : 'bg-[#E74B4D] text-white hover:bg-[#c73a3c]'} disabled:opacity-50`}>
+                        {saveSuccess ? '✓ Opgeslagen' : isSaving ? 'Opslaan...' : 'Wijzigingen Opslaan'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {enecoPriceFields.map(group => (
+                    <div key={group.group} className="mb-6">
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{group.group}</p>
+                      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+                        {group.fields.map(field => (
+                          <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-500' : 'bg-rose-500'} shadow-sm`}>
+                                {field.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-black text-slate-500 truncate">{field.type}</p>
+                                <p className={`text-[10px] font-bold uppercase tracking-wider ${field.label === 'Vast' ? 'text-emerald-500' : 'text-blue-500'}`}>{field.label}</p>
+                              </div>
+                            </div>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={inputStrings[`${field.key}_ctkwh`] ?? String(Number(((overrideData[field.key] as number) || 0) / 10).toFixed(2))}
+                              onChange={e => setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: e.target.value }))}
+                              onBlur={e => {
+                                const parsed = parseFloat(e.target.value);
+                                const centKwh = isNaN(parsed) ? 0 : parsed;
+                                const mwhVal = centKwh * 10;
+                                setOverrideData(prev => ({ ...prev, [field.key]: mwhVal }));
+                                setInputStrings(prev => ({ ...prev, [`${field.key}_ctkwh`]: String(centKwh), [field.key]: String(mwhVal) }));
+                              }}
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 sm:px-4 sm:py-3 font-bold text-slate-600 text-base sm:text-lg focus:ring-2 focus:ring-[#E74B4D]/30 focus:border-[#E74B4D] transition-all"
+                            />
+                            <p className="text-[10px] text-slate-300 mt-2 text-right">€cent/kWh</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </motion.div>
               )}
 
