@@ -608,7 +608,7 @@ export default function AdminDashboard() {
 
                   {/* Elindus Pricing Formula */}
                   <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Prijsformule (25 – 99 MWh)</h3>
-                  <p className="text-xs text-slate-400 mb-5">De verkoopprijs in de wizard wordt berekend als: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Marktprijs × Multiplier + Opslag</span></p>
+                  <p className="text-xs text-slate-400 mb-5">De verkoopprijs in de wizard wordt berekend als: <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Marktprijs × Multiplier + Marge</span></p>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     {/* Elektriciteit Formula Card */}
@@ -633,7 +633,7 @@ export default function AdminDashboard() {
                           <p className="text-[10px] text-slate-300 mt-1 text-right">×</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Opslag</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Marge</p>
                           <input type="number" step="0.5"
                             value={inputStrings['elecAdder'] ?? String(overrideData.elecAdder)}
                             onChange={e => setInputStrings(prev => ({ ...prev, elecAdder: e.target.value }))}
@@ -670,7 +670,7 @@ export default function AdminDashboard() {
                           <p className="text-[10px] text-slate-300 mt-1 text-right">×</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Opslag</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Marge</p>
                           <input type="number" step="0.5"
                             value={inputStrings['gasAdder'] ?? String(overrideData.gasAdder)}
                             onChange={e => setInputStrings(prev => ({ ...prev, gasAdder: e.target.value }))}
