@@ -93,6 +93,7 @@ export default function App() {
   const [includeFixedFeeSavings, setIncludeFixedFeeSavings] = useState<boolean>(false);
   const [comparisonView, setComparisonView] = useState<'ENECO' | 'ELINDUS'>('ENECO');
   const [globalCalcOpen, setGlobalCalcOpen] = useState<'ENECO' | 'ELINDUS' | null>(null);
+  const [showLinksModal, setShowLinksModal] = useState<boolean>(false);
 
   // Fixed fee constants
   const ENECO_FIXED_FEE = customerType === 'PARTICULIER' ? { ELEC: 65, GAS: 65 } : { ELEC: 90, GAS: 90 };
@@ -1006,18 +1007,10 @@ export default function App() {
                         </div>
                       ))}
 
-                      {/* Sales Eneco Button (moved under grids) */}
-                      {(!outcomes.every(o => o.showCoachMessage) && (customerType === 'PARTICULIER' || comparisonView === 'ENECO')) && (
-                        <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-3 sm:py-4 rounded-xl font-black text-sm sm:text-base bg-slate-50 text-slate-500 hover:text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border border-slate-200 mt-2 mb-4 overflow-hidden">
-                          <img src="./eneco-grey.png" alt="Eneco" className="h-5 object-contain z-10 transition-transform group-hover:scale-110 opacity-70" />
-                          <span className="z-10 group-hover:text-[#E74B4D] transition-colors">Naar Eneco Sales Portaal</span>
-                        </a>
-                      )}
-
                       {/* Vergelijking Slider — Alleen voor SOHO */}
                       {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
-                        <div className="pt-6 pb-2 border-t border-slate-100">
-                          <div className="bg-slate-100/50 p-1.5 rounded-2xl flex relative max-w-sm mx-auto shadow-inner border border-slate-200/60">
+                        <div className="pt-6 pb-2 border-t border-slate-100 flex items-center justify-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap">
+                          <div className="bg-slate-100/50 p-1.5 rounded-2xl flex relative w-full max-w-sm shadow-inner border border-slate-200/60">
                             <div
                               className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
                               style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
@@ -1035,6 +1028,20 @@ export default function App() {
                               <img src="./elindus-grey.png" alt="Elindus" className={`h-7 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0 flex items-center' : 'opacity-40 grayscale'}`} />
                             </button>
                           </div>
+                          
+                          <button onClick={() => setShowLinksModal(true)} className="flex items-center justify-center w-14 h-[3.25rem] bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-[#E74B4D] hover:bg-slate-50 shadow-sm flex-shrink-0 transition-colors">
+                            <Info className="w-6 h-6" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Info Button for Particulier */}
+                      {customerType === 'PARTICULIER' && !outcomes.every(o => o.showCoachMessage) && (
+                        <div className="pt-6 pb-2 border-t border-slate-100 flex items-center justify-center">
+                          <button onClick={() => setShowLinksModal(true)} className="flex items-center justify-center w-full max-w-sm gap-2 bg-white border border-slate-200 rounded-2xl h-[3.25rem] text-slate-500 font-bold hover:bg-slate-50 transition-all shadow-sm">
+                            <Info className="w-5 h-5" />
+                            Handige Portaal Links
+                          </button>
                         </div>
                       )}
 
@@ -1165,6 +1172,72 @@ export default function App() {
           </div>
         </div>
       </div>{/* End zoom wrapper */}
+
+      {/* PORTAAL LINKS MODAL */}
+      <AnimatePresence>
+        {showLinksModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowLinksModal(false)} />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} transition={{ type: 'spring', bounce: 0, duration: 0.4 }} className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden relative border border-slate-100">
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xl font-black text-slate-600">Handige Portaal Links</h3>
+                  <button onClick={() => setShowLinksModal(false)} className="w-8 h-8 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <a href="https://elindus.lightning.force.com/lightning/page/home" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-[#E74B4D]/30 shadow-sm transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                      <img src="./elindus-grey.png" alt="Elindus" className="h-6 object-contain opacity-70 group-hover:opacity-100 group-hover:grayscale-0 grayscale transition-all" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-600 text-sm group-hover:text-[#E74B4D] transition-colors truncate">Nieuwe klant aanmaken</p>
+                      <p className="text-xs text-slate-400 mt-0.5 truncate">Onder Elindus voorstel</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-slate-300 group-hover:text-[#E74B4D] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+                  </a>
+
+                  <a href="https://sales.eneco.be/sf/initiation" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 p-4 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 hover:border-[#E74B4D]/30 shadow-sm transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+                      <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain opacity-70 group-hover:opacity-100 group-hover:grayscale-0 grayscale transition-all" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-600 text-sm group-hover:text-[#E74B4D] transition-colors truncate">Nieuwe klant aanmaken</p>
+                      <p className="text-xs text-slate-400 mt-0.5 truncate">Onder Eneco voorstel</p>
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-slate-300 group-hover:text-[#E74B4D] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+                  </a>
+
+                  <div className="h-[2px] bg-slate-100 my-4 w-full"></div>
+
+                  <a href="https://klant.elindus.be/s/marktinformatie/epex-spot?language=nl_NL" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-sm transition-all text-left">
+                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                      <img src="./elindus-grey.png" alt="Elindus" className="h-4 object-contain opacity-50 group-hover:opacity-80 transition-opacity" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-500 text-xs">Tariefkaarten Elindus</p>
+                      <p className="text-[10px] text-slate-400 truncate">Bekijk de Elindus marktinformatie</p>
+                    </div>
+                  </a>
+
+                  <a href="https://eneco.be/nl/" target="_blank" rel="noopener noreferrer" className="group flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-white hover:shadow-sm transition-all text-left">
+                    <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                      <img src="./eneco-grey.png" alt="Eneco" className="h-4 object-contain opacity-50 group-hover:opacity-80 transition-opacity" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-500 text-xs">Tariefkaarten Eneco</p>
+                      <p className="text-[10px] text-slate-400 truncate">Bekijk de website van Eneco</p>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </motion.div>
   );
 }
