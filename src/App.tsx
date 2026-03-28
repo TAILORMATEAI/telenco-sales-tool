@@ -734,9 +734,8 @@ export default function App() {
     if (currentStep < totalSteps) {
       setIsTranslating(true);
       setDirection(1);
-      // Particulier: skip from step 4 (price) directly to step 5 (comparison, which is the last)
-      // because there's no margin step for Particulier
       setCurrentStep(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => setIsTranslating(false), 800);
     }
   };
@@ -747,6 +746,7 @@ export default function App() {
       setIsTranslating(true);
       setDirection(-1);
       setCurrentStep(prev => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => setIsTranslating(false), 800);
     }
   };
@@ -1030,7 +1030,7 @@ export default function App() {
         {isTweevoudig ? (
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-amber-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Dag Tarief</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Dag Tarief</label>
               <div className="relative group">
                 <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-2xl">€</span>
                 <input
@@ -1041,14 +1041,14 @@ export default function App() {
                     if (raw === '') { setElecCurrentPriceDagMWh(0); return; }
                     setElecCurrentPriceDagMWh(showInMWh ? Number(raw) : Number(raw) * 1000);
                   }}
-                  className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-amber-50 focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition-all text-amber-500 outline-none"
+                  className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
                 />
-                <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-amber-500/50 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+                <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-indigo-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Nacht Tarief</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Nacht Tarief</label>
               <div className="relative group">
                 <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-2xl">€</span>
                 <input
@@ -1059,9 +1059,9 @@ export default function App() {
                     if (raw === '') { setElecCurrentPriceNachtMWh(0); return; }
                     setElecCurrentPriceNachtMWh(showInMWh ? Number(raw) : Number(raw) * 1000);
                   }}
-                  className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-indigo-50 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-indigo-500 outline-none"
+                  className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
                 />
-                <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-indigo-500/50 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+                <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
               </div>
             </div>
           </div>

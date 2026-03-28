@@ -20,7 +20,8 @@ import {
   FlameIcon as Flame,
   HomeIcon,
   TrophyIcon,
-  SaveIcon as Save
+  SaveIcon as Save,
+  FileTextIcon
 } from '../components/Icons';
 
 interface MarketData {
@@ -157,6 +158,7 @@ export default function AdminDashboard() {
   // Energy Orders (Bonnen)
   const [orders, setOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   const fetchMarketData = async () => {
     const { data, error } = await supabase.from('market_prices').select('*');
@@ -374,7 +376,7 @@ export default function AdminDashboard() {
     { key: 'overview', label: 'Overzicht', icon: HomeIcon },
     { key: 'elindus', label: 'Elindus', icon: Zap },
     { key: 'eneco', label: 'Eneco', icon: Flame },
-    { key: 'orders', label: 'Bonnen', icon: Save },
+    { key: 'orders', label: 'Bonnen', icon: FileTextIcon },
     { key: 'activity', label: 'Activiteiten', icon: ChartBarIcon },
     { key: 'users', label: 'Gebruikers', icon: UsersIcon },
   ];
@@ -485,8 +487,16 @@ export default function AdminDashboard() {
                       />
                     )}
                     <span className="relative z-10 flex items-center justify-center sm:justify-start gap-2 sm:gap-3 w-full px-2">
-                      <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${isActive ? 'text-slate-600' : 'text-slate-400'}`} />
-                      <span className="hidden sm:inline">{tab.label}</span>
+                      {tab.key === 'elindus' ? (
+                        <img src="./elindus-grey.png" alt="Elindus" className={`h-4 sm:h-5 object-contain ${isActive ? 'grayscale-0 opacity-80' : 'grayscale opacity-40'} transition-all`} />
+                      ) : tab.key === 'eneco' ? (
+                        <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/enecologozondericon.png" alt="Eneco" className={`h-4 sm:h-5 object-contain ${isActive ? 'grayscale-0 opacity-80' : 'grayscale opacity-40'} transition-all`} />
+                      ) : (
+                        <>
+                          <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${tab.key === 'orders' ? (isActive ? 'text-blue-500' : 'text-blue-300') : (isActive ? 'text-slate-600' : 'text-slate-400')}`} />
+                          <span className="hidden sm:inline">{tab.label}</span>
+                        </>
+                      )}
                     </span>
                   </button>
                 );
@@ -1114,45 +1124,81 @@ export default function AdminDashboard() {
                       <h2 className="text-2xl font-black text-slate-500">Bonnen</h2>
                       <p className="text-sm text-slate-400 mt-1">{orders.length} opgeslagen bonnen</p>
                     </div>
-                    <button onClick={fetchOrders} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-[#E5394C] to-[#EA704F] hover:shadow-lg transition-all shadow-sm">
+                    <button onClick={fetchOrders} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:shadow-lg transition-all shadow-sm">
                       <RefreshCw className="w-4 h-4" /> Vernieuwen
                     </button>
                   </div>
                   
                   {ordersLoading ? (
-                    <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#E5394C] rounded-full animate-spin" /></div>
+                    <div className="flex justify-center py-20"><div className="w-8 h-8 border-4 border-slate-200 border-t-blue-500 rounded-full animate-spin" /></div>
                   ) : orders.length === 0 ? (
                     <div className="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm">
-                      <Save className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                      <FileTextIcon className="w-12 h-12 text-blue-200 mx-auto mb-4" />
                       <p className="font-bold text-slate-400">Nog geen bonnen opgeslagen</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {orders.map((order) => (
-                        <div key={order.id} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      {orders.map((order) => {
+                        const isExpanded = expandedOrder === order.id;
+                        return (
+                        <div key={order.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
+                          <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left cursor-pointer">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${order.energy_type === 'ELEC' ? 'bg-amber-500' : order.energy_type === 'GAS' ? 'bg-rose-500' : 'bg-purple-500'} shadow-sm`}>
-                                {order.energy_type === 'ELEC' ? <Zap className="w-5 h-5 text-white" /> : order.energy_type === 'GAS' ? <Flame className="w-5 h-5 text-white" /> : <Calculator className="w-5 h-5 text-white" />}
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${order.energy_type === 'ELEC' ? 'bg-blue-500' : order.energy_type === 'GAS' ? 'bg-blue-400' : 'bg-blue-600'} shadow-sm`}>
+                                <FileTextIcon className="w-5 h-5 text-white" />
                               </div>
                               <div>
                                 <p className="font-black text-slate-600">{order.first_name} {order.last_name}</p>
-                                <p className="text-xs text-slate-400">{order.email} · {order.customer_type}</p>
+                                <p className="text-xs text-slate-400">{order.email} · {order.customer_type} · {order.energy_type}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-4">
-                              <span className="text-xs font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-lg">{order.commission_code}</span>
+                              <span className="text-xs font-bold bg-blue-50 text-blue-600 px-3 py-1 rounded-lg border border-blue-100">{order.commission_code}</span>
+                              <span className="text-[10px] text-slate-400">{order.user_email}</span>
                               <span className="text-xs text-slate-400">{order.created_at ? formatDate(order.created_at) : ''}</span>
+                              <svg className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m6 9 6 6 6-6" /></svg>
                             </div>
-                          </div>
-                          <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                            <div><span className="text-slate-400 font-medium">Type</span><p className="font-bold text-slate-600">{order.energy_type}</p></div>
-                            <div><span className="text-slate-400 font-medium">Meter</span><p className="font-bold text-slate-600">{order.meter_type || '—'}</p></div>
-                            <div><span className="text-slate-400 font-medium">Adres</span><p className="font-bold text-slate-600 truncate">{order.connection_street} {order.connection_house_number}</p></div>
-                            <div><span className="text-slate-400 font-medium">Postcode</span><p className="font-bold text-slate-600">{order.connection_postal_code} {order.connection_city}</p></div>
-                          </div>
+                          </button>
+                          {isExpanded && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-5 pb-5 border-t border-slate-100">
+                              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pt-4 text-xs">
+                                <div><span className="text-slate-400 font-medium block">Energie Type</span><p className="font-bold text-slate-600">{order.energy_type}</p></div>
+                                <div><span className="text-slate-400 font-medium block">Klant Type</span><p className="font-bold text-slate-600">{order.customer_type}</p></div>
+                                <div><span className="text-slate-400 font-medium block">Meter Type</span><p className="font-bold text-slate-600">{order.meter_type || '—'}</p></div>
+                                <div><span className="text-slate-400 font-medium block">Zonnepanelen</span><p className="font-bold text-slate-600">{order.has_solar ? 'Ja' : 'Nee'}</p></div>
+                                {order.company_name && <div><span className="text-slate-400 font-medium block">Bedrijfsnaam</span><p className="font-bold text-slate-600">{order.company_name}</p></div>}
+                                {order.vat_number && <div><span className="text-slate-400 font-medium block">BTW Nummer</span><p className="font-bold text-slate-600">{order.vat_number}</p></div>}
+                                <div><span className="text-slate-400 font-medium block">Geboortedatum</span><p className="font-bold text-slate-600">{order.birth_date || '—'}</p></div>
+                                <div><span className="text-slate-400 font-medium block">Telefoon</span><p className="font-bold text-slate-600">{order.phone || '—'}</p></div>
+                                <div><span className="text-slate-400 font-medium block">Email</span><p className="font-bold text-slate-600">{order.email}</p></div>
+                                {order.elec_consumption_mwh > 0 && <div><span className="text-slate-400 font-medium block">Elec Verbruik</span><p className="font-bold text-slate-600">{order.elec_consumption_mwh} MWh</p></div>}
+                                {order.elec_dag_mwh > 0 && <div><span className="text-slate-400 font-medium block">Elec Dag</span><p className="font-bold text-slate-600">{order.elec_dag_mwh} MWh</p></div>}
+                                {order.elec_nacht_mwh > 0 && <div><span className="text-slate-400 font-medium block">Elec Nacht</span><p className="font-bold text-slate-600">{order.elec_nacht_mwh} MWh</p></div>}
+                                {order.gas_consumption_mwh > 0 && <div><span className="text-slate-400 font-medium block">Gas Verbruik</span><p className="font-bold text-slate-600">{order.gas_consumption_mwh} MWh</p></div>}
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-100 text-xs">
+                                <div>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Aansluitingsadres</p>
+                                  <p className="font-bold text-slate-600">{order.connection_street} {order.connection_house_number}{order.connection_bus ? ` bus ${order.connection_bus}` : ''}</p>
+                                  <p className="text-slate-500">{order.connection_postal_code} {order.connection_city}</p>
+                                </div>
+                                {!order.billing_same && (
+                                  <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Facturatieadres</p>
+                                    <p className="font-bold text-slate-600">{order.billing_street} {order.billing_house_number}{order.billing_bus ? ` bus ${order.billing_bus}` : ''}</p>
+                                    <p className="text-slate-500">{order.billing_postal_code} {order.billing_city}</p>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-2 text-[10px] text-slate-400">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                Aangemaakt door: <span className="font-bold text-slate-500">{order.user_email}</span>
+                              </div>
+                            </motion.div>
+                          )}
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   )}
                 </motion.div>

@@ -239,7 +239,7 @@ export default function CustomerForm({
                     {text.inAanvraag}
                   </label>
                 </div>
-                <input type="text" autoComplete="nope" name="vat_reg_number" disabled={customerData.vatPending} className={`${inputCls} uppercase ${!isVatValid && !customerData.vatPending && customerData.vatNumber.length > 2 ? 'ring-2 ring-rose-400 border-rose-400' : ''}`} value={customerData.vatNumber} onChange={e => setCustomerData(prev => ({ ...prev, vatNumber: formatVatNumber(e.target.value) }))} />
+                <input type="text" autoComplete="off" name="company_tax_id" data-form-type="other" data-lpignore="true" data-1p-ignore disabled={customerData.vatPending} className={`${inputCls} uppercase ${!isVatValid && !customerData.vatPending && customerData.vatNumber.length > 2 ? 'ring-2 ring-rose-400 border-rose-400' : ''}`} value={customerData.vatNumber} onChange={e => setCustomerData(prev => ({ ...prev, vatNumber: formatVatNumber(e.target.value) }))} />
               </div>
             </div>
           </>
