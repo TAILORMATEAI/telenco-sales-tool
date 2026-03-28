@@ -136,15 +136,16 @@ app.post('/api/admin/create-user', express.json(), async (req, res) => {
   const { email, firstName, lastName, role, avatarId } = req.body;
   try {
     const { data: user, error: authError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      data: { first_name: firstName, last_name: lastName, role: role || 'user' }
+      data: { first_name: firstName, last_name: lastName, role: role || 'user' },
+      redirectTo: `${process.env.VITE_SITE_URL || 'http://localhost:3000'}/wachtwoord`
     });
     if (authError) throw authError;
     if (user?.user?.id) {
-      await adminClient.from('profiles').insert({
+      await adminClient.from('profiles').upsert({
         id: user.user.id, email, role: role || 'user',
         first_name: firstName, last_name: lastName,
         avatar_id: avatarId || 'gradient-1', is_active: true, is_archived: false
-      });
+      }, { onConflict: 'id' });
     }
     res.json({ success: true, user: user.user });
   } catch (err: any) {

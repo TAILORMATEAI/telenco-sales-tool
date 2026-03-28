@@ -682,13 +682,13 @@ async function startServer() {
     try {
       const { data: user, error: authError } = await adminClient.auth.admin.inviteUserByEmail(email, {
         data: { first_name: firstName, last_name: lastName, role: role || 'user', inviter_name: adminName || 'Een beheerder' },
-        redirectTo: `${process.env.VITE_SITE_URL || 'http://localhost:3000'}/login`
+        redirectTo: `${process.env.VITE_SITE_URL || 'http://localhost:3000'}/wachtwoord`
       });
 
       if (authError) throw authError;
       
       if (user?.user?.id) {
-        await adminClient.from('profiles').insert({ 
+        await adminClient.from('profiles').upsert({ 
           id: user.user.id,
           email: email,
           role: role || 'user',
@@ -697,7 +697,7 @@ async function startServer() {
           avatar_id: avatarId || 'gradient-1',
           is_active: true,
           is_archived: false
-        });
+        }, { onConflict: 'id' });
       }
       res.json({ success: true, user: user.user });
     } catch (err: any) {

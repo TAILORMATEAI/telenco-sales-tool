@@ -11,6 +11,15 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInvite, setIsInvite] = useState(false);
+
+  useEffect(() => {
+    // Detect invite link
+    if (window.location.hash.includes('type=invite') || localStorage.getItem('isInviteMode') === 'true') {
+      setIsInvite(true);
+      localStorage.setItem('isInviteMode', 'true');
+    }
+  }, []);
 
   useEffect(() => {
     // We luisteren of er specifiek een wachtwoordherstel event gebeurt vanuit the Supabase flow
@@ -26,8 +35,8 @@ export default function ResetPasswordPage() {
     );
 
     // Controleer of de URL een geldige recovery token bevat
-    // (die wordt meegegeven in de link vanuit de e-mail)
-    if (!window.location.hash.includes('type=recovery')) {
+    // (die wordt meegegeven in de link vanuit de e-mail of door de state)
+    if (!window.location.hash.includes('type=recovery') && !window.location.hash.includes('type=invite') && localStorage.getItem('mustChangePassword') !== 'true' && localStorage.getItem('isInviteMode') !== 'true') {
       // Geen token? Dan heb je hier niets te zoeken -> Terug naar login
       navigate('/login', { replace: true });
     }
@@ -63,9 +72,10 @@ export default function ResetPasswordPage() {
       setError(updateError.message);
       setIsLoading(false);
     } else {
-      setSuccess('Yes! Je wachtwoord is succesvol gewijzigd.');
-      // Verwijder de security lock
+      setSuccess(isInvite ? 'Yes! Je account is succesvol geactiveerd.' : 'Yes! Je wachtwoord is succesvol gewijzigd.');
+      // Verwijder de security locks
       localStorage.removeItem('mustChangePassword');
+      localStorage.removeItem('isInviteMode');
       // Na 2 seconden naar inlogscherm
       setTimeout(() => {
         navigate('/login', { replace: true });
@@ -96,10 +106,19 @@ export default function ResetPasswordPage() {
         >
           <div className="flex flex-col items-center justify-center mb-8">
             <img src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png" alt="Telenco Logo" className="w-[180px] object-contain mb-3" style={{ filter: 'grayscale(1) brightness(0) opacity(0.5)' }} />
-            <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-slate-400">Nieuw Wachtwoord</h2>
+            <h2 className="text-sm font-bold tracking-[0.2em] uppercase text-slate-400">
+              {isInvite ? 'Welkom bij Telenco' : 'Nieuw Wachtwoord'}
+            </h2>
           </div>
 
           <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 p-8 sm:p-10 border border-slate-100/50 relative overflow-hidden">
+            {isInvite && (
+              <div className="mb-6 bg-slate-50 border border-slate-100 px-5 py-4 rounded-2xl">
+                <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                  Welkom bij de Telenco Sales Tool! Stel hieronder een veilig, persoonlijk wachtwoord in om je account definitief te activeren en toegang te krijgen.
+                </p>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-5">
               
               <div className="space-y-2">

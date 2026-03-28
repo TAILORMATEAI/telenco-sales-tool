@@ -36,6 +36,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
   const [formAvatar, setFormAvatar] = useState('');
   const [formRole, setFormRole] = useState<'user' | 'admin'>('user');
   const [errorError, setErrorError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   // Combined refresh: always fetch profiles + auth status together to prevent UI flickering
   const refreshAll = async () => {
@@ -100,7 +101,6 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
   };
 
   const handleHardDelete = async (id: string) => {
-    if (!window.confirm('Weet je ZEKER dat je dit account en alle bijbehorende data definitief wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
     try {
       const res = await fetch('/api/admin/hard-delete-user', {
         method: 'POST',
@@ -108,6 +108,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
         body: JSON.stringify({ id })
       });
       if (!res.ok) throw new Error(await res.text());
+      setDeleteTarget(null);
       refreshAll();
     } catch (err: any) {
       alert('Fout bij verwijderen: ' + err.message);
@@ -380,7 +381,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                           <button onClick={() => handleToggleStatus(user.id, true, false)} className="px-2.5 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase rounded-lg hover:bg-emerald-100 transition-colors">
                             Herstel
                           </button>
-                          <button onClick={() => handleHardDelete(user.id)} className="p-1.5 text-rose-500 hover:bg-rose-600 hover:text-white rounded-lg transition-colors" title="Verwijderen">
+                          <button onClick={() => setDeleteTarget(user.id)} className="p-1.5 text-rose-500 hover:bg-rose-600 hover:text-white rounded-lg transition-colors" title="Verwijderen">
                             <TrashIcon className="w-4 h-4" />
                           </button>
                         </>
@@ -396,6 +397,29 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
 
       {/* Create / Edit User Modal */}
       <AnimatePresence>
+        {deleteTarget && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setDeleteTarget(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 16 }} transition={{ duration: 0.2 }} className="bg-white rounded-3xl shadow-2xl w-full max-w-sm relative z-10 overflow-hidden text-center p-8 border border-slate-100">
+              <div className="w-16 h-16 mx-auto bg-slate-50 flex items-center justify-center rounded-full border border-slate-100 mb-5">
+                <TrashIcon className="w-8 h-8 text-rose-500" />
+              </div>
+              <h3 className="text-lg font-black text-slate-700 mb-2">Account Verwijderen</h3>
+              <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">
+                Weet je zeker dat je dit account definitief wilt verwijderen? Dit kan <strong className="text-rose-500">niet</strong> ongedaan worden gemaakt en alle data gaat verloren.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteTarget(null)} className="flex-1 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 text-sm transition-all border border-transparent shadow-sm">
+                  Annuleren
+                </button>
+                <button onClick={() => handleHardDelete(deleteTarget)} className="flex-1 py-3 rounded-xl font-black text-rose-500 bg-white border-2 border-slate-100 hover:border-rose-200 shadow-sm transition-all text-sm">
+                  Verwijderen
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
         {showModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
