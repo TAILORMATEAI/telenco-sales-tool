@@ -1575,10 +1575,10 @@ export default function App() {
                 ) : (
                   <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-50">
                     <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
-                      <button onClick={prevStep} className="group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100"><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
+                      <button disabled={isTranslating} onClick={prevStep} className={`group flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100 ${isTranslating ? 'pointer-events-none opacity-50' : ''}`}><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
                       <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
                       <div className="flex flex-col items-end relative">
-                        <button onClick={nextStep} disabled={!isStepValid() || currentStep === totalSteps} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (!isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                        <button onClick={nextStep} disabled={isTranslating || !isStepValid() || currentStep === totalSteps} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (isTranslating || !isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
                       </div>
                     </div>
                   </motion.div>
