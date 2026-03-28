@@ -1006,6 +1006,14 @@ export default function App() {
                         </div>
                       ))}
 
+                      {/* Sales Eneco Button (moved under grids) */}
+                      {(!outcomes.every(o => o.showCoachMessage) && (customerType === 'PARTICULIER' || comparisonView === 'ENECO')) && (
+                        <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-3 sm:py-4 rounded-xl font-black text-sm sm:text-base bg-slate-50 text-slate-500 hover:text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border border-slate-200 mt-2 mb-4 overflow-hidden">
+                          <img src="./eneco-grey.png" alt="Eneco" className="h-5 object-contain z-10 transition-transform group-hover:scale-110 opacity-70" />
+                          <span className="z-10 group-hover:text-[#E74B4D] transition-colors">Naar Eneco Sales Portaal</span>
+                        </a>
+                      )}
+
                       {/* Vergelijking Slider — Alleen voor SOHO */}
                       {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
                         <div className="pt-6 pb-2 border-t border-slate-100">
@@ -1036,33 +1044,13 @@ export default function App() {
                       {!outcomes.every(o => o.showCoachMessage) && (
                         <div className={`flex flex-col sm:flex-row justify-between items-center sm:items-end gap-4 ${customerType !== 'SOHO' ? 'pt-4 border-t border-slate-100' : 'pt-2'}`}>
                           <div className="text-center sm:text-left w-full sm:w-auto mb-2 sm:mb-0">
-                            {/* Display diff between Eneco and Elindus if SOHO */}
-                            {customerType === 'SOHO' && (
-                              <div className="text-xs font-bold text-slate-400 flex flex-col items-center sm:items-start gap-1.5 mt-2">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border ${totalEnecoSavings > totalElindusSavings ? (comparisonView === 'ENECO' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100') : (comparisonView === 'ELINDUS' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100')}`}>
-                                  {comparisonView === 'ENECO' ? 'Eneco is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalEnecoSavings > totalElindusSavings ? 'goedkoper' : 'duurder') : 'Elindus is €' + Math.abs(totalEnecoSavings - totalElindusSavings).toFixed(2) + ' ' + (totalElindusSavings > totalEnecoSavings ? 'goedkoper' : 'duurder')}
-                                </span>
-                              </div>
-                            )}
+                            {/* Diff removed according to feedback */}
                           </div>
                           <div className="text-center sm:text-right w-full sm:w-auto">
                             <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `Totaal ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'Besparing' : 'Meerkost'}` : `Totaal Eneco ${totalEnecoSavings > 0 ? 'Besparing' : 'Meerkost'}`}</span>
                             <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{Math.abs(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
                           </div>
                         </div>
-                      )}
-
-                      {/* Sales Eneco Button */}
-                      {(!outcomes.every(o => o.showCoachMessage) && (customerType === 'PARTICULIER' || comparisonView === 'ENECO')) && (
-                        <a href="https://sales.eneco.be/" target="_blank" rel="noopener noreferrer" className="group relative w-full py-4 rounded-2xl font-black text-lg bg-white text-slate-600 shadow-sm hover:shadow-md transition-all flex justify-center items-center gap-3 border-2 border-slate-100 overflow-hidden mt-6">
-                          <div className="absolute inset-0 w-full h-full text-slate-500 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none flex items-end">
-                            <svg viewBox="0 0 1440 320" className="w-full h-auto min-w-[200%] md:min-w-[100%] absolute bottom-0 left-0" preserveAspectRatio="none">
-                              <path fill="currentColor" fillOpacity="1" d="M0,128L48,122.7C96,117,192,107,288,117.3C384,128,480,160,576,160C672,160,768,128,864,133.3C960,139,1056,181,1152,192C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-                            </svg>
-                          </div>
-                          <img src="./eneco-grey.png" alt="Eneco" className="h-6 object-contain z-10 transition-transform group-hover:scale-110" />
-                          <span className="z-10 group-hover:text-[#E74B4D] transition-colors">sales.eneco.be</span>
-                        </a>
                       )}
 
                       {/* Verstuur knop */}
