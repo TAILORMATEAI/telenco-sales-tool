@@ -490,7 +490,7 @@ export default function AdminDashboard() {
                       {tab.key === 'elindus' ? (
                         <img src="./elindus-grey.png" alt="Elindus" className={`h-4 sm:h-5 object-contain ${isActive ? 'grayscale-0 opacity-80' : 'grayscale opacity-40'} transition-all`} />
                       ) : tab.key === 'eneco' ? (
-                        <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/enecologozondericon.png" alt="Eneco" className={`h-4 sm:h-5 object-contain ${isActive ? 'grayscale-0 opacity-80' : 'grayscale opacity-40'} transition-all`} />
+                        <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/enecologozondericon.png" alt="Eneco" className={`h-4 sm:h-5 object-contain grayscale ${isActive ? 'opacity-80' : 'opacity-40'} transition-all`} />
                       ) : (
                         <>
                           <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${tab.key === 'orders' ? (isActive ? 'text-blue-500' : 'text-blue-300') : (isActive ? 'text-slate-600' : 'text-slate-400')}`} />
