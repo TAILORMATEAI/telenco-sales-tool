@@ -1046,8 +1046,8 @@ export default function App() {
                             )}
                           </div>
                           <div className="text-center sm:text-right w-full sm:w-auto">
-                            <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `Totaal ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} Besparing` : 'Totaal Eneco Besparing'}</span>
-                            <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
+                            <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `Totaal ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'Besparing' : 'Meerkost'}` : `Totaal Eneco ${totalEnecoSavings > 0 ? 'Besparing' : 'Meerkost'}`}</span>
+                            <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{Math.abs(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
                           </div>
                         </div>
                       )}
@@ -1066,9 +1066,11 @@ export default function App() {
                       )}
 
                       {/* Verstuur knop */}
-                      <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
-                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isSuccess ? <><CheckCircle2 className="w-5 h-5" /> Verzonden</> : <><Send className="w-5 h-5" /> {text.send}</>}
-                      </button>
+                      <div className={`flex relative z-40 transition-all duration-500 ease-in-out ${globalCalcOpen && customerType === 'SOHO' ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto' : 'w-[calc(50%-1.5rem)] ml-auto') : 'w-full'}`}>
+                        <button onClick={handleSendEmail} disabled={isSubmitting || isSuccess} className={`w-full py-4 rounded-2xl font-black text-lg transition-all flex justify-center items-center gap-2 ${isSuccess ? 'bg-emerald-500 text-white' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}>
+                          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : isSuccess ? <><CheckCircle2 className="w-5 h-5" /> Verzonden</> : <><Send className="w-5 h-5" /> {text.send}</>}
+                        </button>
+                      </div>
 
                       {/* GLOBAL CALCULATION OVERLAY */}
                       <AnimatePresence>
@@ -1115,9 +1117,9 @@ export default function App() {
                                           <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} VV:</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newFixedFee}</span></div>
                                         </>
                                       )}
-                                      <div className="flex justify-between pt-1 text-emerald-600 font-bold">
-                                        <span>Besparing ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span>
-                                        <span>€{savings.toFixed(2)}</span>
+                                      <div className={`flex justify-between pt-1 font-bold ${savings > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                        <span>{savings > 0 ? 'Besparing' : 'Meerkost'} ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span>
+                                        <span>€{Math.abs(savings).toFixed(2)}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -1125,10 +1127,10 @@ export default function App() {
                               })}
                             </div>
 
-                            <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-700">
+                            <div className={`mt-4 p-4 rounded-xl border ${globalCalcOpen === 'ENECO' ? (totalEnecoSavings > 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700') : (totalElindusSavings > 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700')}`}>
                               <div className="flex flex-col gap-1 font-black">
-                                <span className="text-xs uppercase tracking-widest">Totaal Besparing:</span>
-                                <span className="text-2xl">€{(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings).toFixed(2)}</span>
+                                <span className="text-xs uppercase tracking-widest">Totaal {(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings) > 0 ? 'Besparing' : 'Meerkost'}:</span>
+                                <span className="text-2xl">€{Math.abs(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings).toFixed(2)}</span>
                               </div>
                             </div>
                           </motion.div>
