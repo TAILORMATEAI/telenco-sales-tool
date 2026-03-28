@@ -108,6 +108,26 @@ app.delete('/api/clear-sync-logs', async (_req, res) => {
   }
 });
 
+// ── Admin: Get Auth Users ──
+app.get('/api/admin/auth-users', async (_req, res) => {
+  const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
+  const adminClient = createClient(supabaseUrl, serviceKey);
+  try {
+    const { data, error } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+    if (error) throw error;
+    const mapped = (data?.users || []).map(u => ({
+      id: u.id,
+      email: u.email,
+      email_confirmed_at: u.email_confirmed_at || u.confirmed_at || null,
+      last_sign_in_at: u.last_sign_in_at || null
+    }));
+    res.json(mapped);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Admin: Create user ──
 app.post('/api/admin/create-user', express.json(), async (req, res) => {
   const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
