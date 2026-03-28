@@ -267,8 +267,8 @@ export default function AdminDashboard() {
   };
 
   const priceFields: { key: keyof MarketData; label: string; desc: string; color: string }[] = [
-    { key: 'epexSpot', label: 'EPEX SPOT', desc: 'Elektriciteit Variabel', color: 'from-yellow-500 to-orange-500' },
-    { key: 'ttfDam', label: 'TTF DAM', desc: 'Gas Variabel', color: 'from-purple-500 to-pink-500' },
+    { key: 'epexSpot', label: 'EPEX SPOT', desc: 'Elektriciteit Variabel', color: 'bg-amber-500' },
+    { key: 'ttfDam', label: 'TTF DAM', desc: 'Gas Variabel', color: 'bg-rose-500' },
   ];
 
   const enecoPriceFields: { group: string; fields: { key: keyof MarketData; label: string; type: string; icon: 'elec' | 'gas' }[] }[] = [
@@ -575,7 +575,7 @@ export default function AdminDashboard() {
                     {priceFields.map(field => (
                       <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
                         <div className="flex items-center gap-3 mb-4">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.color} shadow-sm bg-gradient-to-br`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.color} shadow-sm`}>
                             {field.desc.includes('Elek') ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
                           </div>
                           <div className="min-w-0">
@@ -615,8 +615,8 @@ export default function AdminDashboard() {
                         {group.fields.map(field => (
                           <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
                             <div className="flex items-center gap-3 mb-4">
-                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-50' : 'bg-rose-50'}`}>
-                                {field.icon === 'elec' ? <Zap className="w-4 h-4 text-amber-500" /> : <Flame className="w-4 h-4 text-rose-500" />}
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-500' : 'bg-rose-500'} shadow-sm`}>
+                                {field.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
                               </div>
                               <div className="min-w-0">
                                 <p className="text-[11px] font-black text-slate-500 truncate">{field.type}</p>
