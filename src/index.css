@@ -193,11 +193,12 @@ input:-webkit-autofill:active {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 0.4s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.35s ease;
+  transition: grid-template-rows 0.5s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.4s ease 0.1s;
 }
 .expand-wrapper.open {
   grid-template-rows: 1fr;
   opacity: 1;
+  transition: grid-template-rows 0.5s cubic-bezier(0.33, 1, 0.68, 1), opacity 0.35s ease 0.05s;
 }
 .expand-wrapper > .expand-inner {
   overflow: hidden;
