@@ -178,10 +178,33 @@ export default function AdminDashboard() {
     }
   };
 
+  const [syncError, setSyncError] = useState<{ message: string; time: string } | null>(null);
+
+  const fetchSyncStatus = async () => {
+    const { data } = await supabase
+       .from('sync_logs')
+       .select('*')
+       .order('created_at', { ascending: false })
+       .limit(1);
+    
+    if (data && data.length > 0 && data[0].status === 'error') {
+       const logDate = new Date(data[0].created_at);
+       const now = new Date();
+       if ((now.getTime() - logDate.getTime()) < 48 * 60 * 60 * 1000) {
+         setSyncError({ message: data[0].message, time: data[0].created_at });
+       } else {
+         setSyncError(null);
+       }
+    } else {
+       setSyncError(null);
+    }
+  };
+
   useEffect(() => {
     fetchMarketData();
     fetchLogs();
     fetchUsers();
+    fetchSyncStatus();
   }, []);
 
   const handleSave = async () => {
@@ -373,6 +396,24 @@ export default function AdminDashboard() {
         {/* Main Content Area */}
         <main className="flex-1 h-full min-h-0 overflow-y-auto relative bg-transparent w-full overflow-x-hidden flex flex-col">
           <div className="flex-1 w-full max-w-[clamp(45rem,110vh,65rem)] min-[2000px]:max-w-[clamp(65rem,130vh,80rem)] mx-auto px-4 sm:px-[clamp(1.5rem,3vw,3.5rem)] py-[clamp(1.5rem,4vh,4rem)] relative z-20">
+
+            {syncError && (
+              <div className="mb-6 bg-rose-50 border border-rose-200 p-5 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl -translate-y-16 translate-x-16 pointer-events-none" />
+                <div className="p-3 bg-white rounded-xl shadow-sm border border-rose-100 shrink-0 relative z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-rose-500"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                </div>
+                <div className="relative z-10">
+                  <h3 className="text-rose-600 font-extrabold text-sm tracking-widest uppercase mb-1">Pas op: Automatische Scan Vastgelopen</h3>
+                  <p className="text-rose-900 font-medium text-[15px] leading-relaxed">
+                    De laatste poging om de marktprijzen op te halen bij Elindus is mislukt. Mogelijk is de Elindus structuur gewijzigd.
+                  </p>
+                  <p className="text-rose-500 text-xs font-semibold mt-2 font-mono bg-white inline-block px-2 py-1 rounded-md border border-rose-100">
+                    Systeem log: {syncError.message}
+                  </p>
+                </div>
+              </div>
+            )}
 
             <AnimatePresence mode="wait">
               {/* OVERVIEW / WELCOME TAB */}

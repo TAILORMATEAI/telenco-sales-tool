@@ -1,51 +1,29 @@
 /**
- * Standalone Elindus Market Data Scraper
+ * Standalone Elindus Market Data API Fetcher
  * 
  * Usage:  npx tsx scripts/scrape-elindus.ts
  * 
- * Uses Puppeteer to navigate Elindus market pages,
- * intercepts API responses, and upserts data to Supabase.
- * 
- * Environment variables (set via GitHub Secrets):
- *   SUPABASE_URL  — Supabase project URL
- *   SUPABASE_KEY  — Supabase anon/public key
+ * Uses Native Fetch (Node 18+) to retrieve Elindus market prices directly
+ * from their open API without the overhead or fragility of Puppeteer UI scraping.
+ * Calculates the average price exclusively for the current month.
  */
 
-import puppeteer from 'puppeteer';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
 // ─────────────────────────────────────────────
-// Config — from env vars or fallback defaults
+// Config
 // ─────────────────────────────────────────────
 const supabaseUrl = process.env.SUPABASE_URL || 'https://lksvpkoavcmlwfkonowc.supabase.co';
 const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrc3Zwa29hdmNtbHdma29ub3djIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxODU3MzksImV4cCI6MjA4OTc2MTczOX0.s5VUHfBm7AaPxn5NwhK2LD04zJBMsy5i4ux_mF_dfAg';
 const supabase = createClient(supabaseUrl, supabaseKey);
 const RUN_ID = crypto.randomUUID();
 
-// ─────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────
 interface MarketDataPoint {
   x: number;
   y: number;
   name?: string;
   fromUtc?: string;
-}
-
-interface MarketStatistics {
-  averagePrice?: number;
-  averageDayPrice?: number;
-  averageNightPrice?: number;
-  maxPrice?: number;
-  minPrice?: number;
-}
-
-interface MarketApiResponse {
-  statistics?: MarketStatistics;
-  dataSeries?: {
-    data?: MarketDataPoint[];
-  };
 }
 
 interface ScrapedMarket {
@@ -59,178 +37,113 @@ interface ScrapedMarket {
   hourly_data: MarketDataPoint[] | null;
 }
 
-// ─────────────────────────────────────────────
-// Utilities
-// ─────────────────────────────────────────────
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function logProgress(message: string) {
+async function logProgress(message: string, isError = false) {
   console.log(message);
   await supabase.from('sync_logs').insert({
-    status: 'info',
+    status: isError ? 'error' : 'info',
     message
   });
 }
 
-function humanDelay() {
-  const ms = 3000 + Math.floor(Math.random() * 4000);
-  return delay(ms);
-}
-
 // ─────────────────────────────────────────────
-// Scraper
+// Fetcher Core
 // ─────────────────────────────────────────────
-
-// Rotating pool of realistic Chrome/Firefox/Safari user agents
-const USER_AGENTS = [
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0',
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
-];
-
 async function scrapeElindusData(): Promise<ScrapedMarket[]> {
-  await logProgress(`[${new Date().toISOString()}] > Start iteratie: Browser opstarten...`);
+  await logProgress(`[${new Date().toISOString()}] > Start iteratie: Directe API data ophalen...`);
 
-  const selectedUA = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-  const viewportWidth = 1280 + Math.floor(Math.random() * 400);
-  const viewportHeight = 800 + Math.floor(Math.random() * 200);
+  const results: ScrapedMarket[] = [];
+  const now = new Date();
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-blink-features=AutomationControlled',
-      `--window-size=${viewportWidth},${viewportHeight}`,
-      '--disable-infobars',
-    ],
-  });
+  // Fetch from the start of the year to ensure we have current month dates covered
+  const fromStr = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]; 
+  const toStr = new Date(now.getFullYear() + 1, 0, 1).toISOString().split('T')[0];
 
-  const page = await browser.newPage();
-
-  // Mask WebDriver fingerprint (prevents bot detection via navigator.webdriver)
-  await page.evaluateOnNewDocument(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-    (window as any).chrome = { runtime: {} };
-  });
-
-  await page.setViewport({ width: viewportWidth, height: viewportHeight });
-  await page.setUserAgent(selectedUA);
-
-  // Realistic browser headers
-  await page.setExtraHTTPHeaders({
-    'Accept-Language': 'nl-BE,nl;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-  });
-
-  // Storage for intercepted API data
-  const intercepted: Record<string, MarketApiResponse> = {};
-
-  page.on('response', async (response) => {
-    const url = response.url();
-    if (response.status() !== 200) return;
-
-    try {
-      if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=ELECTRICITY')) {
-        intercepted['EPEX_SPOT'] = await response.json();
-        await logProgress('\u2713 Data voor EPEX SPOT (Elektriciteit Variabel) ontvangen.');
-      }
-      if (url.includes('/marketinfo/dayahead/prices') && url.includes('market=GAS')) {
-        intercepted['TTF_DAM'] = await response.json();
-        await logProgress('\u2713 Data voor TTF DAM (Aardgas Variabel) ontvangen.');
-      }
-    } catch {
-      // Not JSON — skip
-    }
-  });
-
-  // Navigate to main page (triggers EPEX SPOT)
-  await logProgress('> Navigeren naar hoofdpagina Elindus Marktinformatie...');
-  await page.goto('https://klant.elindus.be/s/marktinformatie?language=nl_NL', {
-    waitUntil: 'networkidle2',
-    timeout: 45000,
-  });
-  await humanDelay();
-
-  // Navigate to each remaining market page with wider random delays (6–12s)
-  const marketPages: { url: string; key: string; label: string }[] = [
-    { url: 'https://klant.elindus.be/s/marktinformatie/ttf-dam', key: 'TTF_DAM', label: 'TTF DAM' },
+  const markets = [
+    { key: 'EPEX_SPOT', marketParam: 'ELECTRICITY', label: 'EPEX SPOT' },
+    { key: 'TTF_DAM', marketParam: 'GAS', label: 'TTF DAM' },
   ];
 
-  for (const market of marketPages) {
-    if (intercepted[market.key]) {
-      await logProgress(`> ${market.label} reeds opgehaald, volgende pagina...`);
-      continue;
-    }
-
-    await delay(6000 + Math.floor(Math.random() * 6000));
-
+  for (const m of markets) {
     try {
-      await logProgress(`> Navigeren naar tabblad ${market.label}...`);
-      await page.goto(market.url, { waitUntil: 'networkidle2', timeout: 30000 });
-      await humanDelay();
-
-      if (intercepted[market.key]) {
-        await logProgress(`\u2713 ${market.label} succesvol onderschept.`);
-      } else {
-        await logProgress(`! Geen data ontvangen voor ${market.label}.`);
+      // Direct API extraction from Elindus Public Engine
+      const url = `https://mijn.elindus.be/marketinfo/dayahead/prices?from=${fromStr}&to=${toStr}&market=${m.marketParam}&granularity=DAY`;
+      
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!res.ok) {
+        throw new Error(`Elindus API weigert verbinding (HTTP ${res.status}). Mogelijk is de URL gewijzigd.`);
       }
-    } catch (err: any) {
-      await logProgress(`! Fout bij navigeren naar ${market.label}: ${err.message}`);
-    }
-  }
+      
+      const apiData = await res.json();
+      const series = apiData.dataSeries?.data;
+      
+      if (!series || !Array.isArray(series)) {
+        throw new Error(`Data structuur gewijzigd door Elindus. Kan geen valid data vinden voor ${m.label}.`);
+      }
 
-  await browser.close();
+      await logProgress(`\u2713 Ruwe datapunten voor ${m.label} succesvol opgehaald.`);
 
-  // Build results
-  const results: ScrapedMarket[] = [];
+      // ── FILTER: We filteren expliciet op de "huidige maand" tot en met "vandaag" ──
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
 
-  for (const [name, apiData] of Object.entries(intercepted)) {
-    const stats = apiData?.statistics;
-    const series = apiData?.dataSeries?.data || null;
+      const currentMonthData = series.filter((p: any) => {
+        if (typeof p.y !== 'number') return false;
+        return p.x >= startOfMonth && p.x <= endOfToday;
+      });
 
-    let avgPrice = stats?.averagePrice ?? null;
-    let maxPrice = stats?.maxPrice ?? null;
-    let minPrice = stats?.minPrice ?? null;
+      let avgPrice = null;
+      let maxPrice = null;
+      let minPrice = null;
 
-    if (!stats && series && Array.isArray(series) && series.length > 0) {
-      const yValues = series.map((p: any) => p.y).filter((v: any) => typeof v === 'number');
-      if (yValues.length > 0) {
-        avgPrice = yValues.reduce((a: number, b: number) => a + b, 0) / yValues.length;
+      if (currentMonthData.length > 0) {
+        const yValues = currentMonthData.map((p: any) => p.y);
+        avgPrice = yValues.reduce((a, b) => a + b, 0) / yValues.length;
         maxPrice = Math.max(...yValues);
         minPrice = Math.min(...yValues);
+      } else {
+        // Trigger een error log als er ineens geen data meer in de huidige actuele view zit
+        await logProgress(`! Waarschuwing: Geen actuele maand-data gevonden voor ${m.label}. Controleer of Elindus hun timestamp (x) formaat heeft veranderd.`, true);
       }
-    }
 
-    results.push({
-      indicator_name: name,
-      value: avgPrice,
-      max_price: maxPrice,
-      min_price: minPrice,
-      avg_day_price: stats?.averageDayPrice ?? null,
-      avg_night_price: stats?.averageNightPrice ?? null,
-      unit: 'MWh',
-      hourly_data: series,
-    });
+      results.push({
+        indicator_name: m.key,
+        value: avgPrice,
+        max_price: maxPrice,
+        min_price: minPrice,
+        avg_day_price: null,
+        avg_night_price: null,
+        unit: 'MWh',
+        hourly_data: currentMonthData,
+      });
+
+      // Small respect delay
+      await new Promise(r => setTimeout(r, 1000));
+    } catch (err: any) {
+       // Log explicitly as error to trigger Admin Dashboard warnings
+       await logProgress(`! Scanner Fout bij ${m.label}: ${err.message}`, true);
+    }
   }
 
-  await logProgress(`✓ Scrape iteratie voltooid — ${results.length}/4 markten succesvol uitgelezen.`);
+  await logProgress(`✓ Scrape iteratie voltooid — ${results.length}/2 markten uitgelezen.`);
   return results;
 }
 
 // ─────────────────────────────────────────────
-// Save to Supabase
+// Database Persistence
 // ─────────────────────────────────────────────
 async function saveToSupabase(markets: ScrapedMarket[]) {
   const nowIso = new Date().toISOString();
-  await logProgress('> Data voorbereiden voor opslag in Supabase database...');
+  await logProgress('> Prijzen wegschrijven naar de actuele Market Prices tabellen...');
 
-  // 1. Upsert current prices
+  if (markets.length === 0) return { success: false };
+
+  // 1. Upsert current specific monthly prices
   const upsertData = markets.map((m) => ({
     indicator_name: m.indicator_name,
     value: m.value,
@@ -243,7 +156,7 @@ async function saveToSupabase(markets: ScrapedMarket[]) {
     .upsert(upsertData, { onConflict: 'indicator_name' });
 
   if (upsertError) {
-    await logProgress(`x Fout bij updaten van huidige prijzen: ${upsertError.message}`);
+    await logProgress(`x Fout bij overschrijven current prices: ${upsertError.message}`, true);
     return { success: false, error: upsertError };
   }
 
@@ -260,49 +173,48 @@ async function saveToSupabase(markets: ScrapedMarket[]) {
     .insert(historyLog);
 
   if (historyError) {
-    await logProgress(`! Fout bij schrijven naar geschiedenis log: ${historyError.message}`);
+    await logProgress(`! Fout bij vasthouden geschiedenis data: ${historyError.message}`, true);
   }
 
-  await logProgress('✓ Alle marktdata succesvol opgeslagen in database.');
+  await logProgress('✓ Geupdate API marktdata succesvol en verwerkt online geplaatst.');
   return { success: true, historyLogged: !historyError };
 }
 
 // ─────────────────────────────────────────────
-// Main — run and exit
+// Main
 // ─────────────────────────────────────────────
 async function main() {
   console.log('═══════════════════════════════════════');
-  console.log(' Elindus Market Scraper — GitHub Action');
+  console.log(' Elindus Raw API Scraper — Node.js');
   console.log(`  ${new Date().toISOString()}`);
   console.log('═══════════════════════════════════════');
   
-  await logProgress('> Start: GitHub Actions Script geinitialiseerd.');
+  await logProgress('> Start: Elindus API Data Fetcher gestart.', false);
 
   try {
     const markets = await scrapeElindusData();
 
     if (markets.length === 0) {
-      console.error('x No markets captured — exiting with error');
+      await logProgress('x Kritieke netwerkfout: 0 markten ingeladen. Scan faalt.', true);
       process.exit(1);
     }
 
     const result = await saveToSupabase(markets);
 
-    // Print summary
-    console.log('\nSummary:');
+    // Summary terminal
+    console.log('\nSummary (Maandgemiddelde tot vandaag):');
     for (const m of markets) {
-      console.log(`  ${m.indicator_name}: ${m.value?.toFixed(2) ?? 'N/A'} euro/MWh (${m.hourly_data?.length ?? 0} data points)`);
+      console.log(`  ${m.indicator_name}: ${m.value?.toFixed(2) ?? 'N/A'} euro/MWh (${m.hourly_data?.length ?? 0} data-points meegerekend)`);
     }
 
     if (!result.success) {
-      await logProgress('x Fatale fout tijdens database operations.');
+      await logProgress('x Externe Opslag Fout: Kon data niet naar centrale database sturen.', true);
       process.exit(1);
     }
 
-    await logProgress('Scraper succesvol afgerond! Proces wordt afgesloten.');
     process.exit(0);
   } catch (error: any) {
-    await logProgress(`x Onverwachte fout: ${error.message}`);
+    await logProgress(`x Onverwachte System Fout: ${error.message}`, true);
     process.exit(1);
   }
 }
