@@ -559,7 +559,7 @@ export default function AdminDashboard() {
                   {/* Action bar */}
                   <div className="flex flex-col items-center text-center mb-10 mt-4 relative">
                     <img src="./elindus-grey.png" alt="Elindus" className="h-20 object-contain opacity-70 mb-4" />
-                    <h2 className="text-3xl font-black text-slate-500 mb-1">Elindus Marktprijzen</h2>
+                    <h2 className="text-3xl font-black text-slate-500 mb-1">Marktprijzen</h2>
                     <p className="text-sm text-slate-400 mb-6">
                       Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
                     </p>
@@ -729,6 +729,7 @@ export default function AdminDashboard() {
                         <li>Toont van elke marktprijs het <span className="font-bold text-slate-500">gemiddelde van dagprijzen</span> (niet uur of maand)</li>
                         <li>Maakt het gemiddelde vanaf de <span className="font-bold text-slate-500">1ste van de huidige maand</span> tot aan de meest recente datum</li>
                         <li>Update automatisch elke maand mee voor de indicatoren <span className="font-bold text-slate-500">EPEX SPOT</span> en <span className="font-bold text-slate-500">TTF DAM</span></li>
+                        <li>Automatische scan op ingestelde tijdstippen, óf manueel via de <span className="font-bold text-slate-500">Start Market Scan</span> knop hieronder</li>
                       </ul>
                     </div>
                     <LiveSyncTerminal onSyncComplete={fetchMarketData} />
@@ -741,7 +742,7 @@ export default function AdminDashboard() {
                 <motion.div key="eneco" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
                   <div className="flex flex-col items-center text-center mb-10 mt-4 relative">
                     <img src="./eneco-grey.png" alt="Eneco" className="h-20 object-contain opacity-70 mb-4" />
-                    <h2 className="text-3xl font-black text-slate-500 mb-1">Eneco Tarieven</h2>
+                    <h2 className="text-3xl font-black text-slate-500 mb-1">Tarieven</h2>
                     <p className="text-sm text-slate-400 mb-6">
                       Laatst bijgewerkt: {marketData.lastUpdated ? formatDate(marketData.lastUpdated) : 'Nooit'}
                     </p>

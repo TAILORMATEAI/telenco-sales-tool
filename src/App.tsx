@@ -964,7 +964,7 @@ export default function App() {
                                   </div>
                                   <div className="mt-auto">
                                     <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                      <span className="text-xs text-slate-400 font-bold">{enecoSavingsTotal > 0 ? text.savingWord : (lang === 'nl' ? 'Meerkost:' : 'Surcoût:')}</span>
                                       <span className={`px-2 py-0.5 rounded text-xs font-bold ${enecoSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{enecoSavingsPercentage > 0 ? '+' : ''}{enecoSavingsPercentage.toFixed(2)}%</span>
                                       <span className={`block font-black text-lg ${enecoSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{enecoSavingsTotal > 0 ? '+' : ''}€{enecoSavingsTotal.toFixed(2)}</span>
                                     </div>
@@ -990,7 +990,7 @@ export default function App() {
                                   </div>
                                   <div className="mt-auto">
                                     <div className="text-right flex items-center justify-end gap-2 mt-2">
-                                      <span className="text-xs text-slate-400 font-bold">{text.savingWord}</span>
+                                      <span className="text-xs text-slate-400 font-bold">{elindusSavingsTotal > 0 ? text.savingWord : (lang === 'nl' ? 'Meerkost:' : 'Surcoût:')}</span>
                                       <span className={`px-2 py-0.5 rounded text-xs font-bold ${elindusSavingsPercentage > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>{elindusSavingsPercentage > 0 ? '+' : ''}{elindusSavingsPercentage.toFixed(2)}%</span>
                                       <span className={`block font-black text-lg ${elindusSavingsTotal > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{elindusSavingsTotal > 0 ? '+' : ''}€{elindusSavingsTotal.toFixed(2)}</span>
                                     </div>
@@ -1101,19 +1101,24 @@ export default function App() {
                                       {o.type === 'ELEC' ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
                                       {o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)
                                     </h4>
-                                    <div className="space-y-2 text-sm">
-                                      <div className="flex justify-between"><span className="text-slate-400">Huidig (Energie):</span><span className="font-bold">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
-                                      <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} (Energie):</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newPrice.toFixed(2)}</span></div>
+                                    <div className="space-y-3 text-sm">
+                                      <div className="flex flex-col gap-1">
+                                        <div className="flex justify-between text-slate-400"><span>Huidige Prijs:</span><span className="font-medium bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-xs">€{(showInMWh ? o.currPrice : o.currPrice / 1000).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-400 text-xs">Kosten ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{(o.currPrice * o.cons).toFixed(2)}</span></div>
+                                      </div>
+
+                                      <div className="flex flex-col gap-1 border-t border-slate-100 pt-2">
+                                        <div className="flex justify-between text-slate-500 font-bold"><span>{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} Voorstel:</span><span className="text-[#E74B4D] bg-red-50 border border-red-100 px-1.5 py-0.5 rounded text-xs">€{((globalCalcOpen === 'ENECO' ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-400 text-xs">Kosten ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{newPrice.toFixed(2)}</span></div>
+                                      </div>
 
                                       {includeFixedFeeSavings && (
-                                        <>
-                                          <div className="flex justify-between mt-1"><span className="text-slate-400">Huidig VV:</span><span className="font-bold">€{o.currentFixedFee}</span></div>
-                                          <div className="flex justify-between"><span className="text-slate-400">{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} VV:</span><span className="font-bold border-b border-slate-200 pb-1 border-dashed">€{newFixedFee}</span></div>
-                                        </>
+                                        <div className="flex justify-between items-center border-t border-slate-100 pt-2"><span className="text-slate-400 text-xs">Vaste Vergoeding (VV):</span><span className="font-bold text-slate-500 text-[10px] uppercase bg-slate-100 px-1.5 py-0.5 rounded">€{o.currentFixedFee} → €{newFixedFee}</span></div>
                                       )}
-                                      <div className={`flex justify-between pt-1 font-bold ${savings > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                        <span>{savings > 0 ? 'Besparing' : 'Meerkost'} ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span>
-                                        <span>€{Math.abs(savings).toFixed(2)}</span>
+
+                                      <div className={`flex justify-between items-center border-t border-dashed border-slate-200 pt-2 font-black ${savings > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                        <span className="text-xs uppercase tracking-wider">{savings > 0 ? 'Besparing' : (lang === 'NL' ? 'Meerkost' : 'Surcoût')} ({o.type === 'ELEC' ? 'Elek' : 'Gas'}):</span>
+                                        <span className="text-base">€{Math.abs(savings).toFixed(2)}</span>
                                       </div>
                                     </div>
                                   </div>
