@@ -133,10 +133,10 @@ app.post('/api/admin/create-user', express.json(), async (req, res) => {
   const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return res.status(500).json({ error: 'Geen SERVICE_ROLE sleutel gevonden.' });
   const adminClient = createClient(supabaseUrl, serviceKey);
-  const { email, firstName, lastName, role, avatarId } = req.body;
+  const { email, firstName, lastName, role, avatarId, adminName } = req.body;
   try {
     const { data: user, error: authError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      data: { first_name: firstName, last_name: lastName, role: role || 'user' },
+      data: { first_name: firstName, last_name: lastName, role: role || 'user', inviter_name: adminName || 'Een beheerder' },
       redirectTo: `${process.env.VITE_SITE_URL || 'http://localhost:3000'}/wachtwoord`
     });
     if (authError) throw authError;
