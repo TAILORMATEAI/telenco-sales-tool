@@ -54,9 +54,10 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
   const results: ScrapedMarket[] = [];
   const now = new Date();
 
-  // Fetch from the start of the year to ensure we have current month dates covered
-  const fromStr = new Date(now.getFullYear(), 0, 1).toISOString().split('T')[0]; 
-  const toStr = new Date(now.getFullYear() + 1, 0, 1).toISOString().split('T')[0];
+  // ── Periode: 1e van de huidige maand → vandaag (+ 1 dag marge) ──
+  const fromStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const toStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
 
   const markets = [
     { key: 'EPEX_SPOT', marketParam: 'ELECTRICITY', label: 'EPEX SPOT' },
@@ -65,9 +66,11 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
 
   for (const m of markets) {
     try {
-      // Direct API extraction from Elindus Public Engine
+      // Exact dezelfde API call als de Elindus website doet bij "Per Dag" + juiste periode
       const url = `https://mijn.elindus.be/marketinfo/dayahead/prices?from=${fromStr}&to=${toStr}&market=${m.marketParam}&granularity=DAY`;
       
+      await logProgress(`> ${m.label}: API ophalen (${fromStr} → ${toStr}, Per Dag)...`);
+
       const res = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -80,36 +83,17 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
       }
       
       const apiData = await res.json();
-      const series = apiData.dataSeries?.data;
+      const stats = apiData?.statistics;
       
-      if (!series || !Array.isArray(series)) {
-        throw new Error(`Data structuur gewijzigd door Elindus. Kan geen valid data vinden voor ${m.label}.`);
+      if (!stats || typeof stats.averagePrice !== 'number') {
+        throw new Error(`Geen "Gemiddelde prijs" ontvangen voor ${m.label}. Elindus heeft mogelijk hun API response structuur gewijzigd.`);
       }
 
-      await logProgress(`\u2713 Ruwe datapunten voor ${m.label} succesvol opgehaald.`);
+      const avgPrice = stats.averagePrice;
+      const maxPrice = stats.maxPrice ?? null;
+      const minPrice = stats.minPrice ?? null;
 
-      // ── FILTER: We filteren expliciet op de "huidige maand" tot en met "vandaag" ──
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-      const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
-
-      const currentMonthData = series.filter((p: any) => {
-        if (typeof p.y !== 'number') return false;
-        return p.x >= startOfMonth && p.x <= endOfToday;
-      });
-
-      let avgPrice = null;
-      let maxPrice = null;
-      let minPrice = null;
-
-      if (currentMonthData.length > 0) {
-        const yValues = currentMonthData.map((p: any) => p.y);
-        avgPrice = yValues.reduce((a, b) => a + b, 0) / yValues.length;
-        maxPrice = Math.max(...yValues);
-        minPrice = Math.min(...yValues);
-      } else {
-        // Trigger een error log als er ineens geen data meer in de huidige actuele view zit
-        await logProgress(`! Waarschuwing: Geen actuele maand-data gevonden voor ${m.label}. Controleer of Elindus hun timestamp (x) formaat heeft veranderd.`, true);
-      }
+      await logProgress(`✓ ${m.label}: Gemiddelde prijs = ${avgPrice.toFixed(2)} €/MWh (max: ${maxPrice?.toFixed(2)}, min: ${minPrice?.toFixed(2)})`);
 
       results.push({
         indicator_name: m.key,
@@ -119,13 +103,13 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
         avg_day_price: null,
         avg_night_price: null,
         unit: 'MWh',
-        hourly_data: currentMonthData,
+        hourly_data: null,
       });
 
-      // Small respect delay
+      // Kleine pauze tussen de twee calls
       await new Promise(r => setTimeout(r, 1000));
     } catch (err: any) {
-       // Log explicitly as error to trigger Admin Dashboard warnings
+       // Log als error → triggert Admin Dashboard waarschuwingsbanner
        await logProgress(`! Scanner Fout bij ${m.label}: ${err.message}`, true);
     }
   }
