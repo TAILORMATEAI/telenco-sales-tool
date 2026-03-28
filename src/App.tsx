@@ -1025,7 +1025,7 @@ export default function App() {
                               onClick={() => setComparisonView('ELINDUS')}
                               className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center ${comparisonView === 'ELINDUS' ? '' : 'hover:opacity-80'}`}
                             >
-                              <img src="./elindus-grey.png" alt="Elindus" className={`h-7 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0 flex items-center' : 'opacity-40 grayscale'}`} />
+                              <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0 flex items-center' : 'opacity-40 grayscale'}`} />
                             </button>
                           </div>
                           
