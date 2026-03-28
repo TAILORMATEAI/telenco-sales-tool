@@ -271,23 +271,23 @@ export default function AdminDashboard() {
     { key: 'ttfDam', label: 'TTF DAM', desc: 'Gas Variabel', color: 'from-purple-500 to-pink-500' },
   ];
 
-  const enecoPriceFields: { group: string; fields: { key: keyof MarketData; label: string; icon: 'elec' | 'gas' }[] }[] = [
+  const enecoPriceFields: { group: string; fields: { key: keyof MarketData; label: string; type: string; icon: 'elec' | 'gas' }[] }[] = [
     {
       group: 'Residentieel (Particulier)',
       fields: [
-        { key: 'enecoResElecVast', label: 'Elek Vast', icon: 'elec' },
-        { key: 'enecoResElecVar', label: 'Elek Variabel', icon: 'elec' },
-        { key: 'enecoResGasVast', label: 'Gas Vast', icon: 'gas' },
-        { key: 'enecoResGasVar', label: 'Gas Variabel', icon: 'gas' },
+        { key: 'enecoResElecVast', label: 'Vast', type: 'Elektriciteit', icon: 'elec' },
+        { key: 'enecoResElecVar', label: 'Variabel', type: 'Elektriciteit', icon: 'elec' },
+        { key: 'enecoResGasVast', label: 'Vast', type: 'Gas', icon: 'gas' },
+        { key: 'enecoResGasVar', label: 'Variabel', type: 'Gas', icon: 'gas' },
       ]
     },
     {
-      group: 'SOHO',
+      group: 'SME (Zakelijk)',
       fields: [
-        { key: 'enecoSohoElecVast', label: 'Elek Vast', icon: 'elec' },
-        { key: 'enecoSohoElecVar', label: 'Elek Variabel', icon: 'elec' },
-        { key: 'enecoSohoGasVast', label: 'Gas Vast', icon: 'gas' },
-        { key: 'enecoSohoGasVar', label: 'Gas Variabel', icon: 'gas' },
+        { key: 'enecoSohoElecVast', label: 'Vast', type: 'Elektriciteit', icon: 'elec' },
+        { key: 'enecoSohoElecVar', label: 'Variabel', type: 'Elektriciteit', icon: 'elec' },
+        { key: 'enecoSohoGasVast', label: 'Vast', type: 'Gas', icon: 'gas' },
+        { key: 'enecoSohoGasVar', label: 'Variabel', type: 'Gas', icon: 'gas' },
       ]
     }
   ];
@@ -566,16 +566,23 @@ export default function AdminDashboard() {
                   </div>
 
 
-                  <h3 className="text-lg font-black text-slate-500 mb-4 mt-8">Huidige Marktprijzen</h3>
+                  <h3 className="text-lg font-black text-slate-500 mb-4 mt-8 flex items-center gap-3">
+                    <img src="./elindus-grey.png" alt="Elindus" className="h-6 object-contain opacity-60" />
+                    <span className="opacity-90">Marktprijzen</span>
+                  </h3>
                   {/* Market Price Cards */}
                   <div className="grid grid-cols-2 xl:grid-cols-2 gap-3 sm:gap-4 mb-8">
                     {priceFields.map(field => (
-                      <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                        <div className="flex items-center mb-4">
-                          {field.desc.includes('Elek') ? <Zap className="w-6 h-6 text-[#E74B4D]" /> : <Flame className="w-6 h-6 text-[#E74B4D]" />}
+                      <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.color} shadow-sm bg-gradient-to-br`}>
+                            {field.desc.includes('Elek') ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-black text-slate-600 truncate">{field.label}</p>
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-rose-500">Variabel</p>
+                          </div>
                         </div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{field.label}</p>
-                        <p className="text-[10px] text-slate-300 mb-3">{field.desc}</p>
                         <input
                           type="number"
                           step="0.01"
@@ -606,11 +613,16 @@ export default function AdminDashboard() {
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{group.group}</p>
                       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
                         {group.fields.map(field => (
-                          <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all">
-                            <div className="flex items-center mb-4">
-                              {field.icon === 'elec' ? <Zap className="w-5 h-5 text-[#E74B4D]" /> : <Flame className="w-5 h-5 text-[#E74B4D]" />}
+                          <div key={field.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-50' : 'bg-rose-50'}`}>
+                                {field.icon === 'elec' ? <Zap className="w-4 h-4 text-amber-500" /> : <Flame className="w-4 h-4 text-rose-500" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-black text-slate-500 truncate">{field.type}</p>
+                                <p className={`text-[10px] font-bold uppercase tracking-wider ${field.label === 'Vast' ? 'text-emerald-500' : 'text-blue-500'}`}>{field.label}</p>
+                              </div>
                             </div>
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{field.label}</p>
                             <input
                               type="number"
                               step="0.01"
