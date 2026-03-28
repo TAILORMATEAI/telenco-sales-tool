@@ -1108,7 +1108,7 @@ export default function App() {
                                       </div>
 
                                       <div className="flex flex-col gap-1 border-t border-slate-100 pt-2">
-                                        <div className="flex justify-between text-slate-500 font-bold"><span>{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} Voorstel:</span><span className="text-[#E74B4D] bg-red-50 border border-red-100 px-1.5 py-0.5 rounded text-xs">€{((globalCalcOpen === 'ENECO' ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                        <div className="flex justify-between text-slate-500 font-bold"><span>{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} Voorstel:</span><span className="font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm px-1.5 py-0.5 rounded text-xs">€{((globalCalcOpen === 'ENECO' ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
                                         <div className="flex justify-between"><span className="text-slate-400 text-xs">Kosten ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{newPrice.toFixed(2)}</span></div>
                                       </div>
 
