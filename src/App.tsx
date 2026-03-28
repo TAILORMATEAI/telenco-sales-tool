@@ -866,7 +866,7 @@ export default function App() {
                         <>
                           {/* Eneco slide btn */}
                           <button onClick={() => setGlobalCalcOpen(globalCalcOpen === 'ENECO' ? null : 'ENECO')} className="hidden md:flex absolute top-[40%] -translate-y-1/2 left-0 h-16 w-8 bg-slate-50 border-y border-r border-slate-200 rounded-r-xl items-center justify-center z-40 transition-colors shadow-sm hover:bg-slate-100 text-slate-400 group cursor-pointer hover:w-9 px-1">
-                            <img src="./eneco-grey.png" alt="Eneco" className="h-4 object-contain opacity-60 group-hover:opacity-100 transition-opacity rotate-90 flex-shrink-0" />
+                            <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/eneco-e.png" alt="Eneco" className="h-5 w-5 object-contain opacity-60 group-hover:opacity-100 transition-all grayscale opacity-50 group-hover:grayscale-0 flex-shrink-0" />
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-300 absolute right-1"><path d="m9 18 6-6-6-6" /></svg>
                           </button>
 
@@ -874,7 +874,7 @@ export default function App() {
                           {customerType === 'SOHO' && (
                             <button onClick={() => setGlobalCalcOpen(globalCalcOpen === 'ELINDUS' ? null : 'ELINDUS')} className="hidden md:flex absolute top-[40%] -translate-y-1/2 right-0 h-16 w-8 bg-slate-50 border-y border-l border-slate-200 rounded-l-xl items-center justify-center z-40 transition-colors shadow-sm hover:bg-slate-100 text-slate-400 group cursor-pointer hover:w-9 px-1">
                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-300 absolute left-1"><path d="m15 18-6-6 6-6" /></svg>
-                              <img src="./elindus-grey.png" alt="Elindus" className="h-4 object-contain opacity-60 group-hover:opacity-100 transition-opacity -rotate-90 flex-shrink-0" />
+                              <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/elindus-e.png" alt="Elindus" className="h-5 w-5 object-contain opacity-60 group-hover:opacity-100 transition-all grayscale opacity-50 group-hover:grayscale-0 flex-shrink-0" />
                             </button>
                           )}
                         </>
