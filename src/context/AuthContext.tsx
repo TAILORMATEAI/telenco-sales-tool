@@ -42,9 +42,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .single();
 
     if (!error && data) {
+      if (data.is_archived) {
+        await supabase.auth.signOut();
+        setProfile(null);
+        setUser(null);
+        setSession(null);
+        return { error: new Error('Account gearchiveerd') };
+      }
       setProfile(data as Profile);
       // Update last_login asynchronously so it doesn't block the loading phase
       supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', userId);
+      return { data };
     } else {
       // Auto-create profile for new users (pull name from auth metadata)
       const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -61,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Failed to create profile (possibly RLS issue):', insertError);
       } else {
         setProfile(newProfile);
+        return { data: newProfile };
       }
     }
   };
@@ -101,8 +110,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error };
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error };
+    
+    // Check if the user is archived right after authenticating
+    if (data?.user) {
+      const { data: profile } = await supabase.from('profiles').select('is_archived').eq('id', data.user.id).single();
+      if (profile?.is_archived) {
+        await supabase.auth.signOut();
+        return { error: { message: 'Je account is gearchiveerd en de toegang is ontzegd. Neem contact op met een beheerder.' } };
+      }
+    }
+    
+    return { error: null };
   };
 
   const signOut = async () => {
