@@ -452,8 +452,10 @@ export default function App() {
     const elecPrice = getElecPrice();
     const gasPrice = getGasPrice();
 
-    if (elecPrice > 0) setElecEnecoOfferPriceMWh(elecPrice);
-    if (gasPrice > 0) setGasEnecoOfferPriceMWh(gasPrice);
+    if (marketData) {
+      setElecEnecoOfferPriceMWh(elecPrice);
+      setGasEnecoOfferPriceMWh(gasPrice);
+    }
   }, [customerType, elecTariff, gasTariff, marketData, hasSolarPanels, elecMeterType, elecDagMWh, elecNachtMWh]);
 
   const handleSaveOverride = async () => {
