@@ -86,6 +86,42 @@ function CountUp({ value, isCurrency = false }: { value: number, isCurrency?: bo
   return <motion.span>{rounded}</motion.span>;
 }
 
+/* ─── Price Input Field (Preserves Decimals/Zeroes) ─── */
+const PriceInputField = ({ value, onChange, showInMWh, className, step = "0.01" }: { value: number, onChange: (v: number) => void, showInMWh: boolean, className: string, step?: string }) => {
+  const [localVal, setLocalVal] = useState<string>(() => {
+    if (value === 0) return '';
+    return showInMWh ? value.toString() : (value / 1000).toString();
+  });
+
+  useEffect(() => {
+    const expectedNum = showInMWh ? value : value / 1000;
+    const localNum = Number(localVal);
+    // Only overwrite user input if the actual numerical value diverges
+    if (localNum !== expectedNum) {
+      setLocalVal(expectedNum === 0 ? '' : expectedNum.toString());
+    }
+  }, [value, showInMWh]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    setLocalVal(raw);
+    const num = Number(raw);
+    if (!isNaN(num)) {
+      onChange(showInMWh ? num : num * 1000);
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      step={step}
+      value={localVal}
+      onChange={handleChange}
+      className={className}
+    />
+  );
+};
+
 export default function App() {
   const { user, isAdmin, signOut, lang, setLang } = useAuth();
   const navigate = useNavigate();
@@ -1070,14 +1106,10 @@ export default function App() {
               <label className="block text-xs font-bold text-slate-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Dag Tarief</label>
               <div className="relative group">
                 <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-2xl">€</span>
-                <input
-                  type="number" step="0.01"
-                  value={showInMWh ? (elecCurrentPriceDagMWh === 0 ? '' : elecCurrentPriceDagMWh) : (elecCurrentPriceDagMWh === 0 ? '' : elecCurrentPriceDagMWh / 1000)}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') { setElecCurrentPriceDagMWh(0); return; }
-                    setElecCurrentPriceDagMWh(showInMWh ? Number(raw) : Number(raw) * 1000);
-                  }}
+                <PriceInputField
+                  value={elecCurrentPriceDagMWh}
+                  showInMWh={showInMWh}
+                  onChange={setElecCurrentPriceDagMWh}
                   className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
                 />
                 <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
@@ -1088,14 +1120,10 @@ export default function App() {
               <label className="block text-xs font-bold text-slate-500 uppercase flex items-center justify-center gap-2"><Zap className="w-3 h-3"/> Nacht Tarief</label>
               <div className="relative group">
                 <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-2xl">€</span>
-                <input
-                  type="number" step="0.01"
-                  value={showInMWh ? (elecCurrentPriceNachtMWh === 0 ? '' : elecCurrentPriceNachtMWh) : (elecCurrentPriceNachtMWh === 0 ? '' : elecCurrentPriceNachtMWh / 1000)}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') { setElecCurrentPriceNachtMWh(0); return; }
-                    setElecCurrentPriceNachtMWh(showInMWh ? Number(raw) : Number(raw) * 1000);
-                  }}
+                <PriceInputField
+                  value={elecCurrentPriceNachtMWh}
+                  showInMWh={showInMWh}
+                  onChange={setElecCurrentPriceNachtMWh}
                   className="block w-full pl-16 pr-24 py-4 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-2xl focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
                 />
                 <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-sm hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
@@ -1105,16 +1133,10 @@ export default function App() {
         ) : (
           <div className="relative group">
             <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-slate-400 font-bold text-3xl">€</span>
-            <input
-              type="number"
-              step="0.01"
-              value={showInMWh ? (cons === 0 ? '' : cons) : (cons === 0 ? '' : cons / 1000)}
-              onChange={(e) => {
-                const raw = e.target.value;
-                if (raw === '') { setCons(0); return; }
-                const val = Number(raw);
-                setCons(showInMWh ? val : val * 1000);
-              }}
+            <PriceInputField
+              value={cons}
+              showInMWh={showInMWh}
+              onChange={setCons}
               className="block w-full pl-16 pr-24 py-[clamp(1rem,4vh,2rem)] text-[clamp(1.5rem,4vh,2.25rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1.25rem,3vh,2rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
             />
             <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-[clamp(1rem,2vh,1.25rem)] hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
