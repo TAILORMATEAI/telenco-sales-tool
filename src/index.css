@@ -188,21 +188,35 @@ input:-webkit-autofill:active {
   transition: background-color 5000s ease-in-out 0s;
 }
 
-/* Smooth expand/collapse using CSS grid trick */
+/* Smooth expand/collapse — max-height approach avoids grid snap/jerk */
 .expand-wrapper {
-  display: grid;
-  grid-template-rows: 0fr;
+  overflow: clip;
+  max-height: 0;
   opacity: 0;
-  transition: grid-template-rows 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease 0.15s;
+  transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .expand-wrapper.open {
-  grid-template-rows: 1fr;
+  max-height: 2000px;
   opacity: 1;
-  transition: grid-template-rows 0.7s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease 0.1s;
+  overflow: clip;
+  transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.expand-wrapper > .expand-inner {
-  overflow: hidden;
+
+.expand-slow {
+  overflow: clip;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 1.3s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.expand-wrapper.open > .expand-inner {
-  overflow: visible;
+.expand-slow.open {
+  max-height: 800px;
+  opacity: 1;
+  transition: max-height 1.3s cubic-bezier(0.2, 0, 0.1, 1),
+              opacity 0.5s cubic-bezier(0.2, 0, 0.1, 1);
 }
+
+/* no extra inner rules needed — parent .expand-wrapper handles overflow */

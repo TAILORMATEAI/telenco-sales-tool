@@ -962,9 +962,9 @@ export default function App() {
         </div>
 
         {/* Question 2: Consumption input — only if knows === true */}
-        <div className={`expand-wrapper ${knows === true ? 'open' : ''}`}>
-          <div className="expand-inner">
-            <div className="space-y-8 pt-8 mt-8 border-t border-slate-100">
+        <div className={`expand-slow ${knows === true ? 'open' : ''} w-full`}>
+          <div className="w-full">
+            <div className="flex flex-col w-full space-y-8 pt-8 border-t border-slate-100">
               {isElec ? (
                 <>
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-4">
@@ -975,49 +975,48 @@ export default function App() {
                     <button onClick={() => setElecMeterType('TWEEVOUDIG')} className={`flex-1 min-w-[120px] py-3 rounded-2xl font-bold transition-all ${elecMeterType === 'TWEEVOUDIG' ? 'bg-eneco-gradient text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>{text.tweevoudig}</button>
                   </div>
 
-                  <div className={`expand-wrapper ${elecMeterType ? 'open' : ''}`}>
-                    <div className="expand-inner">
-                      <AnimatePresence mode="wait">
-                        {elecMeterType === 'ENKEL' && (
-                          <motion.div key="enkel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
-                            <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">{text.verbruikTotaal}</label>
-                              <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
-                            </div>
-                            <div className="flex justify-center"><div className="relative w-full max-w-[200px]"><input type="number" value={inputUnit === 'kWh' ? (consMWh === 0 ? '' : Math.round(consMWh * 1000)) : (consMWh === 0 ? '' : consMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setConsMWh(m); if (m >= 25) setTariff('VARIABEL'); }} className="block w-full pr-16 py-3 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-4 flex items-center text-eneco-gradient/50">{inputUnit}</span></div></div>
-                            {inputUnit === 'MWh' && <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(v) => { setConsMWh(v); if (v >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full" />}
-                          </motion.div>
-                        )}
-                        {elecMeterType === 'TWEEVOUDIG' && (
-                          <motion.div key="twee" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
-                            <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">{text.verdelingVerbruik}</label>
-                              <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
-                            </div>
+                  <div className={`expand-slow ${elecMeterType ? 'open' : ''} w-full`}>
+                    <div className="w-full">
+                      <div className={`expand-slow ${elecMeterType === 'ENKEL' ? 'open' : ''} w-full`}>
+                        <div className="flex flex-col w-full space-y-6">
+                          <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">{text.verbruikTotaal}</label>
+                            <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
+                          </div>
+                          <div className="flex justify-center"><div className="relative w-full max-w-[200px]"><input type="number" value={inputUnit === 'kWh' ? (consMWh === 0 ? '' : Math.round(consMWh * 1000)) : (consMWh === 0 ? '' : consMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setConsMWh(m); if (m >= 25) setTariff('VARIABEL'); }} className="block w-full pr-16 py-3 text-2xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-4 flex items-center text-eneco-gradient/50">{inputUnit}</span></div></div>
+                          {inputUnit === 'MWh' && <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(v) => { setConsMWh(v); if (v >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full" />}
+                        </div>
+                      </div>
 
-                            {/* Dag */}
-                            <div className="space-y-4">
-                              <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> {text.dagVerbruik}</label>
-                              <div className="flex items-center gap-4">
-                                <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecDagMWh === 0 ? '' : Math.round(elecDagMWh * 1000)) : (elecDagMWh === 0 ? '' : elecDagMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecDagMWh(m); setConsMWh(m + elecNachtMWh); if ((m + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
-                                {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecDagMWh} onChange={(v) => { setElecDagMWh(v); setConsMWh(v + elecNachtMWh); if ((v + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
-                              </div>
-                            </div>
+                      <div className={`expand-slow ${elecMeterType === 'TWEEVOUDIG' ? 'open' : ''} w-full`}>
+                        <div className="flex flex-col w-full space-y-8">
+                          <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">{text.verdelingVerbruik}</label>
+                            <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
+                          </div>
 
-                            {/* Nacht */}
-                            <div className="space-y-4">
-                              <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> {text.nachtVerbruik}</label>
-                              <div className="flex items-center gap-4">
-                                <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecNachtMWh === 0 ? '' : Math.round(elecNachtMWh * 1000)) : (elecNachtMWh === 0 ? '' : elecNachtMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecNachtMWh(m); setConsMWh(m + elecDagMWh); if ((m + elecDagMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
-                                {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecNachtMWh} onChange={(v) => { setElecNachtMWh(v); setConsMWh(v + elecDagMWh); if ((v + elecDagMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
-                              </div>
+                          {/* Dag */}
+                          <div className="space-y-4">
+                            <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> {text.dagVerbruik}</label>
+                            <div className="flex items-center gap-4">
+                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecDagMWh === 0 ? '' : Math.round(elecDagMWh * 1000)) : (elecDagMWh === 0 ? '' : elecDagMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecDagMWh(m); setConsMWh(m + elecNachtMWh); if ((m + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecDagMWh} onChange={(v) => { setElecDagMWh(v); setConsMWh(v + elecNachtMWh); if ((v + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
                             </div>
+                          </div>
 
-                            <div className="bg-slate-50 p-4 rounded-xl flex justify-between items-center text-sm font-bold text-slate-500 border border-slate-100">
-                              <span>Totaal Berekend Verbruik:</span>
-                              <span className="text-lg text-slate-700">{inputUnit === 'kWh' ? Math.round(consMWh * 1000) : consMWh.toFixed(2)} {inputUnit}</span>
+                          {/* Nacht */}
+                          <div className="space-y-4">
+                            <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> {text.nachtVerbruik}</label>
+                            <div className="flex items-center gap-4">
+                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecNachtMWh === 0 ? '' : Math.round(elecNachtMWh * 1000)) : (elecNachtMWh === 0 ? '' : elecNachtMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecNachtMWh(m); setConsMWh(m + elecDagMWh); if ((m + elecDagMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecNachtMWh} onChange={(v) => { setElecNachtMWh(v); setConsMWh(v + elecDagMWh); if ((v + elecDagMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
                             </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                          </div>
+
+                          <div className="bg-slate-50 p-4 rounded-xl flex justify-between items-center text-sm font-bold text-slate-500 border border-slate-100">
+                            <span>Totaal Berekend Verbruik:</span>
+                            <span className="text-lg text-slate-700">{inputUnit === 'kWh' ? Math.round(consMWh * 1000) : consMWh.toFixed(2)} {inputUnit}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </>
@@ -1055,13 +1054,13 @@ export default function App() {
         </div>
 
         {/* Question 3: Unknown consumption — over 30 MWh toggle */}
-        <div className={`expand-wrapper ${knows === false ? 'open' : ''}`}>
-          <div className="expand-inner">
-            <div className="pt-[clamp(1rem,3vh,2rem)] mt-[clamp(1rem,3vh,2rem)] border-t border-slate-100">
+        <div className={`expand-slow ${knows === false ? 'open' : ''} w-full`}>
+          <div className="w-full">
+            <div className="flex flex-col w-full pt-[clamp(1rem,3vh,2rem)] border-t border-slate-100">
               <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.over30}</label>
               <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
                 <button onClick={() => { setOver30(true); setTariff('VARIABEL'); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${over30 === true ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.yes}</button>
-                <button onClick={() => { setOver30(false); setTariff(null); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${over30 === false ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
+                <button onClick={() => { setOver30(false); setTariff('VARIABEL'); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${over30 === false ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
               </div>
             </div>
           </div>
@@ -1180,12 +1179,12 @@ export default function App() {
             transition={{ duration: 0.3, ease: 'easeOut' }}
             className="relative z-10 w-full max-w-5xl min-[2000px]:max-w-7xl mx-auto px-4 sm:px-6 flex-1 flex flex-col justify-center items-center py-[clamp(1rem,3vh,3rem)] pb-[clamp(2rem,6vh,6rem)]"
           >
-            <div className="w-full relative flex items-center justify-center min-h-[clamp(300px,50vh,600px)]">
+            <div className="w-full relative flex flex-col items-center">
               <AnimatePresence initial={false} custom={direction} mode="wait">
 
                 {/* STEP 1: Customer Type + Energy Type (combined) */}
                 {currentStep === 1 && (
-                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl space-y-4">
+                  <motion.div key="step1" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
                     {/* Customer Type */}
                     <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
                       {(['PARTICULIER', 'SOHO'] as const).map((type) => {
@@ -1207,44 +1206,52 @@ export default function App() {
                     </div>
 
                     {/* Energy Type — smooth expand after choosing customer type */}
-                    <div className={`expand-wrapper ${customerType ? 'open' : ''}`}>
-                      <div className="expand-inner">
-                        <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)] mt-4">
-                          {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
-                            const isSelected = energyType === type;
-                            const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
-                            const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
-                            return (
-                              <button key={type} onClick={() => {
-                                setEnergyType(type);
-                                if (type === 'GAS') {
-                                  setHasSolarPanels(null);
-                                  nextStep();
-                                } else {
-                                  setHasSolarPanels(null);
-                                }
-                              }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-eneco-gradient border-transparent text-white shadow-[#E5394C]/20 shadow-lg' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
-                                <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
-                                <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
+                    <AnimatePresence>
+                      {customerType && (
+                        <motion.div initial={{ opacity: 0, height: 0, overflow: 'clip' }} animate={{ opacity: 1, height: 'auto', overflow: 'clip' }} exit={{ opacity: 0, height: 0, overflow: 'clip' }} transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full">
+                          <div className="flex flex-col w-full pt-4 pb-12 -mb-12">
+                            <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col sm:flex-row gap-[clamp(0.75rem,1.5vh,1rem)]">
+                              {(['ELEC', 'GAS', 'BOTH'] as const).map((type) => {
+                                const isSelected = energyType === type;
+                                const label = type === 'ELEC' ? text.elec : type === 'GAS' ? text.gas : text.both;
+                                const Icon = type === 'ELEC' ? Zap : type === 'GAS' ? Flame : Calculator;
+                                return (
+                                  <button key={type} onClick={() => {
+                                    setEnergyType(type);
+                                    if (type === 'GAS') {
+                                      setHasSolarPanels(null);
+                                      nextStep();
+                                    } else {
+                                      setHasSolarPanels(null);
+                                    }
+                                  }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-eneco-gradient border-transparent text-white shadow-[#E5394C]/20 shadow-lg' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                                    <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
+                                    <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
                     {/* Solar Panels — smooth expand after choosing ELEC or BOTH */}
-                    <div className={`expand-wrapper ${(energyType === 'ELEC' || energyType === 'BOTH') ? 'open' : ''}`}>
-                      <div className="expand-inner">
-                        <div className="bg-white mt-4 rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col items-center">
-                          <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">Heeft de klant zonnepanelen?</label>
-                          <div className="flex justify-center w-full gap-[clamp(0.75rem,1.5vh,1rem)] sm:max-w-md mx-auto">
-                            <button disabled={isTranslating} onClick={() => { if (isTranslatingRef.current) return; setHasSolarPanels(true); isTranslatingRef.current = true; setIsTranslating(true); setTimeout(() => { isTranslatingRef.current = false; nextStep(); }, 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === true ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.yes}</button>
-                            <button disabled={isTranslating} onClick={() => { if (isTranslatingRef.current) return; setHasSolarPanels(false); isTranslatingRef.current = true; setIsTranslating(true); setTimeout(() => { isTranslatingRef.current = false; nextStep(); }, 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === false ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.no}</button>
+                    <AnimatePresence>
+                      {(energyType === 'ELEC' || energyType === 'BOTH') && (
+                        <motion.div initial={{ opacity: 0, height: 0, overflow: 'clip' }} animate={{ opacity: 1, height: 'auto', overflow: 'clip' }} exit={{ opacity: 0, height: 0, overflow: 'clip' }} transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full">
+                          <div className="flex flex-col w-full pt-4 pb-12 -mb-12">
+                            <div className="bg-white rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col items-center">
+                              <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">Heeft de klant zonnepanelen?</label>
+                              <div className="flex justify-center w-full gap-[clamp(0.75rem,1.5vh,1rem)] sm:max-w-md mx-auto">
+                                <button disabled={isTranslating} onClick={() => { if (isTranslatingRef.current) return; setHasSolarPanels(true); isTranslatingRef.current = true; setIsTranslating(true); setTimeout(() => { isTranslatingRef.current = false; nextStep(); }, 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === true ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.yes}</button>
+                                <button disabled={isTranslating} onClick={() => { if (isTranslatingRef.current) return; setHasSolarPanels(false); isTranslatingRef.current = true; setIsTranslating(true); setTimeout(() => { isTranslatingRef.current = false; nextStep(); }, 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === false ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.no}</button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
 
 
                   </motion.div>
@@ -1328,7 +1335,7 @@ export default function App() {
                             )}
                           </div>
 
-                            {/* Linksonder Hoek (Enkel Bad credit) */}
+                          {/* Linksonder Hoek (Enkel Bad credit) */}
                           {customerType === 'SOHO' && (
                             <button onClick={() => {
                               if (forceElindus) {
