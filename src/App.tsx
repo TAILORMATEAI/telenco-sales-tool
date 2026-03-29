@@ -895,9 +895,11 @@ export default function App() {
                       <button onClick={() => setElecMeterType('TWEEVOUDIG')} className={`flex-1 min-w-[120px] py-3 rounded-2xl font-bold transition-all ${elecMeterType === 'TWEEVOUDIG' ? 'bg-eneco-gradient text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>Tweevoudig (Dag/Nacht)</button>
                     </div>
 
+                    <div className={`expand-wrapper ${elecMeterType ? 'open' : ''}`}>
+                      <div className="expand-inner">
                     <AnimatePresence mode="wait">
                       {elecMeterType === 'ENKEL' && (
-                        <motion.div key="enkel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-6">
+                        <motion.div key="enkel" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
                           <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">Verbruik Totaal</label>
                             <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
                           </div>
@@ -906,7 +908,7 @@ export default function App() {
                         </motion.div>
                       )}
                       {elecMeterType === 'TWEEVOUDIG' && (
-                        <motion.div key="twee" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+                        <motion.div key="twee" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="space-y-8">
                           <div className="flex justify-between items-end mb-4"><label className="block text-sm font-bold text-slate-400 uppercase">Verdeling Verbruik</label>
                             <div className="flex bg-slate-100 p-1 rounded-full"><button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'kWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>kWh</button><button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full ${inputUnit === 'MWh' ? 'bg-white text-eneco-gradient' : 'text-slate-500'}`}>MWh</button></div>
                           </div>
@@ -936,6 +938,8 @@ export default function App() {
                         </motion.div>
                       )}
                     </AnimatePresence>
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -1455,18 +1459,24 @@ export default function App() {
 
                             <div className="flex-1 overflow-y-auto pr-2 space-y-4">
                               {outcomes.map(o => {
+                                // For ENECO: show only if showEneco
                                 if (globalCalcOpen === 'ENECO' && !o.showEneco) return null;
-                                if (globalCalcOpen === 'ELINDUS' && !o.showElindus) return null;
+                                // For ELINDUS: show if showElindus, OR show gas-from-Eneco when gas <25 MWh
+                                const isEnecoFallback = globalCalcOpen === 'ELINDUS' && !o.showElindus && o.showEneco;
+                                if (globalCalcOpen === 'ELINDUS' && !o.showElindus && !isEnecoFallback) return null;
 
-                                const newPrice = globalCalcOpen === 'ENECO' ? (o.enecoPrice * o.cons) : (o.elindusEsimatedPrice * o.cons);
-                                const savings = globalCalcOpen === 'ENECO' ? o.enecoSavingsTotal : o.elindusSavingsTotal;
-                                const newFixedFee = globalCalcOpen === 'ENECO' ? o.enecoFixedFee : o.elindusFixedFee;
+                                const useEnecoForThis = isEnecoFallback;
+                                const newPrice = (globalCalcOpen === 'ENECO' || useEnecoForThis) ? (o.enecoPrice * o.cons) : (o.elindusEsimatedPrice * o.cons);
+                                const savings = (globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoSavingsTotal : o.elindusSavingsTotal;
+                                const newFixedFee = (globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoFixedFee : o.elindusFixedFee;
+                                const displayProvider = useEnecoForThis ? 'Eneco' : (globalCalcOpen === 'ENECO' ? 'Eneco' : 'Elindus');
 
                                 return (
-                                  <div key={o.type} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                  <div key={o.type} className={`p-4 rounded-xl border ${useEnecoForThis ? 'bg-blue-50/50 border-blue-100' : 'bg-slate-50 border-slate-100'}`}>
                                     <h4 className="font-bold text-slate-500 mb-2 uppercase tracking-widest text-xs border-b border-slate-200 pb-2 flex items-center gap-2">
                                       {o.type === 'ELEC' ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
                                       {o.type === 'ELEC' ? text.elec : text.gas} ({o.cons} MWh)
+                                      {useEnecoForThis && <span className="text-[9px] font-bold bg-blue-100 text-blue-500 px-2 py-0.5 rounded-full ml-auto normal-case tracking-normal">via Eneco</span>}
                                     </h4>
                                     <div className="space-y-3 text-sm">
                                       {o.type === 'ELEC' && elecMeterType === 'TWEEVOUDIG' ? (
@@ -1487,7 +1497,7 @@ export default function App() {
                                       )}
 
                                       <div className="flex flex-col gap-1 border-t border-slate-100 pt-2">
-                                        <div className="flex justify-between text-slate-500 font-bold"><span>{globalCalcOpen.toLowerCase().replace(/^\w/, c => c.toUpperCase())} Voorstel:</span><span className="font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm px-1.5 py-0.5 rounded text-xs">€{((globalCalcOpen === 'ENECO' ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                      <div className="flex justify-between text-slate-500 font-bold"><span>{displayProvider} Voorstel:</span><span className="font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm px-1.5 py-0.5 rounded text-xs">€{(((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
                                         <div className="flex justify-between"><span className="text-slate-400 text-xs">Kosten ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{newPrice.toFixed(2)}</span></div>
                                       </div>
 
@@ -1505,7 +1515,7 @@ export default function App() {
                               })}
                             </div>
 
-                            <div className={`mt-4 p-4 rounded-xl border ${globalCalcOpen === 'ENECO' ? (totalEnecoSavings > 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700') : (totalElindusSavings > 0 ? 'bg-emerald-50 border-emerald-100 text-emerald-700' : 'bg-rose-50 border-rose-100 text-rose-700')}`}>
+                            <div className={`mt-4 p-4 rounded-xl border ${globalCalcOpen === 'ENECO' ? (totalEnecoSavings > 0 ? 'border-emerald-200 text-emerald-600' : 'border-rose-200 text-rose-600') : (totalElindusSavings > 0 ? 'border-emerald-200 text-emerald-600' : 'border-rose-200 text-rose-600')} bg-white`}>
                               <div className="flex flex-col gap-1 font-black">
                                 <span className="text-xs uppercase tracking-widest">Totaal {(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings) > 0 ? 'Besparing' : 'Meerkost'}:</span>
                                 <span className="text-2xl">€{Math.abs(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings).toFixed(2)}</span>

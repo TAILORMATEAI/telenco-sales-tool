@@ -257,7 +257,7 @@ export default function CustomerForm({
             <label className={labelCls}>{text.phone} *</label>
             <div className="flex gap-2 items-stretch">
               <PhoneCountrySelect value={customerData.phoneCountry} onChange={(val: string) => setCustomerData(prev => ({ ...prev, phoneCountry: val }))} />
-              <input type="tel" autoComplete="tel-national" name="phone_number" className={`${inputCls} flex-1`} placeholder="4XX XX XX XX" value={customerData.phone} onChange={e => {
+              <input type="tel" autoComplete="tel-national" name="phone_number" className={`${inputCls} flex-1`} placeholder="04xx xx xx xx" value={customerData.phone} onChange={e => {
                 let raw = e.target.value.replace(/[^0-9 ]/g, '');
                 setCustomerData(prev => ({ ...prev, phone: raw }));
               }} />
@@ -295,11 +295,11 @@ export default function CustomerForm({
           </div>
           <div className="md:col-span-2">
             <label className={labelCls}>{text.houseNr} *</label>
-            <input type="text" autoComplete="nope" name="conn_house" className={inputCls} value={connectionAddress.houseNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
+            <input type="text" autoComplete="nope" name="conn_house" className={inputCls} placeholder="5 of 5A" value={connectionAddress.houseNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
           </div>
           <div className="md:col-span-2">
             <label className={labelCls}>{text.bus}</label>
-            <input type="text" autoComplete="nope" name="conn_bus" className={inputCls} value={connectionAddress.busNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
+            <input type="text" autoComplete="nope" name="conn_bus" className={inputCls} placeholder="/A, /1" value={connectionAddress.busNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-[clamp(0.75rem,1.5vh,1rem)]">
@@ -325,11 +325,11 @@ export default function CustomerForm({
               </div>
               <div className="md:col-span-2">
                 <label className={labelCls}>{text.houseNr} *</label>
-                <input type="text" autoComplete="nope" name="bill_house" className={inputCls} value={billingAddress.houseNumber} onChange={e => setBillingAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
+                <input type="text" autoComplete="nope" name="bill_house" className={inputCls} placeholder="5 of 5A" value={billingAddress.houseNumber} onChange={e => setBillingAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
               </div>
               <div className="md:col-span-2">
                 <label className={labelCls}>{text.bus}</label>
-                <input type="text" autoComplete="nope" name="bill_bus" className={inputCls} value={billingAddress.busNumber} onChange={e => setBillingAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
+                <input type="text" autoComplete="nope" name="bill_bus" className={inputCls} placeholder="/A, /1" value={billingAddress.busNumber} onChange={e => setBillingAddress(prev => ({ ...prev, busNumber: e.target.value }))} />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-[clamp(0.75rem,1.5vh,1rem)]">
