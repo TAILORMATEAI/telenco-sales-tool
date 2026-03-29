@@ -110,6 +110,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Track active presence with a debounce
+  useEffect(() => {
+    if (!user) return;
+    
+    let lastUpdateTimer = Date.now();
+    let isUpdating = false;
+
+    const updatePresence = async () => {
+      const now = Date.now();
+      if (!isUpdating && now - lastUpdateTimer > 3 * 60 * 1000) { // Max once every 3 minutes
+        isUpdating = true;
+        try {
+          await supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', user.id);
+          lastUpdateTimer = Date.now();
+        } catch (e) {
+          console.error("Failed to update presence:", e);
+        } finally {
+          isUpdating = false;
+        }
+      }
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach(e => window.addEventListener(e, updatePresence, { passive: true }));
+    
+    // Initial ping on mount/auth if needed (fetchProfile already does one, so we just set timer here)
+
+    return () => {
+      events.forEach(e => window.removeEventListener(e, updatePresence));
+    };
+  }, [user]);
+
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error };

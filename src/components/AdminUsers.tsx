@@ -17,6 +17,7 @@ interface Profile {
   created_at: string;
   email_confirmed_at?: string | null;
   last_sign_in_at?: string | null;
+  last_login?: string | null;
 }
 
 export default function AdminUsers({ currentUserEmail }: { currentUserEmail: string }) {
@@ -303,7 +304,8 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
 
               // Calculate status
               const now = new Date();
-              const lastSeenDate = user.last_sign_in_at ? new Date(user.last_sign_in_at) : null;
+              // Use last_login which is updated constantly by active users, falling back to sign in time
+              const lastSeenDate = user.last_login ? new Date(user.last_login) : (user.last_sign_in_at ? new Date(user.last_sign_in_at) : null);
               const diffMs = lastSeenDate ? now.getTime() - lastSeenDate.getTime() : Infinity;
               const diffMins = Math.floor(diffMs / 1000 / 60);
 
