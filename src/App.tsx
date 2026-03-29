@@ -145,7 +145,7 @@ export default function App() {
   const [elecCurrentPriceDagMWh, setElecCurrentPriceDagMWh] = useState<number>(130);
   const [elecCurrentPriceNachtMWh, setElecCurrentPriceNachtMWh] = useState<number>(110);
   const [elecEnecoOfferPriceMWh, setElecEnecoOfferPriceMWh] = useState<number>(85); // Note: Offer calculation will be split
-  const [elecTariff, setElecTariff] = useState<'VAST' | 'VARIABEL' | null>(null);
+  const [elecTariff, setElecTariff] = useState<'VAST' | 'VARIABEL'>('VARIABEL');
 
   // Gas State
   const [gasKnowsConsumption, setGasKnowsConsumption] = useState<boolean | null>(null);
@@ -153,7 +153,7 @@ export default function App() {
   const [gasIsOver30MWh, setGasIsOver30MWh] = useState<boolean | null>(null);
   const [gasCurrentPriceMWh, setGasCurrentPriceMWh] = useState<number>(120);
   const [gasEnecoOfferPriceMWh, setGasEnecoOfferPriceMWh] = useState<number>(85);
-  const [gasTariff, setGasTariff] = useState<'VAST' | 'VARIABEL' | null>(null);
+  const [gasTariff, setGasTariff] = useState<'VAST' | 'VARIABEL'>('VARIABEL');
 
   const [showInMWh, setShowInMWh] = useState<boolean>(true);
   const [inputUnit, setInputUnit] = useState<'MWh' | 'kWh'>('MWh');
@@ -1028,30 +1028,17 @@ export default function App() {
                             const val = Number(raw);
                             const newMWh = inputUnit === 'kWh' ? val / 1000 : val;
                             setConsMWh(newMWh);
-                            if (newMWh >= 25) { setTariff('VARIABEL'); }
+                            setConsMWh(newMWh);
                           }} className="block w-full pr-16 py-[clamp(0.75rem,2.5vh,1rem)] text-[clamp(1.5rem,3vh,1.875rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1rem,2vh,1.5rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-eneco-gradient outline-none" />
                           <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-eneco-gradient/50 font-bold text-[clamp(1rem,2vh,1.125rem)] pointer-events-none">{inputUnit}</span>
                         </div>
                       </div>
                       {inputUnit === 'MWh' && (
-                        <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(val) => { setConsMWh(val); if (val >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full mb-2" />
+                        <LiquidGlassSlider min={1} max={150} value={consMWh} onChange={(val) => { setConsMWh(val); }} color="#E5394C" className="w-full mb-2" />
                       )}
                     </div>
                   </>
                 )}
-
-                {/* Tariff type — only if consumption < 25 MWh */}
-                <div className={`expand-wrapper ${consMWh > 0 && consMWh < 25 && (!isElec || (isElec && elecMeterType)) ? 'open' : ''}`}>
-                  <div className="expand-inner">
-                    <div className="pt-6 border-t border-slate-100">
-                      <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
-                      <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
-                        <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
-                        <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -1064,19 +1051,6 @@ export default function App() {
                 <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
                   <button onClick={() => { setOver30(true); setTariff('VARIABEL'); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${over30 === true ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.yes}</button>
                   <button onClick={() => { setOver30(false); setTariff(null); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${over30 === false ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
-                </div>
-              </div>
-
-              {/* Tariff choice for < 25 MWh when consumption is unknown */}
-              <div className={`expand-wrapper ${over30 === false ? 'open' : ''}`}>
-                <div className="expand-inner">
-                  <div className="pt-6 border-t border-slate-100 mt-6">
-                    <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">{text.tariffType}</label>
-                    <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
-                      <button onClick={() => setTariff('VAST')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VAST' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.vast}</button>
-                      <button onClick={() => setTariff('VARIABEL')} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${tariff === 'VARIABEL' ? 'bg-eneco-gradient text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.variabel}</button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1385,9 +1359,13 @@ export default function App() {
                               {/* Eneco */}
                               {showEneco && (
                                 <div className="pt-2 pb-4 px-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
-                                  <div className="flex justify-between items-center mb-0">
+                                  <div className="flex justify-between items-center mb-2">
                                     <img src="./eneco-grey.png" alt="Eneco" className="h-[2.75rem] min-[2000px]:h-12 object-contain" />
-                                    <span className="text-[10px] font-bold text-slate-300 uppercase">VV: €{enecoFixedFee}</span>
+                                    <div className="flex bg-slate-100 p-[3px] rounded-lg border border-slate-200/60 shadow-inner">
+                                      <button onClick={() => type === 'ELEC' ? setElecTariff('VAST') : setGasTariff('VAST')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${type === 'ELEC' ? (elecTariff === 'VAST' ? 'bg-white shadow-sm text-[#E5394C] ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-500') : (gasTariff === 'VAST' ? 'bg-white shadow-sm text-[#E5394C] ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-500')}`}>VAST</button>
+                                      <button onClick={() => type === 'ELEC' ? setElecTariff('VARIABEL') : setGasTariff('VARIABEL')} className={`px-3 py-1 text-[10px] font-bold rounded-md transition-all ${type === 'ELEC' ? (elecTariff === 'VARIABEL' ? 'bg-white shadow-sm text-[#E5394C] ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-500') : (gasTariff === 'VARIABEL' ? 'bg-white shadow-sm text-[#E5394C] ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-500')}`}>VAR</button>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-1 rounded-lg">VV: €{enecoFixedFee}</span>
                                   </div>
                                   <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
                                     <span>€{showInMWh ? enecoPrice.toFixed(2) : (enecoPrice / 1000).toFixed(4)}</span>
