@@ -1299,7 +1299,7 @@ export default function App() {
                         <div className={`expand-wrapper ${includeFixedFeeSavings ? 'open' : ''} mt-2 w-full max-w-sm mx-auto`}>
                           <div className="expand-inner">
                             <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-4 mb-4">
-                                <div className="space-y-3">
+                                <div className="flex flex-col sm:flex-row gap-3">
                                   {getRequiredTypes().map(etype => {
                                     const isElec = etype === 'ELEC';
                                     const currentFee = isElec ? elecCurrentFixedFee : gasCurrentFixedFee;
@@ -1309,7 +1309,7 @@ export default function App() {
                                     const enecoSaving = currentFee - enecoFee;
                                     const elindusSaving = currentFee - elindusFee;
                                     return (
-                                      <div key={etype} className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                                      <div key={etype} className="flex-1 bg-white p-4 rounded-xl border border-slate-200 space-y-3">
                                         <div className="flex items-center gap-2">
                                           {isElec ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
                                           <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{isElec ? text.elec : text.gas}</span>
@@ -1322,15 +1322,19 @@ export default function App() {
                                             <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 text-xs font-bold">/{lang === 'NL' ? 'jaar' : 'an'}</span>
                                           </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-2">
-                                          <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${enecoSaving > 0 ? 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm' : enecoSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                        <div className="flex flex-col gap-2">
+                                          <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center justify-between gap-1.5 ${enecoSaving > 0 ? 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm' : enecoSaving === 0 ? 'bg-slate-100 border border-slate-200 text-slate-400' : 'bg-rose-50 border border-rose-200 text-rose-500'}`}>
                                             <img src="./eneco-grey.png" alt="Eneco" className={`h-3.5 object-contain ${enecoSaving > 0 ? 'opacity-100' : 'opacity-60'}`} />
-                                            <span className="text-slate-500">€{enecoFee}</span> <span className="text-[10px] text-slate-300">→</span> {enecoSaving > 0 ? <span className="font-black text-emerald-500 bg-emerald-100 px-1 py-0.5 rounded ml-0.5">+€{enecoSaving}</span> : enecoSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(enecoSaving)}`}
+                                            <div className="flex items-center gap-1.5">
+                                              <span className="text-slate-500">€{enecoFee}</span> <span className="text-[10px] text-slate-300">→</span> {enecoSaving > 0 ? <span className="font-black text-emerald-500 bg-emerald-100 px-1 py-0.5 rounded ml-0.5">+€{enecoSaving}</span> : enecoSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(enecoSaving)}`}
+                                            </div>
                                           </div>
-                                          {customerType === 'SOHO' && (
-                                            <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${elindusSaving > 0 ? 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm' : elindusSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                          {customerType === 'SOHO' && hasAnyElindus && (
+                                            <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center justify-between gap-1.5 ${elindusSaving > 0 ? 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm' : elindusSaving === 0 ? 'bg-slate-100 border border-slate-200 text-slate-400' : 'bg-rose-50 border border-rose-200 text-rose-500'}`}>
                                               <img src="./elindus-grey.png" alt="Elindus" className={`h-3.5 object-contain ${elindusSaving > 0 ? 'opacity-100' : 'opacity-60'}`} />
-                                              <span className="text-slate-500">€{elindusFee}</span> <span className="text-[10px] text-slate-300">→</span> {elindusSaving > 0 ? <span className="font-black text-emerald-500 bg-emerald-100 px-1 py-0.5 rounded ml-0.5">+€{elindusSaving}</span> : elindusSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(elindusSaving)}`}
+                                              <div className="flex items-center gap-1.5">
+                                                <span className="text-slate-500">€{elindusFee}</span> <span className="text-[10px] text-slate-300">→</span> {elindusSaving > 0 ? <span className="font-black text-emerald-500 bg-emerald-100 px-1 py-0.5 rounded ml-0.5">+€{elindusSaving}</span> : elindusSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(elindusSaving)}`}
+                                              </div>
                                             </div>
                                           )}
                                         </div>
