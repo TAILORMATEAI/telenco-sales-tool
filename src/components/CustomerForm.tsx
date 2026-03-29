@@ -239,7 +239,16 @@ export default function CustomerForm({
                     {text.inAanvraag}
                   </label>
                 </div>
-                <input type="text" autoComplete="off" name="company_tax_id" data-form-type="other" data-lpignore="true" data-1p-ignore disabled={customerData.vatPending} className={`${inputCls} uppercase ${!isVatValid && !customerData.vatPending && customerData.vatNumber.length > 2 ? 'ring-2 ring-rose-400 border-rose-400' : ''}`} value={customerData.vatNumber} onChange={e => setCustomerData(prev => ({ ...prev, vatNumber: formatVatNumber(e.target.value) }))} />
+                <div className="relative">
+                  <input type="text" maxLength={12} autoComplete="off" name="company_tax_id" data-form-type="other" data-lpignore="true" data-1p-ignore disabled={customerData.vatPending} className={`${inputCls} uppercase pr-10 ${!isVatValid && !customerData.vatPending && customerData.vatNumber.length > 2 ? 'ring-2 ring-rose-400 border-rose-400' : ''}`} value={customerData.vatNumber} onChange={e => setCustomerData(prev => ({ ...prev, vatNumber: formatVatNumber(e.target.value) }))} />
+                  {isVatValid && !customerData.vatPending && customerData.vatNumber.length === 12 && (
+                    <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                      <div className="bg-emerald-500 rounded-full p-0.5 shadow-sm">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
@@ -257,10 +266,20 @@ export default function CustomerForm({
             <label className={labelCls}>{text.phone} *</label>
             <div className="flex gap-2 items-stretch">
               <PhoneCountrySelect value={customerData.phoneCountry} onChange={(val: string) => setCustomerData(prev => ({ ...prev, phoneCountry: val }))} />
-              <input type="tel" autoComplete="tel-national" name="phone_number" className={`${inputCls} flex-1`} placeholder="04xx xx xx xx" value={customerData.phone} onChange={e => {
-                let raw = e.target.value.replace(/[^0-9 ]/g, '');
-                setCustomerData(prev => ({ ...prev, phone: raw }));
-              }} />
+              <div className="relative flex-1">
+                <input type="tel" maxLength={10} autoComplete="tel-national" name="phone_number" className={`${inputCls} w-full pr-10`} placeholder="04xx xx xx xx" value={customerData.phone} onChange={e => {
+                  let raw = e.target.value.replace(/[^0-9]/g, '');
+                  if(raw.length > 10) raw = raw.slice(0, 10);
+                  setCustomerData(prev => ({ ...prev, phone: raw }));
+                }} />
+                {(customerData.phone.length === 9 || customerData.phone.length === 10) && (
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                    <div className="bg-emerald-500 rounded-full p-0.5 shadow-sm">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

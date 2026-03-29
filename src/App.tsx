@@ -511,7 +511,7 @@ export default function App() {
       addressHint: 'Tip: Typ "5A" voor extensie. Voor bus, gebruik "5/A", "5/1" of "5/001".',
       sameAddress: 'Is het aansluitingsadres gelijk aan het facturatieadres?',
       jaSimple: 'Ja', neeSimple: 'Nee', inAanvraag: 'In aanvraag', saveOrder: 'Opslaan Bon',
-      meterType: 'Type Meter', enkelvoudig: 'Enkelvoudig', tweevoudig: 'Tweevoudig (Dag/Nacht)',
+      meterType: 'Type Meter', enkelvoudig: 'Enkelvoudig', tweevoudig: 'Tweevoudig',
       verbruikTotaal: 'Verbruik Totaal', verdelingVerbruik: 'Verdeling Verbruik',
       dagVerbruik: 'Dag Verbruik', nachtVerbruik: 'Nacht Verbruik',
       hasSolar: 'Heeft de klant zonnepanelen?',
@@ -585,7 +585,7 @@ export default function App() {
       addressHint: 'Astuce : Tapez "5A" pour une extension. Pour une boîte, utilisez "5/A", "5/1" ou "5/001".',
       sameAddress: 'L\'adresse de connexion est-elle identique à l\'adresse de facturation ?',
       jaSimple: 'Oui', neeSimple: 'Non', inAanvraag: 'En demande', saveOrder: 'Enregistrer',
-      meterType: 'Type de Compteur', enkelvoudig: 'Simple', tweevoudig: 'Bihoraire (Jour/Nuit)',
+      meterType: 'Type de Compteur', enkelvoudig: 'Simple', tweevoudig: 'Bihoraire',
       verbruikTotaal: 'Consommation Totale', verdelingVerbruik: 'Répartition de la Consommation',
       dagVerbruik: 'Consommation Jour', nachtVerbruik: 'Consommation Nuit',
       hasSolar: 'Le client a-t-il des panneaux solaires ?',
@@ -1278,19 +1278,21 @@ export default function App() {
                         </>
                       )}
 
+                      {/* Vaste Vergoeding Toggle - Top Center */}
                       {!outcomes.every(o => o.showCoachMessage) && (
-                        <div className="bg-slate-50/50 rounded-2xl border border-slate-100 p-4 space-y-3 max-w-sm mx-auto mb-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{lang === 'NL' ? 'Vaste vergoeding?' : 'Frais fixes?'}</span>
-                            <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-10 h-6 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-4' : ''}`} />
-                            </button>
-                          </div>
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-10 bg-white/80 backdrop-blur border-b border-x border-slate-200 rounded-b-2xl px-4 flex items-center justify-center gap-3 z-40 shadow-sm">
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{lang === 'NL' ? 'Vaste vergoeding?' : 'Frais fixes?'}</span>
+                          <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-8 h-5 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-3' : ''}`} />
+                          </button>
+                        </div>
+                      )}
 
-                          <AnimatePresence>
-                            {includeFixedFeeSavings && (
-                              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-                                <div className="space-y-2 pt-2">
+                      {!outcomes.every(o => o.showCoachMessage) && (
+                        <div className={`expand-wrapper ${includeFixedFeeSavings ? 'open' : ''} mt-2 w-full max-w-sm mx-auto`}>
+                          <div className="expand-inner">
+                            <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-4 mb-4">
+                                <div className="space-y-3">
                                   {getRequiredTypes().map(etype => {
                                     const isElec = etype === 'ELEC';
                                     const currentFee = isElec ? elecCurrentFixedFee : gasCurrentFixedFee;
@@ -1300,28 +1302,28 @@ export default function App() {
                                     const enecoSaving = currentFee - enecoFee;
                                     const elindusSaving = currentFee - elindusFee;
                                     return (
-                                      <div key={etype} className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
+                                      <div key={etype} className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
                                         <div className="flex items-center gap-2">
-                                          {isElec ? <Zap className="w-3.5 h-3.5 text-[#E5394C]" /> : <Flame className="w-3.5 h-3.5 text-[#E5394C]" />}
-                                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{isElec ? text.elec : text.gas}</span>
+                                          {isElec ? <Zap className="w-4 h-4 text-[#E5394C]" /> : <Flame className="w-4 h-4 text-[#E5394C]" />}
+                                          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{isElec ? text.elec : text.gas}</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                          <label className="text-[10px] text-slate-400 font-bold whitespace-nowrap">{lang === 'NL' ? 'Huidig:' : 'Actuel:'}</label>
+                                        <div className="flex items-center gap-3">
+                                          <label className="text-xs text-slate-400 font-bold whitespace-nowrap">{lang === 'NL' ? 'Huidig:' : 'Actuel:'}</label>
                                           <div className="relative flex-1">
-                                            <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400 font-bold text-xs">€</span>
-                                            <input type="number" step="5" value={currentFee === 0 ? '' : currentFee} onChange={(e) => setFee(e.target.value === '' ? 0 : Number(e.target.value))} className="w-full pl-6 pr-10 py-1.5 text-xs font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#E5394C]/20 focus:border-[#E5394C] outline-none text-slate-600" />
-                                            <span className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 text-[10px] font-bold">/{lang === 'NL' ? 'jaar' : 'an'}</span>
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold">€</span>
+                                            <input type="number" step="5" value={currentFee === 0 ? '' : currentFee} onChange={(e) => setFee(e.target.value === '' ? 0 : Number(e.target.value))} className="w-full pl-8 pr-14 py-2 text-sm font-bold bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[#E5394C]/20 focus:border-[#E5394C] outline-none text-slate-600" />
+                                            <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 text-xs font-bold">/{lang === 'NL' ? 'jaar' : 'an'}</span>
                                           </div>
                                         </div>
-                                        <div className="flex flex-wrap gap-1.5 pt-1">
-                                          <div className={`text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 ${enecoSaving > 0 ? 'bg-emerald-50 text-emerald-600' : enecoSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
-                                            <img src="./eneco-grey.png" alt="Eneco" className="h-3 object-contain opacity-60" />
-                                            €{enecoFee} → {enecoSaving > 0 ? `+€${enecoSaving}` : enecoSaving === 0 ? '=' : `-€${Math.abs(enecoSaving)}`}
+                                        <div className="flex flex-wrap gap-2">
+                                          <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${enecoSaving > 0 ? 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm' : enecoSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                            <img src="./eneco-grey.png" alt="Eneco" className={`h-3.5 object-contain ${enecoSaving > 0 ? 'opacity-100' : 'opacity-60'}`} />
+                                            <span className="text-slate-500">€{enecoFee}</span> <span className="text-[10px] text-slate-300">→</span> {enecoSaving > 0 ? <span className="font-black text-emerald-500 bg-emerald-100 px-1 py-0.5 rounded ml-0.5">+€{enecoSaving}</span> : enecoSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(enecoSaving)}`}
                                           </div>
                                           {customerType === 'SOHO' && (
-                                            <div className={`text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 ${elindusSaving > 0 ? 'bg-emerald-50 text-emerald-600' : elindusSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
-                                              <img src="./elindus-grey.png" alt="Elindus" className="h-3 object-contain opacity-60" />
-                                              €{elindusFee} → {elindusSaving > 0 ? `+€${elindusSaving}` : elindusSaving === 0 ? '=' : `-€${Math.abs(elindusSaving)}`}
+                                            <div className={`text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 ${elindusSaving > 0 ? 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm' : elindusSaving === 0 ? 'bg-slate-100 text-slate-400' : 'bg-rose-50 text-rose-500'}`}>
+                                              <img src="./elindus-grey.png" alt="Elindus" className={`h-3.5 object-contain ${elindusSaving > 0 ? 'opacity-100' : 'opacity-60'}`} />
+                                              <span className="text-slate-500">€{elindusFee}</span> <span className="text-[10px] text-slate-300">→</span> {elindusSaving > 0 ? <span className="font-black text-emerald-500 bg-emerald-100 px-1 py-0.5 rounded ml-0.5">+€{elindusSaving}</span> : elindusSaving === 0 ? (lang === 'NL' ? 'gelijk' : 'égal') : `-€${Math.abs(elindusSaving)}`}
                                             </div>
                                           )}
                                         </div>
@@ -1329,10 +1331,9 @@ export default function App() {
                                     );
                                   })}
                                 </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                              </div>
+                            </div>
+                          </div>
                       )}
 
                       {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, elindusSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
@@ -1406,8 +1407,8 @@ export default function App() {
 
                       {/* Vergelijking Slider — Alleen voor SOHO */}
                       {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
-                        <div className={`pt-6 pb-2 border-t border-slate-100 flex items-center relative transition-all duration-500 ease-in-out h-20 ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto justify-end gap-0' : 'w-[calc(50%-1.5rem)] ml-auto justify-start gap-0') : 'w-full justify-center gap-3 sm:gap-4'}`}>
-                          <div className={`bg-slate-100/50 rounded-2xl flex relative w-full shadow-inner border transition-all duration-500 ease-in-out ${globalCalcOpen ? 'max-w-0 p-0 m-0 opacity-0 overflow-hidden border-transparent flex-shrink-0' : 'max-w-sm p-1.5 border-slate-200/60 opacity-100 flex-shrink'}`}>
+                        <div className={`pt-6 pb-2 border-t border-slate-100 flex flex-col items-center relative transition-all duration-500 ease-in-out gap-4 ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto' : 'w-[calc(50%-1.5rem)] ml-auto') : 'w-full justify-center'}`}>
+                          <div className={`bg-slate-100/50 rounded-2xl flex relative w-full shadow-inner border transition-all duration-500 ease-in-out ${globalCalcOpen ? 'max-h-0 min-h-0 p-0 m-0 opacity-0 overflow-hidden border-transparent flex-shrink-0' : 'max-w-sm p-1.5 border-slate-200/60 opacity-100 flex-shrink'}`}>
                             <div
                               className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
                               style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
@@ -1426,16 +1427,16 @@ export default function App() {
                             </button>
                           </div>
                           
-                          <button onClick={() => setShowLinksModal(true)} className={`flex items-center justify-center h-[3.25rem] bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-[#E74B4D] hover:bg-slate-50 shadow-sm transition-all duration-500 flex-shrink-0 whitespace-nowrap overflow-hidden ${globalCalcOpen ? 'w-full' : 'w-14'}`}>
-                            <Info className="w-6 h-6 flex-shrink-0" />
-                            <span className={`font-bold transition-all duration-500 overflow-hidden ${globalCalcOpen ? 'max-w-[200px] opacity-100 pl-2' : 'max-w-0 opacity-0 pl-0'}`}>Handige Links</span>
+                          <button onClick={() => setShowLinksModal(true)} className={`flex items-center justify-center h-[3.25rem] bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-[#E74B4D] hover:bg-slate-50 shadow-sm transition-all duration-500 flex-shrink-0 w-full max-w-sm gap-2 font-bold`}>
+                            <Info className="w-5 h-5 flex-shrink-0" />
+                            Handige Portaal Links
                           </button>
                         </div>
                       )}
 
                       {/* Info Button for Particulier */}
                       {customerType === 'PARTICULIER' && !outcomes.every(o => o.showCoachMessage) && (
-                        <div className="pt-6 pb-2 border-t border-slate-100 flex items-center justify-center">
+                        <div className={`pt-6 pb-2 border-t border-slate-100 flex items-center relative transition-all duration-500 ease-in-out ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto justify-start' : 'w-[calc(50%-1.5rem)] ml-auto justify-end') : 'w-full justify-center'}`}>
                           <button onClick={() => setShowLinksModal(true)} className="flex items-center justify-center w-full max-w-sm gap-2 bg-white border border-slate-200 rounded-2xl h-[3.25rem] text-slate-500 font-bold hover:bg-slate-50 transition-all shadow-sm">
                             <Info className="w-5 h-5" />
                             Handige Portaal Links
@@ -1445,8 +1446,8 @@ export default function App() {
 
                       {/* Totale besparing + Commissie — hidden when all outcomes are coach messages */}
                       {!outcomes.every(o => o.showCoachMessage) && (
-                        <div className={`flex flex-col items-center gap-4 transition-all duration-500 ease-in-out relative ${customerType !== 'SOHO' ? 'pt-4 border-t border-slate-100' : 'pt-2'} ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto sm:items-start text-left' : 'w-[calc(50%-1.5rem)] ml-auto sm:items-end text-right') : 'w-full sm:items-end sm:flex-row justify-end'}`}>
-                          <div className={`transition-all duration-500 w-full sm:w-auto ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'text-left' : 'text-right') : 'text-center sm:text-right'}`}>
+                        <div className={`flex flex-col items-center gap-4 transition-all duration-500 ease-in-out relative ${customerType !== 'SOHO' ? 'pt-4 border-t border-slate-100' : 'pt-2'} ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto sm:items-center justify-center' : 'w-[calc(50%-1.5rem)] ml-auto sm:items-center justify-center') : 'w-full sm:items-center justify-center'}`}>
+                          <div className={`transition-all duration-500 w-full sm:w-auto text-center`}>
                             <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `${text.totaal} ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? text.besparingEnkel : text.meerkost}` : `${text.totaal} Eneco ${totalEnecoSavings > 0 ? text.besparingEnkel : text.meerkost}`}</span>
                             <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{Math.abs(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
                           </div>
@@ -1475,7 +1476,7 @@ export default function App() {
                               {text.detailCalculation}
                             </h3>
 
-                            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-4 custom-scrollbar">
                               {outcomes.map(o => {
                                 // For ENECO: show only if showEneco
                                 if (globalCalcOpen === 'ENECO' && !o.showEneco) return null;
@@ -1533,9 +1534,9 @@ export default function App() {
                               })}
                             </div>
 
-                            <div className={`mt-4 p-4 rounded-xl border ${globalCalcOpen === 'ENECO' ? (totalEnecoSavings > 0 ? 'border-emerald-200 text-emerald-600' : 'border-rose-200 text-rose-600') : (totalElindusSavings > 0 ? 'border-emerald-200 text-emerald-600' : 'border-rose-200 text-rose-600')} bg-white`}>
+                            <div className={`mt-0 pt-4 border-t border-slate-200 ${globalCalcOpen === 'ENECO' ? (totalEnecoSavings > 0 ? 'text-emerald-500' : 'text-rose-500') : (totalElindusSavings > 0 ? 'text-emerald-500' : 'text-rose-500')} bg-transparent`}>
                               <div className="flex flex-col gap-1 font-black">
-                                <span className="text-xs uppercase tracking-widest">{text.totaal} {(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings) > 0 ? text.besparingEnkel : text.meerkost}:</span>
+                                <span className="text-xs uppercase tracking-widest text-slate-400">{text.totaal} {(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings) > 0 ? text.besparingEnkel : text.meerkost}:</span>
                                 <span className="text-2xl">€{Math.abs(globalCalcOpen === 'ENECO' ? totalEnecoSavings : totalElindusSavings).toFixed(2)}</span>
                               </div>
                             </div>
