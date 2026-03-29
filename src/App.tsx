@@ -1302,7 +1302,7 @@ export default function App() {
                           </button>
 
                           {/* Elindus slide btn */}
-                          {customerType === 'SOHO' && (
+                          {customerType === 'SOHO' && hasAnyElindus && (
                             <button onClick={() => setGlobalCalcOpen(globalCalcOpen === 'ELINDUS' ? null : 'ELINDUS')} className="hidden md:flex absolute top-0 right-0 h-12 w-12 bg-white/80 backdrop-blur border-b border-l border-slate-200 rounded-bl-2xl items-center justify-center z-40 transition-all shadow-sm hover:bg-slate-50 text-slate-400 group cursor-pointer hover:w-14 hover:h-14 px-2">
                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 text-slate-300 absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity"><path d="m15 18-6-6 6-6" /></svg>
                               <img src="https://lksvpkoavcmlwfkonowc.supabase.co/storage/v1/object/public/images/logos/elindus-e.png" alt="Elindus" className="h-6 w-6 object-contain opacity-60 group-hover:opacity-100 transition-all grayscale opacity-50 group-hover:grayscale-0 flex-shrink-0" />
@@ -1438,8 +1438,8 @@ export default function App() {
                         </div>
                       ))}
 
-                      {/* Vergelijking Slider — Alleen voor SOHO */}
-                      {customerType === 'SOHO' && !outcomes.every(o => o.showCoachMessage) && (
+                      {/* Vergelijking Slider — Alleen voor SOHO als Elindus mogelijk is */}
+                      {customerType === 'SOHO' && hasAnyElindus && !outcomes.every(o => o.showCoachMessage) && (
                         <div className={`pt-6 pb-2 border-t border-slate-100 flex flex-col items-center relative transition-all duration-500 ease-in-out gap-4 ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto' : 'w-[calc(50%-1.5rem)] ml-auto') : 'w-full justify-center'}`}>
                           <div className={`bg-slate-100/50 rounded-2xl flex relative w-full shadow-inner border transition-all duration-500 ease-in-out ${globalCalcOpen ? 'max-h-0 min-h-0 p-0 m-0 opacity-0 overflow-hidden border-transparent flex-shrink-0' : 'max-w-sm p-1.5 border-slate-200/60 opacity-100 flex-shrink'}`}>
                             <div
@@ -1467,8 +1467,8 @@ export default function App() {
                         </div>
                       )}
 
-                      {/* Info Button for Particulier */}
-                      {customerType === 'PARTICULIER' && !outcomes.every(o => o.showCoachMessage) && (
+                      {/* Info Button for Particulier OR SOHO without Elindus */}
+                      {(customerType === 'PARTICULIER' || (customerType === 'SOHO' && !hasAnyElindus)) && !outcomes.every(o => o.showCoachMessage) && (
                         <div className={`pt-6 pb-2 border-t border-slate-100 flex items-center relative transition-all duration-500 ease-in-out ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto justify-start' : 'w-[calc(50%-1.5rem)] ml-auto justify-end') : 'w-full justify-center'}`}>
                           <button onClick={() => setShowLinksModal(true)} className="flex items-center justify-center w-full max-w-sm gap-2 bg-white border border-slate-200 rounded-2xl h-[3.25rem] text-slate-500 font-bold hover:bg-slate-50 transition-all shadow-sm">
                             <Info className="w-5 h-5" />
@@ -1481,8 +1481,8 @@ export default function App() {
                       {!outcomes.every(o => o.showCoachMessage) && (
                         <div className={`flex flex-col items-center gap-4 transition-all duration-500 ease-in-out relative ${customerType !== 'SOHO' ? 'pt-4 border-t border-slate-100' : 'pt-2'} ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto sm:items-center justify-center' : 'w-[calc(50%-1.5rem)] ml-auto sm:items-center justify-center') : 'w-full sm:items-center justify-center'}`}>
                           <div className={`transition-all duration-500 w-full sm:w-auto text-center`}>
-                            <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' ? `${text.totaal} ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? text.besparingEnkel : text.meerkost}` : `${text.totaal} Eneco ${totalEnecoSavings > 0 ? text.besparingEnkel : text.meerkost}`}</span>
-                            <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{Math.abs(customerType === 'SOHO' ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
+                            <span className="block text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">{customerType === 'SOHO' && hasAnyElindus ? `${text.totaal} ${comparisonView === 'ENECO' ? 'Eneco' : 'Elindus'} ${(comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) > 0 ? text.besparingEnkel : text.meerkost}` : `${text.totaal} Eneco ${totalEnecoSavings > 0 ? text.besparingEnkel : text.meerkost}`}</span>
+                            <span className={`text-[clamp(1.75rem,4vh,2.25rem)] font-black leading-none ${(customerType === 'SOHO' && hasAnyElindus ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>{(customerType === 'SOHO' && hasAnyElindus ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings) > 0 ? '+' : ''}€{Math.abs(customerType === 'SOHO' && hasAnyElindus ? (comparisonView === 'ENECO' ? totalEnecoSavings : totalElindusSavings) : totalEnecoSavings).toFixed(2)}</span>
                           </div>
                         </div>
                       )}
