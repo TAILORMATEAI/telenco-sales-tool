@@ -1426,36 +1426,30 @@ export default function App() {
                       {/* Vergelijking Slider — Alleen voor SOHO als Elindus mogelijk is */}
                       {customerType === 'SOHO' && hasAnyElindus && !outcomes.every(o => o.showCoachMessage) && (
                         <div className="w-full pt-6 border-t border-slate-100">
-                          <AnimatePresence>
-                            {!globalCalcOpen && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                                exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                                transition={{ duration: 0.3 }}
-                                className="w-full justify-center flex overflow-hidden mb-4"
+                          <motion.div
+                            animate={{ opacity: globalCalcOpen ? 0 : 1 }}
+                            transition={{ duration: 0.3 }}
+                            className={`w-full justify-center flex mb-4 ${globalCalcOpen ? 'pointer-events-none' : ''}`}
+                          >
+                            <div className={`bg-slate-100/50 rounded-2xl flex relative w-full max-w-sm shadow-inner border border-slate-200/60 p-1.5`}>
+                              <div
+                                className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
+                                style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
+                              />
+                              <button
+                                onClick={() => setComparisonView('ENECO')}
+                                className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center whitespace-nowrap min-w-[50%] ${comparisonView === 'ENECO' ? '' : 'hover:opacity-80'}`}
                               >
-                                <div className={`bg-slate-100/50 rounded-2xl flex relative w-full max-w-sm shadow-inner border border-slate-200/60 p-1.5`}>
-                                  <div
-                                    className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm border border-slate-200 transition-all duration-300 ease-out z-0"
-                                    style={{ left: comparisonView === 'ENECO' ? '6px' : 'calc(50%)' }}
-                                  />
-                                  <button
-                                    onClick={() => setComparisonView('ENECO')}
-                                    className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center whitespace-nowrap min-w-[50%] ${comparisonView === 'ENECO' ? '' : 'hover:opacity-80'}`}
-                                  >
-                                    <img src="./eneco-grey.png" alt="Eneco" className={`h-7 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
-                                  </button>
-                                  <button
-                                    onClick={() => setComparisonView('ELINDUS')}
-                                    className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center whitespace-nowrap min-w-[50%] ${comparisonView === 'ELINDUS' ? '' : 'hover:opacity-80'}`}
-                                  >
-                                    <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0 flex items-center' : 'opacity-40 grayscale'}`} />
-                                  </button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                                <img src="./eneco-grey.png" alt="Eneco" className={`h-7 object-contain transition-all ${comparisonView === 'ENECO' ? 'opacity-100 grayscale-0' : 'opacity-40 grayscale'}`} />
+                              </button>
+                              <button
+                                onClick={() => setComparisonView('ELINDUS')}
+                                className={`flex-1 py-3 z-10 transition-colors flex items-center justify-center whitespace-nowrap min-w-[50%] ${comparisonView === 'ELINDUS' ? '' : 'hover:opacity-80'}`}
+                              >
+                                <img src="./elindus-grey.png" alt="Elindus" className={`h-5 object-contain transition-all ${comparisonView === 'ELINDUS' ? 'opacity-100 grayscale-0 flex items-center' : 'opacity-40 grayscale'}`} />
+                              </button>
+                            </div>
+                          </motion.div>
 
                           <div className={`pb-2 flex flex-col items-center relative transition-all duration-500 ease-in-out gap-4 ${globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'w-[calc(50%-1.5rem)] mr-auto' : 'w-[calc(50%-1.5rem)] ml-auto') : 'w-full justify-center'}`}>
                             <button onClick={() => setShowLinksModal(true)} className={`flex items-center justify-center h-[3.25rem] bg-white border border-slate-200 rounded-2xl text-slate-500 hover:text-[#E74B4D] hover:bg-slate-50 shadow-sm transition-all duration-500 flex-shrink-0 w-full max-w-sm gap-2 font-bold`}>
