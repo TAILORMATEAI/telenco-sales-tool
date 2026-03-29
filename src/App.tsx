@@ -199,6 +199,7 @@ export default function App() {
   const billingStreetRef = React.useRef<HTMLInputElement>(null);
   const billingCityRef = React.useRef<HTMLInputElement>(null);
   const typedStreetRef = React.useRef('');
+  const typedBillingStreetRef = React.useRef('');
 
   const [showAdminSettings, setShowAdminSettings] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -295,7 +296,7 @@ export default function App() {
 
   const GOOGLE_API_KEY = (import.meta as any).env.VITE_GOOGLE_PLACES_API_KEY || '';
   
-  const handlePlace = (ac: any, setter: React.Dispatch<React.SetStateAction<any>>, isBilling: boolean = false) => {
+  const handlePlace = (ac: any, setter: React.Dispatch<React.SetStateAction<any>>, typedVal: string = '') => {
     const place = ac.getPlace();
     if (!place?.address_components) return;
     let street = '', number = '', postal = '', city = '', bus = '';
@@ -312,6 +313,10 @@ export default function App() {
       const parts = number.split('/');
       number = parts[0];
       if (!bus) bus = parts.slice(1).join('/');
+    }
+
+    if (!bus && typedVal.includes('/')) {
+      bus = typedVal.split('/').slice(1).join('/').trim();
     }
 
     setter(prev => ({ ...prev, street, houseNumber: number, busNumber: bus, postalCode: postal, city }));
@@ -361,7 +366,7 @@ export default function App() {
     if (streetRef.current && !streetRef.current.dataset.acInit) {
       const ac = new (window as any).google.maps.places.Autocomplete(streetRef.current, opts);
       streetRef.current.dataset.acInit = 'true';
-      ac.addListener('place_changed', () => handlePlace(ac, setConnectionAddress));
+      ac.addListener('place_changed', () => handlePlace(ac, setConnectionAddress, typedStreetRef.current));
     }
     if (cityRef.current && !cityRef.current.dataset.acInit) {
       const ac2 = new (window as any).google.maps.places.Autocomplete(cityRef.current, { types: ['(cities)'], componentRestrictions: { country: 'be' } });
@@ -379,7 +384,7 @@ export default function App() {
     if (!billingAddressSame && billingStreetRef.current && !billingStreetRef.current.dataset.acInit) {
       const ac3 = new (window as any).google.maps.places.Autocomplete(billingStreetRef.current, opts);
       billingStreetRef.current.dataset.acInit = 'true';
-      ac3.addListener('place_changed', () => handlePlace(ac3, setBillingAddress));
+      ac3.addListener('place_changed', () => handlePlace(ac3, setBillingAddress, typedBillingStreetRef.current));
     }
     if (!billingAddressSame && billingCityRef.current && !billingCityRef.current.dataset.acInit) {
       const ac4 = new (window as any).google.maps.places.Autocomplete(billingCityRef.current, { types: ['(cities)'], componentRestrictions: { country: 'be' } });
@@ -1590,7 +1595,7 @@ export default function App() {
                           billingAddressSame={billingAddressSame} setBillingAddressSame={setBillingAddressSame}
                           billingAddress={billingAddress} setBillingAddress={setBillingAddress}
                           streetRef={streetRef} cityRef={cityRef} billingStreetRef={billingStreetRef} billingCityRef={billingCityRef}
-                          typedStreetRef={typedStreetRef} typedBillingStreetRef={{current: ''}}
+                          typedStreetRef={typedStreetRef} typedBillingStreetRef={typedBillingStreetRef}
                           text={text}
                           customerType={customerType}
                         />
