@@ -308,6 +308,12 @@ export default function App() {
       if (comp.types.includes('subpremise') || comp.types.includes('room')) bus = comp.long_name;
     }
 
+    if (number.includes('/')) {
+      const parts = number.split('/');
+      number = parts[0];
+      if (!bus) bus = parts.slice(1).join('/');
+    }
+
     setter(prev => ({ ...prev, street, houseNumber: number, busNumber: bus, postalCode: postal, city }));
   };
 

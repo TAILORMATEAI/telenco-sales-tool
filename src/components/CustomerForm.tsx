@@ -217,6 +217,14 @@ export default function CustomerForm({
 
   const isVatValid = customerData.vatPending || (customerData.vatNumber.length === 12 && customerData.vatNumber.startsWith('BE'));
 
+  const handleHouseNrBlur = (setter: React.Dispatch<React.SetStateAction<AddressData>>) => (e: React.FocusEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val.includes('/')) {
+      const parts = val.split('/');
+      setter(prev => ({ ...prev, houseNumber: parts[0], busNumber: prev.busNumber || parts.slice(1).join('/') }));
+    }
+  };
+
   return (
     <div className="space-y-[clamp(1.25rem,3vh,2rem)]">
       {/* SECTION 1: Company (only SOHO) + Personal Info */}
@@ -314,7 +322,7 @@ export default function CustomerForm({
           </div>
           <div className="md:col-span-2">
             <label className={labelCls}>{text.houseNr} *</label>
-            <input type="text" autoComplete="nope" name="conn_house" className={inputCls} placeholder="5 of 5A" value={connectionAddress.houseNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
+            <input type="text" autoComplete="nope" name="conn_house" className={inputCls} placeholder="5 of 5A" value={connectionAddress.houseNumber} onChange={e => setConnectionAddress(prev => ({ ...prev, houseNumber: e.target.value }))} onBlur={handleHouseNrBlur(setConnectionAddress)} />
           </div>
           <div className="md:col-span-2">
             <label className={labelCls}>{text.bus}</label>
@@ -344,7 +352,7 @@ export default function CustomerForm({
               </div>
               <div className="md:col-span-2">
                 <label className={labelCls}>{text.houseNr} *</label>
-                <input type="text" autoComplete="nope" name="bill_house" className={inputCls} placeholder="5 of 5A" value={billingAddress.houseNumber} onChange={e => setBillingAddress(prev => ({ ...prev, houseNumber: e.target.value }))} />
+                <input type="text" autoComplete="nope" name="bill_house" className={inputCls} placeholder="5 of 5A" value={billingAddress.houseNumber} onChange={e => setBillingAddress(prev => ({ ...prev, houseNumber: e.target.value }))} onBlur={handleHouseNrBlur(setBillingAddress)} />
               </div>
               <div className="md:col-span-2">
                 <label className={labelCls}>{text.bus}</label>
