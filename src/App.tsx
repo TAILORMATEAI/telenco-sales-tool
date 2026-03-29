@@ -1182,7 +1182,7 @@ export default function App() {
                         const isSelected = customerType === type;
                         const label = type === 'PARTICULIER' ? text.particulier : text.soho;
                         return (
-                          <button key={type} onClick={() => { setCustomerType(type); setEnergyType(null); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                          <button key={type} onClick={() => { setCustomerType(type); setEnergyType(null); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-eneco-gradient border-transparent text-white shadow-[#E5394C]/20 shadow-lg' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-[clamp(1.5rem,4vh,2.5rem)] w-[clamp(1.5rem,4vh,2.5rem)]">
                               {type === 'PARTICULIER' ? (
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -1213,7 +1213,7 @@ export default function App() {
                                 } else {
                                   setHasSolarPanels(null);
                                 }
-                              }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-[#E5394C]/5 border-[#E5394C] text-[#E5394C]' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                              }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-eneco-gradient border-transparent text-white shadow-[#E5394C]/20 shadow-lg' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
                                 <Icon className={`h-[clamp(1.5rem,4vh,2.5rem)] ${type === 'BOTH' ? 'w-auto' : 'w-[clamp(1.5rem,4vh,2.5rem)]'}`} />
                                 <span className="font-bold text-[clamp(14px,1.8vh,1.125rem)]">{label}</span>
                               </button>
