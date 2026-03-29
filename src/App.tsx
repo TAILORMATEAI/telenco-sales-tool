@@ -663,7 +663,15 @@ export default function App() {
   const outcomes = getRequiredTypes().map(calculateTypeOutcome);
 
   const totalEnecoSavings = outcomes.reduce((sum, o) => sum + (o.showEneco ? o.enecoSavingsTotal : 0), 0);
-  const totalElindusSavings = outcomes.reduce((sum, o) => sum + (o.showElindus ? o.elindusSavingsTotal : 0), 0);
+  // For Elindus total: include Elindus savings for types where showElindus=true,
+  // PLUS Eneco savings for types where showElindus=false but showEneco=true
+  // (e.g. gas <25 MWh gets Eneco pricing, but should still count toward Elindus package total)
+  const hasAnyElindus = outcomes.some(o => o.showElindus);
+  const totalElindusSavings = outcomes.reduce((sum, o) => {
+    if (o.showElindus) return sum + o.elindusSavingsTotal;
+    if (hasAnyElindus && o.showEneco) return sum + o.enecoSavingsTotal;
+    return sum;
+  }, 0);
 
   // Commission calculation based on the new formula
   const commissionElecPrice = ((marketData?.epexSpot || 0) * (hasSolarPanels ? (marketData?.injMultiplier ?? 0.9) : (marketData?.elecMultiplier ?? 1.1))) + (hasSolarPanels ? (marketData?.injAdder ?? 15) : (marketData?.elecAdder ?? 18));
@@ -725,29 +733,32 @@ export default function App() {
 
 
   const [isTranslating, setIsTranslating] = useState(false);
+  const isTranslatingRef = React.useRef(false);
 
   // For Particulier: steps are 1(type),2(energy),3(consumption),4(price),5(comparison) — skip margin
   // For SOHO: steps are 1(type),2(energy),3(consumption),4(price),5(margin),6(comparison)
   const nextStep = () => {
-    if (isTranslating) return;
+    if (isTranslatingRef.current) return;
     if (!validateStep()) return;
     if (currentStep < totalSteps) {
+      isTranslatingRef.current = true;
       setIsTranslating(true);
       setDirection(1);
       setCurrentStep(prev => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setIsTranslating(false), 800);
+      setTimeout(() => { isTranslatingRef.current = false; setIsTranslating(false); }, 800);
     }
   };
 
   const prevStep = () => {
-    if (isTranslating) return;
+    if (isTranslatingRef.current) return;
     if (currentStep > 1) {
+      isTranslatingRef.current = true;
       setIsTranslating(true);
       setDirection(-1);
       setCurrentStep(prev => prev - 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => setIsTranslating(false), 800);
+      setTimeout(() => { isTranslatingRef.current = false; setIsTranslating(false); }, 800);
     }
   };
 
@@ -1184,8 +1195,8 @@ export default function App() {
                         <div className="bg-white mt-4 rounded-[clamp(1.25rem,3vh,2.5rem)] p-[clamp(1rem,2vh,1.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col items-center">
                           <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">Heeft de klant zonnepanelen?</label>
                           <div className="flex justify-center w-full gap-[clamp(0.75rem,1.5vh,1rem)] sm:max-w-md mx-auto">
-                            <button disabled={isTranslating} onClick={() => { setHasSolarPanels(true); setIsTranslating(true); setTimeout(() => nextStep(), 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === true ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.yes}</button>
-                            <button disabled={isTranslating} onClick={() => { setHasSolarPanels(false); setIsTranslating(true); setTimeout(() => nextStep(), 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === false ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.no}</button>
+                            <button disabled={isTranslating} onClick={() => { setHasSolarPanels(true); isTranslatingRef.current = true; setIsTranslating(true); setTimeout(() => nextStep(), 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === true ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.yes}</button>
+                            <button disabled={isTranslating} onClick={() => { setHasSolarPanels(false); isTranslatingRef.current = true; setIsTranslating(true); setTimeout(() => nextStep(), 300); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${hasSolarPanels === false ? 'bg-eneco-gradient text-white shadow-[#E5394C]/20 shadow-lg' : 'bg-slate-50 text-slate-400 border border-slate-200 hover:bg-slate-100 hover:text-slate-600'} disabled:pointer-events-none`}>{text.no}</button>
                           </div>
                         </div>
                       </div>
