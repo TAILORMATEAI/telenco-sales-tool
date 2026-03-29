@@ -146,6 +146,8 @@ export default function App() {
   const [elecCurrentPriceDagMWh, setElecCurrentPriceDagMWh] = useState<number>(130);
   const [elecCurrentPriceNachtMWh, setElecCurrentPriceNachtMWh] = useState<number>(110);
   const [elecEnecoOfferPriceMWh, setElecEnecoOfferPriceMWh] = useState<number>(85); // Note: Offer calculation will be split
+  const [elecEnecoOfferPriceDagMWh, setElecEnecoOfferPriceDagMWh] = useState<number>(0);
+  const [elecEnecoOfferPriceNachtMWh, setElecEnecoOfferPriceNachtMWh] = useState<number>(0);
   const [elecTariff, setElecTariff] = useState<'VAST' | 'VARIABEL'>('VARIABEL');
 
   // Gas State
@@ -425,6 +427,9 @@ export default function App() {
           nachtPrice = isSoho ? (marketData.enecoSohoElecNachtVar || 0) : (marketData.enecoResElecNachtVar || 0);
         }
         
+        setElecEnecoOfferPriceDagMWh(dagPrice);
+        setElecEnecoOfferPriceNachtMWh(nachtPrice);
+
         return ((dagPrice * elecDagMWh) + (nachtPrice * elecNachtMWh)) / total;
       }
 
@@ -714,6 +719,8 @@ export default function App() {
       cons,
       currPrice,
       enecoPrice,
+      enecoPriceDag: type === 'ELEC' ? elecEnecoOfferPriceDagMWh : 0,
+      enecoPriceNacht: type === 'ELEC' ? elecEnecoOfferPriceNachtMWh : 0,
       enecoSavingsPercentage,
       enecoSavingsTotal: (enecoSavingsVal * cons) + (includeFixedFeeSavings ? enecoFixedFeeSaving : 0),
       elindusEsimatedPrice: elinEstimatedPrice,
@@ -1542,8 +1549,22 @@ export default function App() {
                                       )}
 
                                       <div className="flex flex-col gap-1 border-t border-slate-100 pt-2">
-                                        <div className="flex justify-between text-slate-500 font-bold"><span>{displayProvider} Voorstel:</span><span className="font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm px-1.5 py-0.5 rounded text-xs">€{(((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-400 text-xs">{text.kosten} ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{newPrice.toFixed(2)}</span></div>
+                                        {o.type === 'ELEC' && elecMeterType === 'TWEEVOUDIG' && (globalCalcOpen === 'ENECO' || useEnecoForThis) ? (
+                                          <>
+                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{displayProvider} (Tweevoudig)</div>
+                                            <div className="flex justify-between text-slate-400"><span>{text.dagTarief}:</span><span className="font-medium bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-xs">€{(showInMWh ? o.enecoPriceDag : o.enecoPriceDag / 1000).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                            <div className="flex justify-between text-slate-400 text-xs"><span>{text.dag} ({showInMWh ? elecDagMWh.toFixed(1) : Math.round(elecDagMWh * 1000)} {showInMWh ? 'MWh' : 'kWh'}):</span><span className="font-bold text-slate-500">€{(o.enecoPriceDag * elecDagMWh).toFixed(2)}</span></div>
+                                            <div className="flex justify-between text-slate-400 mt-1"><span>{text.nachtTarief}:</span><span className="font-medium bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-xs">€{(showInMWh ? o.enecoPriceNacht : o.enecoPriceNacht / 1000).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                            <div className="flex justify-between text-slate-400 text-xs"><span>{text.nacht} ({showInMWh ? elecNachtMWh.toFixed(1) : Math.round(elecNachtMWh * 1000)} {showInMWh ? 'MWh' : 'kWh'}):</span><span className="font-bold text-slate-500">€{(o.enecoPriceNacht * elecNachtMWh).toFixed(2)}</span></div>
+                                            <div className="flex justify-between border-t border-slate-100 pt-1 mt-1"><span className="text-slate-400 text-xs">{text.gewogenGem}:</span><span className="font-medium bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-xs">€{(((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                            <div className="flex justify-between"><span className="text-slate-400 text-xs">{text.kosten} ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{newPrice.toFixed(2)}</span></div>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <div className="flex justify-between text-slate-500 font-bold"><span>{displayProvider} Voorstel:</span><span className="font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm px-1.5 py-0.5 rounded text-xs">€{(((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                            <div className="flex justify-between"><span className="text-slate-400 text-xs">{text.kosten} ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{newPrice.toFixed(2)}</span></div>
+                                          </>
+                                        )}
                                       </div>
 
                                       {includeFixedFeeSavings && (
