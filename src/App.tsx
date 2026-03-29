@@ -1300,13 +1300,13 @@ export default function App() {
                           <div className="expand-inner">
                             <div className="bg-slate-50 rounded-2xl border border-slate-100 p-5 space-y-4 mb-4">
                                 <div className="flex items-center gap-2 sm:gap-4 mb-4">
-                                  <div className="flex-1 flex justify-end">
+                                  <div className="flex-1 flex justify-center">
                                     <img src="./eneco-grey.png" alt="Eneco" className="h-5 sm:h-6 object-contain opacity-80" />
                                   </div>
                                   <div className="w-[100px] sm:w-[140px] shrink-0 text-center">
                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{lang === 'NL' ? 'Huidig' : 'Actuel'}</span>
                                   </div>
-                                  <div className="flex-1 flex justify-start">
+                                  <div className="flex-1 flex justify-center">
                                     {customerType === 'SOHO' && hasAnyElindus && <img src="./elindus-grey.png" alt="Elindus" className="h-5 sm:h-6 object-contain opacity-80" />}
                                   </div>
                                 </div>
@@ -1322,7 +1322,7 @@ export default function App() {
                                     return (
                                       <div key={etype} className="flex items-center gap-2 sm:gap-4 relative">
                                         {/* Eneco Left */}
-                                        <div className="flex-1 flex justify-end">
+                                        <div className="flex-1 flex justify-center">
                                           <div className="text-xs font-bold px-2 sm:px-3 py-2 rounded-lg flex items-center justify-between gap-1.5 bg-white border border-slate-200 text-slate-600 shadow-sm w-full max-w-[160px]">
                                             <div className="flex items-center gap-1.5 w-full justify-between">
                                               <span className="text-slate-500">€{enecoFee}</span> <span className="text-[10px] text-slate-300 hidden sm:inline">→</span> {enecoSaving > 0 ? <span className="font-black text-emerald-500 bg-emerald-100/50 px-1.5 py-0.5 rounded ml-0.5">+€{enecoSaving}</span> : enecoSaving === 0 ? <span className="text-slate-400">{lang === 'NL' ? 'gelijk' : 'égal'}</span> : <span className="font-black text-rose-500 bg-rose-100/50 px-1.5 py-0.5 rounded ml-0.5">-€{Math.abs(enecoSaving)}</span>}
@@ -1343,7 +1343,7 @@ export default function App() {
                                         </div>
 
                                         {/* Elindus Right */}
-                                        <div className="flex-1 flex justify-start">
+                                        <div className="flex-1 flex justify-center">
                                           {customerType === 'SOHO' && hasAnyElindus && (
                                             <div className="text-xs font-bold px-2 sm:px-3 py-2 rounded-lg flex items-center justify-between gap-1.5 bg-white border border-slate-200 text-slate-600 shadow-sm w-full max-w-[160px]">
                                               <div className="flex items-center gap-1.5 w-full justify-between">
