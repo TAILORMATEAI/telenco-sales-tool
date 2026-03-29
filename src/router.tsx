@@ -7,6 +7,8 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import HomePage from './pages/HomePage';
 import AdminDashboard from './pages/AdminDashboard';
 import TelenetWizard from './pages/TelenetWizard';
+import TopVerkopers from './pages/TopVerkopers';
+import RecenteActiviteit from './pages/RecenteActiviteit';
 import App from './App';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -81,6 +83,8 @@ export default function AppRouter() {
             <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/calculator" element={<ProtectedRoute><App /></ProtectedRoute>} />
             <Route path="/telenet" element={<ProtectedRoute><TelenetWizard /></ProtectedRoute>} />
+            <Route path="/top-verkopers" element={<ProtectedRoute><TopVerkopers /></ProtectedRoute>} />
+            <Route path="/activiteiten" element={<ProtectedRoute><RecenteActiviteit /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

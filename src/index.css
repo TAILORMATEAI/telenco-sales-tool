@@ -203,3 +203,6 @@ input:-webkit-autofill:active {
 .expand-wrapper > .expand-inner {
   overflow: hidden;
 }
+.expand-wrapper.open > .expand-inner {
+  overflow: visible;
+}

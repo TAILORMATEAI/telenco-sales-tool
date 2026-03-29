@@ -220,12 +220,20 @@ export default function AdminDashboard() {
 
   const fetchLogs = async () => {
     setLogsLoading(true);
-    const { data, error } = await supabase
+    const { data: lData, error } = await supabase
       .from('activity_logs')
-      .select('*, profiles(first_name, last_name)')
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(100);
-    if (!error && data) setLogs(data);
+    if (!error && lData) {
+      const uids = Array.from(new Set(lData.map(l => l.user_id).filter(Boolean)));
+      const { data: pData } = await supabase.from('profiles').select('id, first_name, last_name, avatar_id').in('id', uids);
+      const logsWithProfiles = lData.map(l => ({
+        ...l,
+        profiles: pData?.find(p => p.id === l.user_id) || null
+      }));
+      setLogs(logsWithProfiles);
+    }
     setLogsLoading(false);
   };
 
@@ -286,8 +294,16 @@ export default function AdminDashboard() {
 
   const fetchOrders = async () => {
     setOrdersLoading(true);
-    const { data, error } = await supabase.from('energy_orders').select('*').order('created_at', { ascending: false }).limit(100);
-    if (!error && data) setOrders(data);
+    const { data: oData, error } = await supabase.from('energy_orders').select('*').order('created_at', { ascending: false }).limit(100);
+    if (!error && oData) {
+      const uids = Array.from(new Set(oData.map(o => o.user_id).filter(Boolean)));
+      const { data: pData } = await supabase.from('profiles').select('id, first_name, last_name, avatar_id').in('id', uids);
+      const ordersWithProfiles = oData.map(o => ({
+        ...o,
+        profiles: pData?.find(p => p.id === o.user_id) || null
+      }));
+      setOrders(ordersWithProfiles);
+    }
     setOrdersLoading(false);
   };
 
@@ -910,7 +926,7 @@ export default function AdminDashboard() {
                   <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Vaste Vergoedingen</h3>
                   <p className="text-xs text-slate-400 mb-5">Vaste jaarlijkse kost (in €, per jaar) afhankelijk van het type verbruik.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                    {[{ key: 'elindusVvElec', label: 'Elektriciteit', icon: 'elec', color: 'bg-amber-500', focusRing: 'focus:ring-amber-500/50', hoverShadow: 'hover:shadow-amber-500/20 hover:shadow-lg' }, { key: 'elindusVvGas', label: 'Aardgas', icon: 'gas', color: 'bg-rose-500', focusRing: 'focus:ring-rose-500/50', hoverShadow: 'hover:shadow-rose-500/20 hover:shadow-lg' }, { key: 'elindusVvInj', label: 'Injectie (Zonnepanelen)', icon: 'inj', color: 'bg-emerald-500', focusRing: 'focus:ring-emerald-500/50', hoverShadow: 'hover:shadow-emerald-500/20 hover:shadow-lg' }].map(f => (
+                    {[{ key: 'elindusVvElec', label: 'Elektriciteit', icon: 'elec', color: 'bg-amber-500', focusRing: 'focus:ring-amber-500/50', hoverShadow: 'hover:shadow-md' }, { key: 'elindusVvGas', label: 'Aardgas', icon: 'gas', color: 'bg-rose-500', focusRing: 'focus:ring-rose-500/50', hoverShadow: 'hover:shadow-md' }, { key: 'elindusVvInj', label: 'Injectie (Zonnepanelen)', icon: 'inj', color: 'bg-emerald-500', focusRing: 'focus:ring-emerald-500/50', hoverShadow: 'hover:shadow-md' }].map(f => (
                       <div key={f.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${f.hoverShadow}`}>
                         <div className="flex items-center gap-3 mb-4">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color} shadow-sm`}>
@@ -1020,7 +1036,7 @@ export default function AdminDashboard() {
                           <p className="text-xs font-bold text-slate-400 mb-2 pl-1">{sub.subLabel}</p>
                           <div className={`grid gap-3 sm:gap-4 ${sub.fields.length <= 2 ? 'grid-cols-2' : 'grid-cols-2 xl:grid-cols-4'}`}>
                             {sub.fields.map(field => (
-                              <div key={field.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${field.icon === 'elec' ? 'hover:shadow-amber-500/20 hover:shadow-lg' : 'hover:shadow-rose-500/20 hover:shadow-lg'}`}>
+                              <div key={field.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all hover:shadow-md`}>
                                 <div className="flex items-center gap-3 mb-4">
                                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${field.icon === 'elec' ? 'bg-amber-500' : 'bg-rose-500'} shadow-sm`}>
                                     {field.icon === 'elec' ? <Zap className="w-4 h-4 text-white" /> : <Flame className="w-4 h-4 text-white" />}
@@ -1069,7 +1085,7 @@ export default function AdminDashboard() {
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{g.group}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         {g.fields.map(f => (
-                          <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm hover:shadow-emerald-500/20 hover:shadow-lg transition-all">
+                          <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-center gap-3 mb-4">
                               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-emerald-500 shadow-sm">
                                 <Zap className="w-4 h-4 text-white" />
@@ -1094,7 +1110,7 @@ export default function AdminDashboard() {
                     <div key={g.group} className="mb-6">
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{g.group}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {[{ key: `eneco${g.type}VvElec`, label: 'Elektriciteit', color: 'bg-amber-500', focusRing: 'focus:ring-amber-500/50', hoverShadow: 'hover:shadow-amber-500/20 hover:shadow-lg' }, { key: `eneco${g.type}VvGas`, label: 'Aardgas', color: 'bg-rose-500', focusRing: 'focus:ring-rose-500/50', hoverShadow: 'hover:shadow-rose-500/20 hover:shadow-lg' }, { key: `eneco${g.type}VvInj`, label: 'Injectie', color: 'bg-emerald-500', focusRing: 'focus:ring-emerald-500/50', hoverShadow: 'hover:shadow-emerald-500/20 hover:shadow-lg' }].map(f => (
+                        {[{ key: `eneco${g.type}VvElec`, label: 'Elektriciteit', color: 'bg-amber-500', focusRing: 'focus:ring-amber-500/50', hoverShadow: 'hover:shadow-md' }, { key: `eneco${g.type}VvGas`, label: 'Aardgas', color: 'bg-rose-500', focusRing: 'focus:ring-rose-500/50', hoverShadow: 'hover:shadow-md' }, { key: `eneco${g.type}VvInj`, label: 'Injectie', color: 'bg-emerald-500', focusRing: 'focus:ring-emerald-500/50', hoverShadow: 'hover:shadow-md' }].map(f => (
                           <div key={f.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${f.hoverShadow}`}>
                             <div className="flex items-center gap-3 mb-4">
                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color} shadow-sm`}>
@@ -1144,8 +1160,15 @@ export default function AdminDashboard() {
                         <div key={order.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
                           <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left cursor-pointer">
                             <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${order.energy_type === 'ELEC' ? 'bg-blue-500' : order.energy_type === 'GAS' ? 'bg-blue-400' : 'bg-blue-600'} shadow-sm`}>
-                                <FileTextIcon className="w-5 h-5 text-white" />
+                              <div className="w-10 h-10 rounded-full border border-slate-200 shadow-sm overflow-hidden shrink-0 bg-slate-100 relative">
+                                {order.profiles?.avatar_id ? (
+                                  <img src={order.profiles.avatar_id} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className={`w-full h-full flex items-center justify-center text-white font-bold text-sm uppercase ${order.energy_type === 'ELEC' ? 'bg-blue-500' : order.energy_type === 'GAS' ? 'bg-blue-400' : 'bg-blue-600'}`}>
+                                    {(order.profiles?.first_name || order.user_email || '?').charAt(0)}
+                                  </div>
+                                )}
+                                <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border border-white ${order.energy_type === 'ELEC' ? 'bg-amber-400' : order.energy_type === 'GAS' ? 'bg-rose-400' : 'bg-emerald-400'}`} title={order.energy_type} />
                               </div>
                               <div>
                                 <p className="font-black text-slate-600">{order.first_name} {order.last_name}</p>
@@ -1250,10 +1273,11 @@ export default function AdminDashboard() {
                               <tr key={log.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
                                 <td className="px-6 py-4 text-sm font-medium text-slate-500">{name}</td>
                                 <td className="px-6 py-4">
-                                  <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-bold ${log.action === 'CALCULATION' ? 'bg-blue-50 text-blue-600' :
+                                  <span className={`inline-flex px-2.5 py-1 rounded-lg text-xs font-bold ${log.action === 'ORDER_CREATED' || log.action === 'ENERGY_ORDER' ? 'bg-gradient-to-r from-[#E5394C] to-[#c73a3c] text-white shadow-sm' :
+                                    log.action === 'CALCULATION' ? 'bg-slate-100 text-blue-600' :
                                     log.action === 'LOGIN' ? 'bg-emerald-50 text-emerald-600' :
                                       'bg-slate-50 text-slate-500'
-                                    }`}>{log.action}</span>
+                                    }`}>{log.action === 'ORDER_CREATED' || log.action === 'ENERGY_ORDER' ? 'BON OPGESLAGEN' : log.action === 'CALCULATION' ? 'BEREKENING' : log.action}</span>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-slate-500">{log.energy_type || '-'}</td>
                                 <td className="px-6 py-4 text-sm font-bold text-slate-500">{log.consumption_mwh ? `${log.consumption_mwh} MWh` : '-'}</td>

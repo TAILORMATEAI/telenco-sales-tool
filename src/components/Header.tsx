@@ -35,7 +35,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
   }, []);
 
   const isTelenet = location.pathname.includes('telenet');
-  const isHome = location.pathname.includes('home') || location.pathname === '/';
+  const isDashboardPage = location.pathname === '/' || location.pathname.includes('top-verkopers') || location.pathname.includes('activiteiten');
   const themeBgClass = isTelenet ? 'bg-[#FFC421]' : 'bg-eneco-gradient';
 
   const getDisplayName = () => {
@@ -77,8 +77,8 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
         <img
           src="https://odqxwaggjgrjpeeqcznk.supabase.co/storage/v1/object/public/images/logos/telencologo.png"
           alt="Telenco Logo"
-          className={`h-[clamp(1.25rem,6vw,2.25rem)] 2xl:h-[clamp(2.25rem,1.5vw,4rem)] object-contain transition-all cursor-pointer ${isHome ? 'opacity-40 hover:opacity-75' : 'opacity-90 hover:opacity-100'}`}
-          style={isHome ? { filter: 'grayscale(1) brightness(0)' } : { filter: 'brightness(0) invert(1)' }}
+          className={`h-[clamp(1.25rem,6vw,2.25rem)] 2xl:h-[clamp(2.25rem,1.5vw,4rem)] object-contain transition-all cursor-pointer ${isDashboardPage ? 'opacity-40 hover:opacity-75' : 'opacity-90 hover:opacity-100'}`}
+          style={isDashboardPage ? { filter: 'grayscale(1) brightness(0)' } : { filter: 'brightness(0) invert(1)' }}
           onClick={() => navigate('/')}
         />
       </div>
@@ -90,7 +90,7 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
             <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className={`group flex items-center gap-1 2xl:gap-2 p-[2px] 2xl:p-1 pr-2.5 sm:pr-3 2xl:pr-5 bg-white ${isHome ? 'border border-slate-200 shadow-sm hover:bg-slate-50' : 'border border-white/80'} rounded-full hover:shadow-md cursor-pointer transition-all`}
+                className={`group flex items-center gap-1 2xl:gap-2 p-[2px] 2xl:p-1 pr-2.5 sm:pr-3 2xl:pr-5 bg-white ${isDashboardPage ? 'border border-slate-200 shadow-sm hover:bg-slate-50' : 'border border-white/80'} rounded-full hover:shadow-md cursor-pointer transition-all`}
               >
                 <div className={`w-[clamp(1.25rem,5vw,1.625rem)] h-[clamp(1.25rem,5vw,1.625rem)] 2xl:w-[clamp(2rem,1.2vw,3rem)] 2xl:h-[clamp(2rem,1.2vw,3rem)] rounded-full overflow-hidden shrink-0 ${themeBgClass} flex items-center justify-center`} >
                   {profile?.avatar_id ? (
@@ -133,13 +133,13 @@ export default function Header({ hideProfileMenuContext = false, actionButton }:
                     </div>
 
                     <button
-                      onClick={() => { setIsProfileMenuOpen(false); /* open modal */ }}
+                      onClick={() => { setIsProfileMenuOpen(false); navigate('/activiteiten'); }}
                       className="flex items-center gap-[clamp(0.5rem,1vh,0.75rem)] px-[clamp(0.75rem,2vh,1rem)] py-[clamp(0.5rem,1.5vh,0.75rem)] text-[clamp(12px,1.5vh,14px)] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-500 transition-colors text-left w-full"
                     >
                       <ClockIcon className="w-[clamp(14px,1.5vh,16px)] h-[clamp(14px,1.5vh,16px)] text-slate-400" /> Recente activiteit
                     </button>
                     <button
-                      onClick={() => { setIsProfileMenuOpen(false); navigate('/top-sellers'); }}
+                      onClick={() => { setIsProfileMenuOpen(false); navigate('/top-verkopers'); }}
                       className="flex items-center gap-[clamp(0.5rem,1vh,0.75rem)] px-[clamp(0.75rem,2vh,1rem)] py-[clamp(0.5rem,1.5vh,0.75rem)] text-[clamp(12px,1.5vh,14px)] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-500 transition-colors text-left w-full"
                     >
                       <TrophyIcon className="w-[clamp(14px,1.5vh,16px)] h-[clamp(14px,1.5vh,16px)] text-slate-400" /> Top Verkopers
