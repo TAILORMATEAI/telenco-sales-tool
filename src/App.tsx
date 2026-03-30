@@ -755,6 +755,13 @@ export default function App() {
     return sum;
   }, 0);
 
+  // Auto-select cheapest provider for comparison view
+  useEffect(() => {
+    if (customerType === 'SOHO' && hasAnyElindus && hasAnyEneco && !forceElindus) {
+      setComparisonView(totalElindusSavings >= totalEnecoSavings ? 'ELINDUS' : 'ENECO');
+    }
+  }, [totalEnecoSavings, totalElindusSavings, hasAnyElindus, hasAnyEneco, customerType, forceElindus]);
+
   // Commission calculation based on the new formula
   const commissionElecPrice = ((marketData?.epexSpot || 0) * (hasSolarPanels ? (marketData?.injMultiplier ?? 0.9) : (marketData?.elecMultiplier ?? 1.1))) + (hasSolarPanels ? (marketData?.injAdder ?? 15) : (marketData?.elecAdder ?? 18));
   const commissionGasPrice = ((marketData?.ttfDam || 0) * (marketData?.gasMultiplier ?? 1.05)) + (marketData?.gasAdder ?? 14);
@@ -1355,9 +1362,9 @@ export default function App() {
 
                           {/* Rechtsonder Hoek (Enkel Portaal links) */}
                           {!outcomes.every(o => o.showCoachMessage) && (
-                            <button onClick={() => setShowLinksModal(true)} className={`hidden md:flex absolute -bottom-[1px] -right-[1px] h-[calc(3.5rem+1px)] bg-white/90 backdrop-blur border-t border-l border-slate-200 rounded-tl-2xl items-center justify-center z-40 transition-all shadow-sm hover:bg-slate-50 text-slate-400 group cursor-pointer px-4 pt-3 pb-[calc(0.75rem+2px)] pr-[calc(1rem+2px)] gap-2 ${globalCalcOpen ? 'opacity-0 pointer-events-none' : ''}`}>
-                              <Info className="w-5 h-5 opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                              <span className="text-[11px] font-bold opacity-50 group-hover:opacity-100 transition-opacity">Portaal Links</span>
+                            <button onClick={() => setShowLinksModal(true)} className={`hidden md:flex absolute -bottom-[1px] -right-[1px] h-[calc(3.5rem+1px)] bg-slate-50/95 backdrop-blur border-t border-l border-slate-300 rounded-tl-2xl items-center justify-center z-40 transition-all shadow-sm hover:bg-white hover:border-blue-500/30 text-slate-500 group cursor-pointer px-4 pt-3 pb-[calc(0.75rem+2px)] pr-[calc(1rem+2px)] gap-2 ${globalCalcOpen ? 'opacity-0 pointer-events-none' : ''}`}>
+                              <Info className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:text-blue-500 transition-all flex-shrink-0" />
+                              <span className="text-[11px] font-bold opacity-70 group-hover:opacity-100 group-hover:text-blue-500 transition-all">Portaal Links</span>
                             </button>
                           )}
                         </>
@@ -1510,7 +1517,7 @@ export default function App() {
 
                       {/* Totale besparing & Active Provider Display */}
                       {!outcomes.every(o => o.showCoachMessage) && (
-                        <div className="w-full pt-4 sm:pt-6 border-t border-slate-100 mt-2">
+                        <div className="w-full pt-4 sm:pt-6 border-t border-slate-100 mt-2" id="total-savings-section">
                           <div
                             className="w-full flex flex-col items-center justify-center relative"
                             style={{ transform: globalCalcOpen ? (globalCalcOpen === 'ENECO' ? 'translateX(-25%)' : 'translateX(25%)') : 'translateX(0)', transition: 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)' }}
@@ -1637,6 +1644,7 @@ export default function App() {
                           </motion.div>
                         )}
                       </AnimatePresence>
+
                     </div>
                   </motion.div>
                 )}
@@ -1720,14 +1728,21 @@ export default function App() {
                   <motion.div key="nav-hide" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="opacity-0 pointer-events-none h-0" />
                 ) : (
                   <motion.div key={`nav-${currentStep}`} custom={direction} variants={variants} initial="enter" animate="center" exit="exit" className="relative w-full max-w-3xl mx-auto px-0 sm:px-6 z-50">
-                    <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex justify-between items-center">
-                      <div className="flex gap-1 sm:gap-2">
+                    <div className="bg-white/80 backdrop-blur-xl border border-white shadow-sm p-4 sm:p-6 rounded-[2rem] flex items-center relative">
+                      <div className="flex gap-1 sm:gap-2 flex-1">
                         <button disabled={isTranslating} onClick={() => setCurrentStep(1)} className={`group flex items-center justify-center w-12 rounded-2xl font-bold transition-all text-slate-400 hover:text-[#E5394C] hover:bg-slate-50 border border-transparent hover:border-slate-100 shadow-sm ${isTranslating ? 'pointer-events-none opacity-50' : ''}`} title={lang === 'NL' ? 'Naar startscherm' : 'Écran d\'accueil'}><Home className="w-5 h-5 transition-colors" /></button>
                         <button disabled={isTranslating} onClick={prevStep} className={`group flex items-center gap-2 px-4 sm:px-6 py-3 rounded-2xl font-bold transition-all text-slate-500 hover:bg-slate-100 ${isTranslating ? 'pointer-events-none opacity-50' : ''}`}><ChevronLeft className="w-5 h-5 transition-colors group-hover:text-[#E5394C]" /><span className="hidden sm:inline">{text.back}</span></button>
                       </div>
-                      <div className="flex gap-2 sm:gap-3">{[...Array(totalSteps)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
-                      <div className="flex flex-col items-end relative">
-                        <button onClick={nextStep} disabled={isTranslating || !isStepValid() || currentStep === totalSteps} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ${currentStep === totalSteps ? 'opacity-0 pointer-events-none' : (isTranslating || !isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]')}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                      <div className="absolute left-1/2 -translate-x-1/2 flex gap-2 sm:gap-3">{[...Array(4)].map((_, i) => (<div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${currentStep === i + 1 ? 'bg-eneco-gradient w-8' : currentStep === 5 && i === 3 ? 'bg-eneco-gradient w-8' : 'bg-slate-200 w-2.5'}`} />))}</div>
+                      <div className="flex flex-col items-end flex-1">
+                        {currentStep >= 4 ? (
+                          <button onClick={nextStep} disabled={isTranslating} className="group flex items-center gap-0 hover:gap-2 pl-3 pr-3 hover:pl-5 hover:pr-6 py-3 rounded-2xl font-bold transition-all duration-300 ease-out bg-eneco-gradient text-white hover:shadow-lg hover:shadow-[#E5394C]/20 disabled:opacity-40 disabled:cursor-not-allowed overflow-hidden ml-auto">
+                            <Save className="w-5 h-5 flex-shrink-0" />
+                            <span className="max-w-0 group-hover:max-w-[200px] overflow-hidden whitespace-nowrap transition-all duration-300 ease-out opacity-0 group-hover:opacity-100 text-sm">{lang === 'NL' ? 'Pending aanmaken' : 'Créer un pending'}</span>
+                          </button>
+                        ) : (
+                          <button onClick={nextStep} disabled={isTranslating || !isStepValid()} className={`flex items-center gap-2 px-6 sm:px-8 py-3 rounded-2xl font-bold transition-all ml-auto ${isTranslating || !isStepValid() ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-eneco-gradient text-white hover:bg-[#E5384C]'}`}><span className="hidden sm:inline">{text.next}</span><ChevronRight className="w-5 h-5" /></button>
+                        )}
                       </div>
                     </div>
                   </motion.div>
