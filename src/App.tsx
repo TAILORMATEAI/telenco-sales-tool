@@ -560,14 +560,14 @@ export default function App() {
       backToHome: 'Terug naar overzicht',
       na: 'NVT',
       imbalance: 'Onbalans',
-      step7Title: 'Klantgegevens & Opslaan',
+      step7Title: 'Klantgegevens & Pending',
       companyName: 'Bedrijfsnaam', vatNumber: 'BTW Nummer', firstName: 'Voornaam', lastName: 'Familienaam',
       birthDate: 'Geboortedatum', phone: 'Contactnummer', email: 'E-mailadres', billingEmailToggle: 'Hetzelfde facturatie e-mailadres?', billingEmail: 'Facturatie e-mailadres',
       connectionAddress: 'Aansluitingsadres', billingAddress: 'Facturatieadres',
       street: 'Straat', houseNr: 'Nr', bus: 'Bus', postalCode: 'Postcode', city: 'Gemeente',
       addressHint: 'Tip: Typ "5A" voor extensie. Voor bus, gebruik "5/A", "5/1" of "5/001".',
       sameAddress: 'Is het aansluitingsadres gelijk aan het facturatieadres?',
-      jaSimple: 'Ja', neeSimple: 'Nee', inAanvraag: 'In aanvraag', saveOrder: 'Opslaan Bon',
+      jaSimple: 'Ja', neeSimple: 'Nee', inAanvraag: 'In aanvraag', saveOrder: 'Pending Opslaan',
       meterType: 'Type Meter', enkelvoudig: 'Enkelvoudig', tweevoudig: 'Tweevoudig',
       verbruikTotaal: 'Verbruik Totaal', verdelingVerbruik: 'Verdeling Verbruik',
       dagVerbruik: 'Dag Verbruik', nachtVerbruik: 'Nacht Verbruik',
@@ -634,14 +634,14 @@ export default function App() {
       backToHome: 'Retour',
       na: 'N/A',
       imbalance: 'Déséquilibre',
-      step7Title: 'Données Client',
+      step7Title: 'Données Client & Pending',
       companyName: 'Nom de l\'entreprise', vatNumber: 'Numéro TVA', firstName: 'Prénom', lastName: 'Nom',
       birthDate: 'Date de naissance', phone: 'Numéro de contact', email: 'Adresse e-mail', billingEmailToggle: 'Même e-mail de facturation ?', billingEmail: 'E-mail de facturation',
       connectionAddress: 'Adresse de connexion', billingAddress: 'Adresse de facturation',
       street: 'Rue', houseNr: 'N°', bus: 'Boîte', postalCode: 'Code postal', city: 'Commune',
       addressHint: 'Astuce : Tapez "5A" pour une extension. Pour une boîte, utilisez "5/A", "5/1" ou "5/001".',
       sameAddress: 'L\'adresse de connexion est-elle identique à l\'adresse de facturation ?',
-      jaSimple: 'Oui', neeSimple: 'Non', inAanvraag: 'En demande', saveOrder: 'Enregistrer',
+      jaSimple: 'Oui', neeSimple: 'Non', inAanvraag: 'En demande', saveOrder: 'Enregistrer Pending',
       meterType: 'Type de Compteur', enkelvoudig: 'Simple', tweevoudig: 'Bihoraire',
       verbruikTotaal: 'Consommation Totale', verdelingVerbruik: 'Répartition de la Consommation',
       dagVerbruik: 'Consommation Jour', nachtVerbruik: 'Consommation Nuit',
@@ -880,23 +880,43 @@ export default function App() {
       });
       if (user) {
         await supabase.from('activity_logs').insert({
-          user_id: user.id, user_email: user.email, action: 'ORDER_CREATED',
+          user_id: user.id, user_email: user.email, action: 'PENDING_CREATED',
           energy_type: energyType, consumption_mwh: totalConsumption, commission_code: code
         });
 
         await supabase.from('energy_orders').insert({
           user_id: user.id,
           user_email: user.email,
+          status: 'pending',
           energy_type: energyType,
           customer_type: customerType,
           meter_type: elecMeterType,
+          // Consumption data
           elec_consumption_mwh: elecConsumptionMWh,
           elec_dag_mwh: elecDagMWh,
           elec_nacht_mwh: elecNachtMWh,
           gas_consumption_mwh: gasConsumptionMWh,
           has_solar: hasSolarPanels,
+          // Tariff choices
+          elec_tariff: elecTariff,
+          gas_tariff: gasTariff,
+          // Current prices entered by sales rep
+          elec_current_price_mwh: elecCurrentPriceMWh,
+          gas_current_price_mwh: gasCurrentPriceMWh,
+          elec_dag_price_mwh: elecCurrentPriceDagMWh,
+          elec_nacht_price_mwh: elecCurrentPriceNachtMWh,
+          // Chosen provider & comparison
           comparison_view: comparisonView,
+          chosen_provider: comparisonView,
+          // Eneco savings
+          total_eneco_savings: totalEnecoSavings,
+          // Elindus savings & commission
+          total_elindus_savings: totalElindusSavings,
+          elindus_margin: elindusMargin,
+          elindus_fixed_fee: elindusFixedFee,
+          commission_calculated: commission,
           commission_code: code,
+          // Customer data
           company_name: customerData.companyName || null,
           vat_number: customerData.vatNumber || null,
           first_name: customerData.firstName,
@@ -904,6 +924,8 @@ export default function App() {
           birth_date: customerData.birthDate,
           phone: customerData.phoneCountry + ' ' + customerData.phone,
           email: customerData.email,
+          billing_email: customerData.billingEmailSame ? customerData.email : (customerData.billingEmail || customerData.email),
+          // Addresses
           connection_street: connectionAddress.street,
           connection_house_number: connectionAddress.houseNumber,
           connection_bus: connectionAddress.busNumber,
@@ -914,7 +936,10 @@ export default function App() {
           billing_house_number: billingAddress.houseNumber,
           billing_bus: billingAddress.busNumber,
           billing_postal_code: billingAddress.postalCode,
-          billing_city: billingAddress.city
+          billing_city: billingAddress.city,
+          // Market data snapshot
+          epex_spot_at_creation: marketData?.epexSpot || null,
+          ttf_dam_at_creation: marketData?.ttfDam || null
         });
       }
       setDossierCode(code);
@@ -1690,10 +1715,10 @@ export default function App() {
                         </div>
                       </motion.div>
                       <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="text-[clamp(1.5rem,4vh,2rem)] font-black text-slate-700 mb-2">
-                        {lang === 'NL' ? 'Bon Opgeslagen!' : 'Bon Enregistré!'}
+                        {lang === 'NL' ? 'Pending Opgeslagen!' : 'Pending Enregistré!'}
                       </motion.h2>
                       <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="text-slate-400 font-medium mb-8">
-                        {lang === 'NL' ? 'Het dossier is succesvol aangemaakt.' : 'Le dossier a été créé avec succès.'}
+                        {lang === 'NL' ? 'De pending is succesvol aangemaakt.' : 'Le pending a été créé avec succès.'}
                       </motion.p>
 
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 mb-8">
