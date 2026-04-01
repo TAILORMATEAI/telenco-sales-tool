@@ -61,7 +61,7 @@ export default function LiquidGlassSlider({
   }, [min, max, step, onChange]);
 
   return (
-    <div className={`relative py-6 z-10 overflow-visible ${className}`}>
+    <div className={`relative py-6 px-6 sm:px-8 z-10 overflow-visible ${className}`}>
       <div 
         ref={containerRef}
         onPointerDown={handlePointerDown}

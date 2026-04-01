@@ -52,11 +52,7 @@ interface MarketData {
   enecoSohoElecNachtVast?: number;
   enecoSohoElecDagVar?: number;
   enecoSohoElecNachtVar?: number;
-  // Dag/Nacht Eneco Injectie
-  enecoResInjElecDag?: number;
-  enecoResInjElecNacht?: number;
-  enecoSohoInjElecDag?: number;
-  enecoSohoInjElecNacht?: number;
+
   // Vaste Vergoedingen
   enecoResVvElec?: number;
   enecoResVvGas?: number;
@@ -132,7 +128,7 @@ export default function AdminDashboard() {
     enecoResElecInj: 0, enecoSohoElecInj: 0,
     enecoResElecDagVast: 0, enecoResElecNachtVast: 0, enecoResElecDagVar: 0, enecoResElecNachtVar: 0,
     enecoSohoElecDagVast: 0, enecoSohoElecNachtVast: 0, enecoSohoElecDagVar: 0, enecoSohoElecNachtVar: 0,
-    enecoResInjElecDag: 0, enecoResInjElecNacht: 0, enecoSohoInjElecDag: 0, enecoSohoInjElecNacht: 0,
+
     enecoResVvElec: 65, enecoResVvGas: 65, enecoSohoVvElec: 90, enecoSohoVvGas: 90,
     enecoResVvInj: 0, enecoSohoVvInj: 0,
     elindusVvElec: 60, elindusVvGas: 60, elindusVvInj: 0
@@ -193,10 +189,7 @@ export default function AdminDashboard() {
         enecoSohoElecNachtVast: rp(find('ENECO_SOHO_ELEC_NACHT_VAST')?.value, 0),
         enecoSohoElecDagVar: rp(find('ENECO_SOHO_ELEC_DAG_VAR')?.value, 0),
         enecoSohoElecNachtVar: rp(find('ENECO_SOHO_ELEC_NACHT_VAR')?.value, 0),
-        enecoResInjElecDag: rp(find('ENECO_RES_INJ_ELEC_DAG')?.value, 0),
-        enecoResInjElecNacht: rp(find('ENECO_RES_INJ_ELEC_NACHT')?.value, 0),
-        enecoSohoInjElecDag: rp(find('ENECO_SOHO_INJ_ELEC_DAG')?.value, 0),
-        enecoSohoInjElecNacht: rp(find('ENECO_SOHO_INJ_ELEC_NACHT')?.value, 0),
+
         enecoResVvElec: rp(find('ENECO_RES_VV_ELEC')?.value, 65),
         enecoResVvGas: rp(find('ENECO_RES_VV_GAS')?.value, 65),
         enecoSohoVvElec: rp(find('ENECO_SOHO_VV_ELEC')?.value, 90),
@@ -346,10 +339,7 @@ export default function AdminDashboard() {
       ['ENECO_SOHO_ELEC_NACHT_VAST', overrideData.enecoSohoElecNachtVast ?? 0],
       ['ENECO_SOHO_ELEC_DAG_VAR', overrideData.enecoSohoElecDagVar ?? 0],
       ['ENECO_SOHO_ELEC_NACHT_VAR', overrideData.enecoSohoElecNachtVar ?? 0],
-      ['ENECO_RES_INJ_ELEC_DAG', overrideData.enecoResInjElecDag ?? 0],
-      ['ENECO_RES_INJ_ELEC_NACHT', overrideData.enecoResInjElecNacht ?? 0],
-      ['ENECO_SOHO_INJ_ELEC_DAG', overrideData.enecoSohoInjElecDag ?? 0],
-      ['ENECO_SOHO_INJ_ELEC_NACHT', overrideData.enecoSohoInjElecNacht ?? 0],
+
       ['ENECO_RES_VV_ELEC', overrideData.enecoResVvElec ?? 65],
       ['ENECO_RES_VV_GAS', overrideData.enecoResVvGas ?? 65],
       ['ENECO_SOHO_VV_ELEC', overrideData.enecoSohoVvElec ?? 90],
@@ -1071,19 +1061,15 @@ export default function AdminDashboard() {
 
                   {/* Eneco - Injectie Tarieven */}
                   <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Injectie Tarieven (Zonnepanelen)</h3>
-                  <p className="text-xs text-slate-400 mb-5">Vergoeding per MWh voor geïnjecteerde stroom. Enkelvoudig = één tarief. Dag/Nacht = tweevoudige meter.</p>
+                  <p className="text-xs text-slate-400 mb-5">Vergoeding per MWh voor geïnjecteerde stroom. Eén vast injectietarief per klanttype (geen dag/nacht).</p>
                   {[{ group: 'Particulier', fields: [
-                    { key: 'enecoResElecInj', label: 'Enkelvoudig' },
-                    { key: 'enecoResInjElecDag', label: 'Dag' },
-                    { key: 'enecoResInjElecNacht', label: 'Nacht' },
+                    { key: 'enecoResElecInj', label: 'Injectietarief' },
                   ]}, { group: 'SOHO', fields: [
-                    { key: 'enecoSohoElecInj', label: 'Enkelvoudig' },
-                    { key: 'enecoSohoInjElecDag', label: 'Dag' },
-                    { key: 'enecoSohoInjElecNacht', label: 'Nacht' },
+                    { key: 'enecoSohoElecInj', label: 'Injectietarief' },
                   ]}].map(g => (
                     <div key={g.group} className="mb-6">
                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">{g.group}</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {g.fields.map(f => (
                           <div key={f.key} className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all hover:shadow-md">
                             <div className="flex items-center gap-3 mb-4">

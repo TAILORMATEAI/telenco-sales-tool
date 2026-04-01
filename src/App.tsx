@@ -56,11 +56,7 @@ interface MarketData {
   enecoSohoElecNachtVast?: number;
   enecoSohoElecDagVar?: number;
   enecoSohoElecNachtVar?: number;
-  // Dag/Nacht Eneco Injectie
-  enecoResInjElecDag?: number;
-  enecoResInjElecNacht?: number;
-  enecoSohoInjElecDag?: number;
-  enecoSohoInjElecNacht?: number;
+
   // Vaste Vergoedingen
   enecoResVvElec?: number;
   enecoResVvGas?: number;
@@ -144,12 +140,16 @@ export default function App() {
   const [elecDagMWh, setElecDagMWh] = useState<number>(25);
   const [elecNachtMWh, setElecNachtMWh] = useState<number>(25);
   const [elecIsOver30MWh, setElecIsOver30MWh] = useState<boolean | null>(null);
+  const [elecKnowsInjection, setElecKnowsInjection] = useState<boolean | null>(null);
+  const [elecInjectionMWh, setElecInjectionMWh] = useState<number>(0);
   const [elecCurrentPriceMWh, setElecCurrentPriceMWh] = useState<number>(120); // Single current price
   const [elecCurrentPriceDagMWh, setElecCurrentPriceDagMWh] = useState<number>(130);
   const [elecCurrentPriceNachtMWh, setElecCurrentPriceNachtMWh] = useState<number>(110);
+  const [elecCurrentInjectionPriceMWh, setElecCurrentInjectionPriceMWh] = useState<number>(40);
   const [elecEnecoOfferPriceMWh, setElecEnecoOfferPriceMWh] = useState<number>(85); // Note: Offer calculation will be split
   const [elecEnecoOfferPriceDagMWh, setElecEnecoOfferPriceDagMWh] = useState<number>(0);
   const [elecEnecoOfferPriceNachtMWh, setElecEnecoOfferPriceNachtMWh] = useState<number>(0);
+  const [elecEnecoOfferInjectionPriceMWh, setElecEnecoOfferInjectionPriceMWh] = useState<number>(0);
   const [elecTariff, setElecTariff] = useState<'VAST' | 'VARIABEL'>('VARIABEL');
 
   // Gas State
@@ -272,10 +272,7 @@ export default function App() {
           enecoSohoElecNachtVast: find('ENECO_SOHO_ELEC_NACHT_VAST')?.value || 0,
           enecoSohoElecDagVar: find('ENECO_SOHO_ELEC_DAG_VAR')?.value || 0,
           enecoSohoElecNachtVar: find('ENECO_SOHO_ELEC_NACHT_VAR')?.value || 0,
-          enecoResInjElecDag: find('ENECO_RES_INJ_ELEC_DAG')?.value || 0,
-          enecoResInjElecNacht: find('ENECO_RES_INJ_ELEC_NACHT')?.value || 0,
-          enecoSohoInjElecDag: find('ENECO_SOHO_INJ_ELEC_DAG')?.value || 0,
-          enecoSohoInjElecNacht: find('ENECO_SOHO_INJ_ELEC_NACHT')?.value || 0,
+
           enecoResVvElec: find('ENECO_RES_VV_ELEC')?.value || 65,
           enecoResVvGas: find('ENECO_RES_VV_GAS')?.value || 65,
           enecoSohoVvElec: find('ENECO_SOHO_VV_ELEC')?.value || 90,
@@ -418,10 +415,7 @@ export default function App() {
         let dagPrice = 0;
         let nachtPrice = 0;
 
-        if (hasSolarPanels) {
-          dagPrice = isSoho ? (marketData.enecoSohoInjElecDag || 0) : (marketData.enecoResInjElecDag || 0);
-          nachtPrice = isSoho ? (marketData.enecoSohoInjElecNacht || 0) : (marketData.enecoResInjElecNacht || 0);
-        } else if (elecTariff === 'VAST') {
+        if (elecTariff === 'VAST') {
           dagPrice = isSoho ? (marketData.enecoSohoElecDagVast || 0) : (marketData.enecoResElecDagVast || 0);
           nachtPrice = isSoho ? (marketData.enecoSohoElecNachtVast || 0) : (marketData.enecoResElecNachtVast || 0);
         } else {
@@ -435,9 +429,6 @@ export default function App() {
         return ((dagPrice * elecDagMWh) + (nachtPrice * elecNachtMWh)) / total;
       }
 
-      if (hasSolarPanels) {
-        return isSoho ? (marketData.enecoSohoElecInj || 0) : (marketData.enecoResElecInj || 0);
-      }
       if (elecTariff === 'VAST') {
         return isSoho ? (marketData.enecoSohoElecVast || 0) : (marketData.enecoResElecVast || 0);
       }
@@ -455,8 +446,9 @@ export default function App() {
     if (marketData) {
       setElecEnecoOfferPriceMWh(elecPrice);
       setGasEnecoOfferPriceMWh(gasPrice);
+      setElecEnecoOfferInjectionPriceMWh(isSoho ? (marketData.enecoSohoElecInj || 0) : (marketData.enecoResElecInj || 0));
     }
-  }, [customerType, elecTariff, gasTariff, marketData, hasSolarPanels, elecMeterType, elecDagMWh, elecNachtMWh]);
+  }, [customerType, elecTariff, gasTariff, marketData, elecMeterType, elecDagMWh, elecNachtMWh]);
 
   const handleSaveOverride = async () => {
     setIsSavingOverride(true);
@@ -572,6 +564,8 @@ export default function App() {
       verbruikTotaal: 'Verbruik Totaal', verdelingVerbruik: 'Verdeling Verbruik',
       dagVerbruik: 'Dag Verbruik', nachtVerbruik: 'Nacht Verbruik',
       hasSolar: 'Heeft de klant zonnepanelen?',
+      injectieTotaal: 'Injectie Totaal',
+      huidigInjectieTarief: 'Huidig Injectietarief',
       detailCalculation: 'Detail Berekening',
       huidigePrijsTwee: 'Huidige Prijs (Tweevoudig)', dagTarief: 'Dag Tarief', nachtTarief: 'Nacht Tarief',
       dag: 'Dag', nacht: 'Nacht', totaalHuidig: 'Totaal Huidig',
@@ -646,6 +640,8 @@ export default function App() {
       verbruikTotaal: 'Consommation Totale', verdelingVerbruik: 'Répartition de la Consommation',
       dagVerbruik: 'Consommation Jour', nachtVerbruik: 'Consommation Nuit',
       hasSolar: 'Le client a-t-il des panneaux solaires ?',
+      injectieTotaal: 'Injection Totale',
+      huidigInjectieTarief: 'Tarif d\'Injection Actuel',
       detailCalculation: 'Calcul Détaillé',
       huidigePrijsTwee: 'Prix Actuel (Bihoraire)', dagTarief: 'Tarif Jour', nachtTarief: 'Tarif Nuit',
       dag: 'Jour', nacht: 'Nuit', totaalHuidig: 'Total Actuel',
@@ -682,35 +678,41 @@ export default function App() {
       currPrice = total > 0 ? ((elecCurrentPriceDagMWh * elecDagMWh) + (elecCurrentPriceNachtMWh * elecNachtMWh)) / total : 0;
     }
 
+    const hasInj = type === 'ELEC' && hasSolarPanels;
+    const injCons = hasInj ? elecInjectionMWh : 0;
+    const currInjPrice = hasInj ? elecCurrentInjectionPriceMWh : 0;
+
     // Eneco
     const enecoPrice = type === 'ELEC' ? elecEnecoOfferPriceMWh : gasEnecoOfferPriceMWh;
-    const enecoSavingsVal = currPrice - enecoPrice;
-    const enecoSavingsPercentage = currPrice > 0 ? (enecoSavingsVal / currPrice) * 100 : 0;
+    const enecoInjPrice = hasInj ? elecEnecoOfferInjectionPriceMWh : 0;
 
     // Elindus formula: price × multiplier + adder
     const baseMarkt = type === 'GAS'
       ? (marketData?.ttfDam || 0)
       : (marketData?.epexSpot || 0);
 
-    const multiplier = type === 'GAS'
-      ? (marketData?.gasMultiplier ?? 1.05)
-      : (hasSolarPanels ? (marketData?.injMultiplier ?? 0.9) : (marketData?.elecMultiplier ?? 1.1));
-    const adder = type === 'GAS'
-      ? (marketData?.gasAdder ?? 14)
-      : (hasSolarPanels ? (marketData?.injAdder ?? 15) : (marketData?.elecAdder ?? 18));
-
-    const elinEstimatedPrice = (baseMarkt * multiplier) + adder;
-    const elindusSavingsVal = currPrice - elinEstimatedPrice;
-    const elindusSavingsPercentage = currPrice > 0 ? (elindusSavingsVal / currPrice) * 100 : 0;
+    const elinEstimatedPrice = (baseMarkt * (type === 'GAS' ? (marketData?.gasMultiplier ?? 1.05) : (marketData?.elecMultiplier ?? 1.1))) + (type === 'GAS' ? (marketData?.gasAdder ?? 14) : (marketData?.elecAdder ?? 18));
+    const elinEstimatedInjPrice = hasInj ? ((baseMarkt * (marketData?.injMultiplier ?? 0.9)) + (marketData?.injAdder ?? 15)) : 0;
 
     // Fixed fee savings logic
-    const fixedFeeKey = (type === 'ELEC' && hasSolarPanels) ? 'INJ' : type;
-    const enecoFixedFee = ENECO_FIXED_FEE[fixedFeeKey];
-    const elindusFixedFee = ELINDUS_FIXED_FEE[fixedFeeKey];
+    const enecoFixedFee = ENECO_FIXED_FEE[type];
+    const elindusFixedFee = ELINDUS_FIXED_FEE[type];
 
     const currentFixedFee = type === 'ELEC' ? elecCurrentFixedFee : gasCurrentFixedFee;
     const enecoFixedFeeSaving = currentFixedFee - enecoFixedFee;
     const elindusFixedFeeSaving = currentFixedFee - elindusFixedFee;
+
+    // Total Cost Calculations (Consumption Cost - Injection Income)
+    const currentTotalCost = (cons * currPrice) - (injCons * currInjPrice);
+    const enecoTotalCost = (cons * enecoPrice) - (injCons * enecoInjPrice);
+    const elindusTotalCost = (cons * elinEstimatedPrice) - (injCons * elinEstimatedInjPrice);
+
+    // Savings Calculation
+    const enecoSavingsVal = currentTotalCost - enecoTotalCost;
+    const elindusSavingsVal = currentTotalCost - elindusTotalCost;
+
+    const enecoSavingsPercentage = currPrice > 0 ? ((currPrice - enecoPrice) / currPrice) * 100 : 0;
+    const elindusSavingsPercentage = currPrice > 0 ? ((currPrice - elinEstimatedPrice) / currPrice) * 100 : 0;
 
     // Volume-based visibility rules:
     // 0-25: Eneco only | 25-100: Both (SOHO) or Eneco only (Particulier) | 100+: Coach message
@@ -722,14 +724,18 @@ export default function App() {
       type,
       cons,
       currPrice,
+      currInjPrice,
+      injCons,
       enecoPrice,
+      enecoInjPrice,
       enecoPriceDag: type === 'ELEC' ? elecEnecoOfferPriceDagMWh : 0,
       enecoPriceNacht: type === 'ELEC' ? elecEnecoOfferPriceNachtMWh : 0,
       enecoSavingsPercentage,
-      enecoSavingsTotal: (enecoSavingsVal * cons) + (includeFixedFeeSavings ? enecoFixedFeeSaving : 0),
+      enecoSavingsTotal: enecoSavingsVal + (includeFixedFeeSavings ? enecoFixedFeeSaving : 0),
       elindusEsimatedPrice: elinEstimatedPrice,
+      elinEstimatedInjPrice,
       elindusSavingsPercentage,
-      elindusSavingsTotal: (elindusSavingsVal * cons) + (includeFixedFeeSavings ? elindusFixedFeeSaving : 0),
+      elindusSavingsTotal: elindusSavingsVal + (includeFixedFeeSavings ? elindusFixedFeeSaving : 0),
       showEneco,
       showElindus,
       showCoachMessage,
@@ -895,6 +901,7 @@ export default function App() {
           elec_consumption_mwh: elecConsumptionMWh,
           elec_dag_mwh: elecDagMWh,
           elec_nacht_mwh: elecNachtMWh,
+          elec_injection_mwh: elecInjectionMWh,
           gas_consumption_mwh: gasConsumptionMWh,
           has_solar: hasSolarPanels,
           // Tariff choices
@@ -905,6 +912,7 @@ export default function App() {
           gas_current_price_mwh: gasCurrentPriceMWh,
           elec_dag_price_mwh: elecCurrentPriceDagMWh,
           elec_nacht_price_mwh: elecCurrentPriceNachtMWh,
+          elec_current_injection_price_mwh: elecCurrentInjectionPriceMWh,
           // Chosen provider & comparison
           comparison_view: comparisonView,
           chosen_provider: comparisonView,
@@ -1083,6 +1091,50 @@ export default function App() {
                   </div>
                 </>
               )}
+
+              {isElec && hasSolarPanels && (
+                <div className="flex flex-col w-full space-y-4 pt-6 mt-4">
+                  {/* Vraag: Kent de klant zijn injectie? */}
+                  <div className="border-t border-slate-100 pt-6">
+                    <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">
+                      Kent de klant het injectievolume?
+                    </label>
+                    <div className="flex justify-center flex-wrap sm:flex-nowrap gap-4">
+                      <button onClick={() => setElecKnowsInjection(true)} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${elecKnowsInjection === true ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.yes}</button>
+                      <button onClick={() => { setElecKnowsInjection(false); setElecInjectionMWh(0); }} className={`flex-1 min-w-[120px] py-[clamp(0.75rem,2vh,1rem)] rounded-2xl font-bold transition-all ${elecKnowsInjection === false ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600'}`}>{text.no}</button>
+                    </div>
+                  </div>
+
+                  <div className={`expand-slow ${elecKnowsInjection === true ? 'open' : ''} w-full`}>
+                    <div className="w-full space-y-4 pt-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-3">
+                        <label className="block text-sm font-bold text-slate-400 uppercase tracking-widest">{text.injectieTotaal}</label>
+                        <div className="flex bg-emerald-50 p-1 rounded-full">
+                          <button onClick={() => setInputUnit('kWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'kWh' ? 'bg-white text-emerald-500 shadow-sm' : 'text-emerald-600/50 hover:bg-emerald-100'}`}>kWh</button>
+                          <button onClick={() => setInputUnit('MWh')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${inputUnit === 'MWh' ? 'bg-white text-emerald-500 shadow-sm' : 'text-emerald-600/50 hover:bg-emerald-100'}`}>MWh</button>
+                        </div>
+                      </div>
+                      <div className="space-y-6">
+                        <div className="flex justify-center">
+                          <div className="relative w-full max-w-[200px] group">
+                            <input type="number" step="0.01" value={inputUnit === 'kWh' ? (elecInjectionMWh === 0 ? '' : Math.round(elecInjectionMWh * 1000)) : (elecInjectionMWh === 0 ? '' : elecInjectionMWh)} onChange={(e) => {
+                              const raw = e.target.value;
+                              if (raw === '') { setElecInjectionMWh(0); return; }
+                              const val = Number(raw);
+                              const newMWh = inputUnit === 'kWh' ? val / 1000 : val;
+                              setElecInjectionMWh(newMWh);
+                            }} className="block w-full pr-16 py-[clamp(0.75rem,2.5vh,1rem)] text-[clamp(1.5rem,3vh,1.875rem)] font-black text-center bg-slate-50 border-2 border-emerald-100 rounded-[clamp(1rem,2vh,1.5rem)] focus:bg-emerald-500/5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-emerald-500 outline-none" />
+                            <span className="absolute inset-y-0 right-0 pr-4 flex items-center text-emerald-500/50 font-bold text-[clamp(1rem,2vh,1.125rem)] pointer-events-none">{inputUnit}</span>
+                          </div>
+                        </div>
+                        {inputUnit === 'MWh' && (
+                          <LiquidGlassSlider min={0} max={150} value={elecInjectionMWh} onChange={(val) => { setElecInjectionMWh(val); }} color="#10B981" className="w-full mb-2" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1169,6 +1221,24 @@ export default function App() {
               className="block w-full pl-16 pr-24 py-[clamp(1rem,4vh,2rem)] text-[clamp(1.5rem,4vh,2.25rem)] font-black text-center bg-slate-50 border-2 border-slate-100 rounded-[clamp(1.25rem,3vh,2rem)] focus:bg-eneco-gradient/5 focus:ring-4 focus:ring-[#E5394C]/10 focus:border-[#E5394C] transition-all text-slate-600 outline-none"
             />
             <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-slate-400 font-bold text-[clamp(1rem,2vh,1.25rem)] hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+          </div>
+        )}
+
+        {isElec && hasSolarPanels && elecKnowsInjection === true && (
+          <div className="pt-8 border-t border-slate-100 mt-8 space-y-4">
+            <label className="block text-sm sm:text-[clamp(12px,1.5vh,14px)] font-bold text-slate-400 mb-[clamp(1rem,2vh,1.5rem)] uppercase tracking-widest text-center">
+              {text.huidigInjectieTarief}
+            </label>
+            <div className="relative group">
+              <span className="absolute inset-y-0 left-0 pl-6 flex items-center text-emerald-500/50 font-bold text-3xl">€</span>
+              <PriceInputField
+                value={elecCurrentInjectionPriceMWh}
+                showInMWh={showInMWh}
+                onChange={setElecCurrentInjectionPriceMWh}
+                className="block w-full pl-16 pr-24 py-[clamp(1rem,4vh,2rem)] text-[clamp(1.5rem,4vh,2.25rem)] font-black text-center bg-slate-50 border-2 border-emerald-100 rounded-[clamp(1.25rem,3vh,2rem)] focus:bg-emerald-500/5 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-emerald-500 outline-none"
+              />
+              <span className="absolute inset-y-0 right-0 pr-6 flex items-center text-emerald-500/50 font-bold text-[clamp(1rem,2vh,1.25rem)] hidden sm:flex">{showInMWh ? '/ MWh' : '/ kWh'}</span>
+            </div>
           </div>
         )}
 
@@ -1634,6 +1704,14 @@ export default function App() {
                                         </div>
                                       )}
 
+                                      {o.type === 'ELEC' && hasSolarPanels && (
+                                        <div className="flex flex-col gap-1 mt-1">
+                                          <div className="flex justify-between text-slate-400"><span>{text.huidigInjectieTarief}:</span><span className="font-medium bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded text-xs">€{(showInMWh ? o.currInjPrice : o.currInjPrice / 1000).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                          <div className="flex justify-between text-emerald-600/80 text-xs"><span>Opbrengst Injectie ({showInMWh ? o.injCons.toFixed(1) : Math.round(o.injCons * 1000)} {showInMWh ? 'MWh' : 'kWh'}):</span><span className="font-bold text-emerald-500">-€{(o.currInjPrice * o.injCons).toFixed(2)}</span></div>
+                                          <div className="flex justify-between border-t border-slate-100 pt-1 mt-1"><span className="text-slate-400 text-xs font-bold">Netto Huidig:</span><span className="font-bold text-slate-700">€{((o.currPrice * o.cons) - (o.currInjPrice * o.injCons)).toFixed(2)}</span></div>
+                                        </div>
+                                      )}
+
                                       <div className="flex flex-col gap-1 border-t border-slate-100 pt-2">
                                         {o.type === 'ELEC' && elecMeterType === 'TWEEVOUDIG' && (globalCalcOpen === 'ENECO' || useEnecoForThis) ? (
                                           <>
@@ -1649,6 +1727,14 @@ export default function App() {
                                             <div className="flex justify-between text-slate-500 font-bold"><span>{displayProvider} Voorstel:</span><span className="font-bold bg-slate-100 text-slate-600 border border-slate-200 shadow-sm px-1.5 py-0.5 rounded text-xs">€{(((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoPrice : o.elindusEsimatedPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
                                             <div className="flex justify-between"><span className="text-slate-400 text-xs">{text.kosten} ({o.cons} MWh):</span><span className="font-bold text-slate-500">€{newPrice.toFixed(2)}</span></div>
                                           </>
+                                        )}
+
+                                        {o.type === 'ELEC' && hasSolarPanels && (
+                                          <div className="flex flex-col gap-1 mt-1 border-t border-slate-100 pt-1">
+                                            <div className="flex justify-between text-emerald-600/80 font-bold"><span>{displayProvider} Injectietarief:</span><span className="font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-sm px-1.5 py-0.5 rounded text-xs">€{(((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoInjPrice : o.elinEstimatedInjPrice) / (showInMWh ? 1 : 1000)).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
+                                            <div className="flex justify-between text-emerald-600/80 text-xs"><span>Opbrengst ({showInMWh ? o.injCons.toFixed(1) : Math.round(o.injCons * 1000)} {showInMWh ? 'MWh' : 'kWh'}):</span><span className="font-bold text-emerald-500">-€{(((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoInjPrice : o.elinEstimatedInjPrice) * o.injCons).toFixed(2)}</span></div>
+                                            <div className="flex justify-between border-t border-slate-100 pt-1 mt-1"><span className="text-slate-400 text-xs font-bold">Netto {displayProvider}:</span><span className="font-bold text-slate-700">€{(newPrice - (((globalCalcOpen === 'ENECO' || useEnecoForThis) ? o.enecoInjPrice : o.elinEstimatedInjPrice) * o.injCons)).toFixed(2)}</span></div>
+                                          </div>
                                         )}
                                       </div>
 
