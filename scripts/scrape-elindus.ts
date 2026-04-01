@@ -54,10 +54,11 @@ async function scrapeElindusData(): Promise<ScrapedMarket[]> {
   const results: ScrapedMarket[] = [];
   const now = new Date();
 
-  // ── Periode: 1e van de huidige maand → 1e van volgende maand (Elindus levert alles wat beschikbaar is) ──
-  const fromStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const toStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}-${String(nextMonth.getDate()).padStart(2, '0')}`;
+  // ── Periode: vandaag − 1 maand → vandaag ──
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  const fromStr = `${oneMonthAgo.getFullYear()}-${pad(oneMonthAgo.getMonth() + 1)}-${pad(oneMonthAgo.getDate())}`;
+  const toStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
   const markets = [
     { key: 'EPEX_SPOT', marketParam: 'ELECTRICITY', label: 'EPEX SPOT' },
