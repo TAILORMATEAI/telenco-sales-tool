@@ -890,7 +890,7 @@ export default function App() {
           energy_type: energyType, consumption_mwh: totalConsumption, commission_code: code
         });
 
-        await supabase.from('energy_orders').insert({
+        await supabase.from('pendings').insert({
           user_id: user.id,
           user_email: user.email,
           status: 'pending',

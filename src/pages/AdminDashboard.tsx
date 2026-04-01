@@ -287,7 +287,7 @@ export default function AdminDashboard() {
 
   const fetchOrders = async () => {
     setOrdersLoading(true);
-    const { data: oData, error } = await supabase.from('energy_orders').select('*').order('created_at', { ascending: false }).limit(100);
+    const { data: oData, error } = await supabase.from('pendings').select('*').order('created_at', { ascending: false }).limit(100);
     if (!error && oData) {
       const uids = Array.from(new Set(oData.map(o => o.user_id).filter(Boolean)));
       const { data: pData } = await supabase.from('profiles').select('id, first_name, last_name, avatar_id').in('id', uids);

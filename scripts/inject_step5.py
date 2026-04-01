@@ -47,8 +47,8 @@ save_order_func = """
           energy_type: energyType, consumption_mwh: totalConsumption, commission_code: commissionCode
         });
         
-        // 2. Save pure bon to energy_orders
-        await supabase.from('energy_orders').insert({
+        // 2. Save pure bon to pendings
+        await supabase.from('pendings').insert({
           user_id: user.id,
           user_email: user.email,
           energy_type: energyType,

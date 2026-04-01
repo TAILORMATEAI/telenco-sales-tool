@@ -81,7 +81,7 @@ export default function HomePage() {
       setLogsLoading(true);
       const [ { data: lData }, { data: oData } ] = await Promise.all([
         supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
-        supabase.from('energy_orders').select('*').order('created_at', { ascending: false }).limit(20)
+        supabase.from('pendings').select('*').order('created_at', { ascending: false }).limit(20)
       ]);
       
       const combinedLogs = [];

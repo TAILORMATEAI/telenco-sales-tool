@@ -23,7 +23,7 @@ export default function RecenteActiviteit() {
       setLogsLoading(true);
       const [ { data: lData }, { data: oData } ] = await Promise.all([
         supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(50),
-        supabase.from('energy_orders').select('*').order('created_at', { ascending: false }).limit(50)
+        supabase.from('pendings').select('*').order('created_at', { ascending: false }).limit(50)
       ]);
       
       const combinedLogs = [];
