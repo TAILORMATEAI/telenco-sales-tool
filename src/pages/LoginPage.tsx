@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabase';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRightIcon as ArrowRight } from '../components/Icons';
+import { ArrowRightIcon as ArrowRight, EyeIcon, EyeOffIcon } from '../components/Icons';
 import LoginBackgroundWaves, { DEFAULT_WAVES } from '../components/LoginBackgroundWaves';
 
 export default function LoginPage() {
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState(localStorage.getItem('telenco-email') || '');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -222,15 +223,20 @@ export default function LoginPage() {
               {!isForgotPassword && (
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Wachtwoord</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={isSignUp ? 6 : undefined}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
-                    placeholder="••••••••"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={isSignUp ? 6 : undefined}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl px-5 py-4 pr-12 text-slate-600 font-medium placeholder-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-800/20 focus:border-slate-800 transition-all"
+                      placeholder="••••••••"
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1" tabIndex={-1}>
+                      {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                    </button>
+                  </div>
                   <AnimatePresence>
                     {isSignUp && (
                       <motion.div

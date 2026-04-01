@@ -80,7 +80,7 @@ export default function HomePage() {
     const fetchLogs = async () => {
       setLogsLoading(true);
       const [ { data: lData }, { data: oData } ] = await Promise.all([
-        supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
+        supabase.from('activiteiten').select('*').order('created_at', { ascending: false }).limit(20),
         supabase.from('pendings').select('*').order('created_at', { ascending: false }).limit(20)
       ]);
       

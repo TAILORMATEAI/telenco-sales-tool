@@ -66,6 +66,8 @@ interface MarketData {
   lastUpdated?: string;
   updatedBy?: string;
   updatedByAvatar?: string;
+  promoElec?: number;
+  promoGas?: number;
 }
 
 interface ActivityLog {
@@ -131,7 +133,8 @@ export default function AdminDashboard() {
 
     enecoResVvElec: 65, enecoResVvGas: 65, enecoSohoVvElec: 90, enecoSohoVvGas: 90,
     enecoResVvInj: 0, enecoSohoVvInj: 0,
-    elindusVvElec: 60, elindusVvGas: 60, elindusVvInj: 0
+    elindusVvElec: 60, elindusVvGas: 60, elindusVvInj: 0,
+    promoElec: 100, promoGas: 100
   });
   const [overrideData, setOverrideData] = useState<MarketData>({ ...marketData });
   const [inputStrings, setInputStrings] = useState<Record<string, string>>({});
@@ -199,6 +202,8 @@ export default function AdminDashboard() {
         elindusVvElec: rp(find('ELINDUS_VV_ELEC')?.value, 60),
         elindusVvGas: rp(find('ELINDUS_VV_GAS')?.value, 60),
         elindusVvInj: rp(find('ELINDUS_VV_INJ')?.value, 0),
+        promoElec: rp(find('PROMO_ELEC')?.value, 100),
+        promoGas: rp(find('PROMO_GAS')?.value, 100),
         lastUpdated: data[0].last_updated,
         updatedBy: data[0].updated_by || 'Systeem',
         updatedByAvatar: data[0].updated_by_avatar
@@ -214,7 +219,7 @@ export default function AdminDashboard() {
   const fetchLogs = async () => {
     setLogsLoading(true);
     const { data: lData, error } = await supabase
-      .from('activity_logs')
+      .from('activiteiten')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100);
@@ -348,6 +353,9 @@ export default function AdminDashboard() {
       ['ENECO_SOHO_VV_INJ', overrideData.enecoSohoVvInj ?? 0],
       ['ELINDUS_VV_ELEC', overrideData.elindusVvElec ?? 60],
       ['ELINDUS_VV_GAS', overrideData.elindusVvGas ?? 60],
+      ['ELINDUS_VV_INJ', overrideData.elindusVvInj ?? 0],
+      ['PROMO_ELEC', overrideData.promoElec ?? 100],
+      ['PROMO_GAS', overrideData.promoGas ?? 100],
       ['ELINDUS_VV_INJ', overrideData.elindusVvInj ?? 0],
     ];
     const updates = indicators.map(([name, value]) => ({
@@ -1114,6 +1122,27 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Eneco - Commerciële Promoties */}
+                  <h3 className="text-lg font-black text-slate-500 mb-2 pt-6 border-t border-slate-100">Commerciële Promoties (Eneco Variabel)</h3>
+                  <p className="text-xs text-slate-400 mb-5">Vaste korting die verkopers optioneel kunnen toekennen om een verkoop te pushen.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                    {[{ key: 'promoElec', label: 'Elektriciteit Promo', color: 'bg-amber-500', focusRing: 'focus:ring-amber-500/50', hoverShadow: 'hover:shadow-md' }, { key: 'promoGas', label: 'Aardgas Promo', color: 'bg-rose-500', focusRing: 'focus:ring-rose-500/50', hoverShadow: 'hover:shadow-md' }].map(f => (
+                      <div key={f.key} className={`bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-sm transition-all ${f.hoverShadow}`}>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${f.color} shadow-sm`}>
+                            <span className="text-white font-black text-[10px]">PROMO</span>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-black text-slate-500 uppercase">{f.label}</p>
+                            <p className="text-[10px] font-bold tracking-wider text-slate-400">Optionele Korting</p>
+                          </div>
+                        </div>
+                        <input type="number" step="1" value={inputStrings[f.key] ?? String(overrideData[f.key as keyof MarketData] ?? '')} onChange={e => setInputStrings(prev => ({ ...prev, [f.key]: e.target.value }))} onBlur={e => { const val = parseFloat(e.target.value) || 0; setOverrideData(p => ({ ...p, [f.key]: val })); setInputStrings(p => ({ ...p, [f.key]: String(val) })); }} className={`w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-bold text-slate-600 focus:ring-2 ${f.focusRing} outline-none transition-all`} />
+                        <p className="text-[10px] text-slate-300 mt-2 text-right">€/jaar</p>
+                      </div>
+                    ))}
+                  </div>
 
                 </motion.div>
               )}

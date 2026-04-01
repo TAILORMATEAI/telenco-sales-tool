@@ -807,7 +807,7 @@ export default function TelenetWizard() {
         techUrl = await uploadPhoto(photos.tech, 'TECH');
       }
       if (user) {
-        await supabase.from('activity_logs').insert({ user_id: user.id, user_email: user.email, action: 'TELENET_WIZARD', energy_type: 'NA', commission_code: customerData.companyName, consumption_mwh: 0 });
+        await supabase.from('activiteiten').insert({ user_id: user.id, user_email: user.email, action: 'TELENET_WIZARD', energy_type: 'NA', commission_code: customerData.companyName, consumption_mwh: 0 });
       }
 
       const emailFull = customerData.email;

@@ -68,6 +68,8 @@ interface MarketData {
   elindusVvGas?: number;
   elindusVvInj?: number;
   lastUpdated?: string;
+  promoElec?: number;
+  promoGas?: number;
 }
 
 function CountUp({ value, isCurrency = false }: { value: number, isCurrency?: boolean }) {
@@ -85,7 +87,7 @@ function CountUp({ value, isCurrency = false }: { value: number, isCurrency?: bo
 }
 
 /* ─── Price Input Field (Preserves Decimals/Zeroes) ─── */
-const PriceInputField = ({ value, onChange, showInMWh, className, step = "0.01" }: { value: number, onChange: (v: number) => void, showInMWh: boolean, className: string, step?: string }) => {
+const PriceInputField = ({ value, onChange, showInMWh, className, step = "any" }: { value: number, onChange: (v: number) => void, showInMWh: boolean, className: string, step?: string }) => {
   const [localVal, setLocalVal] = useState<string>(() => {
     if (value === 0) return '';
     return showInMWh ? value.toString() : (value / 1000).toString();
@@ -127,6 +129,16 @@ export default function App() {
   const [customerType, setCustomerType] = useState<CustomerType>(null);
   const [forceElindus, setForceElindus] = useState<boolean>(false);
 
+  useEffect(() => {
+    if (customerType === 'PARTICULIER') {
+      setShowInMWh(false); // Default kWh pricing view
+      setInputUnit('kWh'); // Default kWh consumption input
+    } else if (customerType === 'SOHO') {
+      setShowInMWh(true); // Default MWh pricing view
+      setInputUnit('MWh'); // Default MWh consumption input
+    }
+  }, [customerType]);
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/login', { replace: true });
@@ -162,6 +174,10 @@ export default function App() {
 
   const [showInMWh, setShowInMWh] = useState<boolean>(true);
   const [inputUnit, setInputUnit] = useState<'MWh' | 'kWh'>('MWh');
+
+  // Commercial Promos (Opt-in from seller, valid only if tariff is VAR)
+  // Single toggle: applies to both gas and elec simultaneously
+  const [applyPromo, setApplyPromo] = useState<boolean>(false);
 
   // Fixed fee state
   const [elecCurrentFixedFee, setElecCurrentFixedFee] = useState<number>(100);
@@ -702,17 +718,32 @@ export default function App() {
     const enecoFixedFeeSaving = currentFixedFee - enecoFixedFee;
     const elindusFixedFeeSaving = currentFixedFee - elindusFixedFee;
 
+    // Commercial Promo Logic on Eneco (single toggle for both)
+    let appliedPromoValue = 0;
+    if (applyPromo) {
+      if (type === 'ELEC' && elecTariff === 'VARIABEL') {
+        appliedPromoValue = marketData?.promoElec ?? 100;
+      } else if (type === 'GAS' && gasTariff === 'VARIABEL') {
+        appliedPromoValue = marketData?.promoGas ?? 100;
+      }
+    }
+
     // Total Cost Calculations (Consumption Cost - Injection Income)
     const currentTotalCost = (cons * currPrice) - (injCons * currInjPrice);
-    const enecoTotalCost = (cons * enecoPrice) - (injCons * enecoInjPrice);
+    const enecoTotalCost = (cons * enecoPrice) - (injCons * enecoInjPrice) - appliedPromoValue;
     const elindusTotalCost = (cons * elinEstimatedPrice) - (injCons * elinEstimatedInjPrice);
 
-    // Savings Calculation
+    // Savings Calculation (including fixed fees and promo)
     const enecoSavingsVal = currentTotalCost - enecoTotalCost;
     const elindusSavingsVal = currentTotalCost - elindusTotalCost;
 
-    const enecoSavingsPercentage = currPrice > 0 ? ((currPrice - enecoPrice) / currPrice) * 100 : 0;
-    const elindusSavingsPercentage = currPrice > 0 ? ((currPrice - elinEstimatedPrice) / currPrice) * 100 : 0;
+    // Full savings including fixed fee + promo for percentage calculation
+    const currentFullCost = currentTotalCost + (includeFixedFeeSavings ? currentFixedFee : 0);
+    const enecoFullCost = enecoTotalCost + (includeFixedFeeSavings ? enecoFixedFee : 0);
+    const elindusFullCost = elindusTotalCost + (includeFixedFeeSavings ? elindusFixedFee : 0);
+
+    const enecoSavingsPercentage = currentFullCost > 0 ? ((currentFullCost - enecoFullCost) / currentFullCost) * 100 : 0;
+    const elindusSavingsPercentage = currentFullCost > 0 ? ((currentFullCost - elindusFullCost) / currentFullCost) * 100 : 0;
 
     // Volume-based visibility rules:
     // 0-25: Eneco only | 25-100: Both (SOHO) or Eneco only (Particulier) | 100+: Coach message
@@ -728,6 +759,7 @@ export default function App() {
       injCons,
       enecoPrice,
       enecoInjPrice,
+      appliedPromoValue,
       enecoPriceDag: type === 'ELEC' ? elecEnecoOfferPriceDagMWh : 0,
       enecoPriceNacht: type === 'ELEC' ? elecEnecoOfferPriceNachtMWh : 0,
       enecoSavingsPercentage,
@@ -799,6 +831,7 @@ export default function App() {
         if (elecKnowsConsumption === true && elecConsumptionMWh < 25 && elecTariff === null) return false;
         if (elecKnowsConsumption === false && elecIsOver30MWh === null) return false;
         if (elecKnowsConsumption === false && elecIsOver30MWh === false && elecTariff === null) return false;
+        if (hasSolarPanels === true && elecKnowsInjection === null) return false;
       }
       if (req.includes('GAS')) {
         if (gasKnowsConsumption === null) return false;
@@ -885,7 +918,7 @@ export default function App() {
         commission_calculated: commission
       });
       if (user) {
-        await supabase.from('activity_logs').insert({
+        await supabase.from('activiteiten').insert({
           user_id: user.id, user_email: user.email, action: 'PENDING_CREATED',
           energy_type: energyType, consumption_mwh: totalConsumption, commission_code: code
         });
@@ -1038,18 +1071,18 @@ export default function App() {
                           {/* Dag */}
                           <div className="space-y-4">
                             <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> {text.dagVerbruik}</label>
-                            <div className="flex items-center gap-4">
-                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecDagMWh === 0 ? '' : Math.round(elecDagMWh * 1000)) : (elecDagMWh === 0 ? '' : elecDagMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecDagMWh(m); setConsMWh(m + elecNachtMWh); if ((m + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
-                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecDagMWh} onChange={(v) => { setElecDagMWh(v); setConsMWh(v + elecNachtMWh); if ((v + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
+                            <div className="flex flex-col gap-4">
+                              <div className="relative flex justify-center"><div className="relative w-full max-w-[200px]"><input type="number" value={inputUnit === 'kWh' ? (elecDagMWh === 0 ? '' : Math.round(elecDagMWh * 1000)) : (elecDagMWh === 0 ? '' : elecDagMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecDagMWh(m); setConsMWh(m + elecNachtMWh); if ((m + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecDagMWh} onChange={(v) => { setElecDagMWh(v); setConsMWh(v + elecNachtMWh); if ((v + elecNachtMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full" />}
                             </div>
                           </div>
 
                           {/* Nacht */}
                           <div className="space-y-4">
                             <label className="block text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap className="w-3 h-3" /> {text.nachtVerbruik}</label>
-                            <div className="flex items-center gap-4">
-                              <div className="relative w-[150px] shrink-0"><input type="number" value={inputUnit === 'kWh' ? (elecNachtMWh === 0 ? '' : Math.round(elecNachtMWh * 1000)) : (elecNachtMWh === 0 ? '' : elecNachtMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecNachtMWh(m); setConsMWh(m + elecDagMWh); if ((m + elecDagMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div>
-                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecNachtMWh} onChange={(v) => { setElecNachtMWh(v); setConsMWh(v + elecDagMWh); if ((v + elecDagMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="flex-1" />}
+                            <div className="flex flex-col gap-4">
+                              <div className="relative flex justify-center"><div className="relative w-full max-w-[200px]"><input type="number" value={inputUnit === 'kWh' ? (elecNachtMWh === 0 ? '' : Math.round(elecNachtMWh * 1000)) : (elecNachtMWh === 0 ? '' : elecNachtMWh)} onChange={(e) => { const v = Number(e.target.value); const m = inputUnit === 'kWh' ? v / 1000 : v; setElecNachtMWh(m); setConsMWh(m + elecDagMWh); if ((m + elecDagMWh) >= 25) setTariff('VARIABEL'); }} className="block w-full pr-12 py-2 text-xl font-black text-center bg-slate-50 border-2 border-slate-100 rounded-xl text-eneco-gradient" /><span className="absolute inset-y-0 right-0 pr-3 flex items-center text-eneco-gradient/50 text-sm">{inputUnit}</span></div></div>
+                              {inputUnit === 'MWh' && <LiquidGlassSlider min={0} max={100} value={elecNachtMWh} onChange={(v) => { setElecNachtMWh(v); setConsMWh(v + elecDagMWh); if ((v + elecDagMWh) >= 25) setTariff('VARIABEL'); }} color="#E5394C" className="w-full" />}
                             </div>
                           </div>
 
@@ -1295,7 +1328,7 @@ export default function App() {
                         const isSelected = customerType === type;
                         const label = type === 'PARTICULIER' ? text.particulier : text.soho;
                         return (
-                          <button key={type} onClick={() => { setCustomerType(type); setEnergyType(null); setForceElindus(false); }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-eneco-gradient border-transparent text-white shadow-[#E5394C]/20 shadow-lg' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
+                          <button key={type} onClick={() => { setCustomerType(type); setEnergyType(null); setForceElindus(false); if (type === 'PARTICULIER') { setInputUnit('kWh'); setShowInMWh(false); } }} className={`flex-1 flex flex-col items-center justify-center gap-[clamp(0.5rem,1.5vh,1rem)] p-[clamp(1rem,3vh,2rem)] rounded-[clamp(1rem,3vh,1.5rem)] border-2 transition-all ${isSelected ? 'bg-eneco-gradient border-transparent text-white shadow-[#E5394C]/20 shadow-lg' : 'border-slate-200 text-slate-400 hover:bg-slate-50 hover:border-slate-300'}`}>
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-[clamp(1.5rem,4vh,2.5rem)] w-[clamp(1.5rem,4vh,2.5rem)]">
                               {type === 'PARTICULIER' ? (
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -1388,8 +1421,20 @@ export default function App() {
                   <motion.div key="step4" custom={direction} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.4, ease: 'easeInOut' }} className="w-full max-w-3xl">
                     <div className="bg-white rounded-[clamp(1.5rem,3vh,2.5rem)] pt-[clamp(2rem,4vh,3rem)] p-[clamp(1.25rem,3vh,2rem)] sm:p-[clamp(1.5rem,4vh,2.5rem)] sm:pt-[clamp(2.5rem,5vh,3.5rem)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-slate-100 flex flex-col gap-[clamp(1rem,3vh,1.5rem)] relative overflow-hidden">
 
-                      {/* Inner Slide Buttons (Eneco / Elindus) */}
-                      {!outcomes.every(o => o.showCoachMessage) && (
+                      {/* Is there any consumption > 100 MWh? */}
+                      {outcomes.some(o => o.showCoachMessage) ? (
+                        <div className="flex flex-col items-center justify-center p-8 sm:p-12 text-center min-h-[350px]">
+                          <div className="inline-flex flex-col items-center gap-5 bg-white border-2 border-slate-100 px-8 py-10 rounded-3xl shadow-sm w-full max-w-lg relative overflow-hidden">
+                            <h3 className="font-black text-2xl text-slate-700">{lang === 'NL' ? 'Volume > 100 MWh' : 'Volume > 100 MWh'}</h3>
+                            <p className="font-medium text-slate-500 text-sm leading-relaxed mb-4">
+                              {lang === 'NL' ? 'Hoger dan 100MWh, neem contact op met je coach, berekening verloopt via Salesforce.' : 'Volume supérieur à 100 MWh, contactez votre coach, le calcul s\'effectue via Salesforce.'}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {/* Inner Slide Buttons (Eneco / Elindus) */}
+                          {!outcomes.every(o => o.showCoachMessage) && (
                         <>
                           {/* Linksboven Hoek & Eneco € toggle */}
                           <div className={`absolute -top-[1px] -left-[1px] flex gap-2 items-start z-40 transition-all duration-300`}>
@@ -1466,11 +1511,35 @@ export default function App() {
                       )}
 
                       {/* Vaste Vergoeding Toggle - Top Center */}
+                      {/* Vaste Vergoeding Toggle & Unit Toggle - Top Center */}
                       {!outcomes.every(o => o.showCoachMessage) && (
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-10 bg-white/80 backdrop-blur border-b border-x border-slate-200 rounded-b-2xl px-4 flex items-center justify-center gap-3 z-40 shadow-sm">
-                          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{lang === 'NL' ? 'Vaste vergoeding?' : 'Frais fixes?'}</span>
-                          <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-8 h-5 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
-                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-3' : ''}`} />
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-10 bg-white/80 backdrop-blur border-b border-x border-slate-200 rounded-b-2xl px-4 flex items-center justify-center gap-6 z-40 shadow-sm whitespace-nowrap">
+                          {/* Promo Toggle - only visible when at least one tariff is VARIABEL */}
+                          {(elecTariff === 'VARIABEL' || gasTariff === 'VARIABEL') && (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => setApplyPromo(!applyPromo)} className={`p-1 rounded-lg border shadow-sm transition-all focus:outline-none flex items-center justify-center ${applyPromo ? 'bg-emerald-100 border-emerald-400 text-emerald-600' : 'bg-white border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200'}`} title="Korting Toepassen">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="2"></circle><circle cx="15" cy="15" r="2"></circle><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+                                </button>
+                                <span className={`text-[10px] font-black uppercase tracking-widest transition-colors ${applyPromo ? 'text-emerald-600' : 'text-slate-400'}`}>Promo</span>
+                              </div>
+                              <div className="w-px h-4 bg-slate-200"></div>
+                            </>
+                          )}
+
+                          {/* Fixed Fee Toggle */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{lang === 'NL' ? 'Vaste vergoeding?' : 'Frais fixes?'}</span>
+                            <button onClick={() => setIncludeFixedFeeSavings(!includeFixedFeeSavings)} className={`relative w-8 h-5 rounded-full transition-colors ${includeFixedFeeSavings ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${includeFixedFeeSavings ? 'translate-x-3' : ''}`} />
+                            </button>
+                          </div>
+                          
+                          <div className="w-px h-4 bg-slate-200"></div>
+
+                          {/* Unit Toggle */}
+                          <button onClick={() => setShowInMWh(!showInMWh)} className="text-[10px] font-black tracking-widest uppercase flex items-center gap-1.5 text-eneco-gradient hover:opacity-80 transition-opacity">
+                            {text.unitToggle} <span className="bg-eneco-gradient/10 px-2 py-0.5 rounded border border-[#E5394C]/20">{showInMWh ? 'kWh' : 'MWh'}</span>
                           </button>
                         </div>
                       )}
@@ -1524,7 +1593,7 @@ export default function App() {
                                         </div>
                                         <div className="relative w-full">
                                           <span className="absolute inset-y-0 left-0 pl-2 flex items-center text-slate-400 font-bold text-xs">€</span>
-                                          <input type="number" step="5" value={currentFee} onChange={(e) => setFee(e.target.value === '' ? 0 : Number(e.target.value))} className="w-full pl-5 pr-1 py-1 text-sm font-bold bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-[#E5394C]/20 focus:border-[#E5394C] outline-none text-slate-600 text-center" />
+                                          <input type="number" step="5" value={currentFee === 0 ? '' : currentFee} onChange={(e) => setFee(e.target.value === '' ? 0 : Number(e.target.value))} onBlur={(e) => { if (e.target.value === '') setFee(0); }} placeholder="0" className="w-full pl-5 pr-1 py-1 text-sm font-bold bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-[#E5394C]/20 focus:border-[#E5394C] outline-none text-slate-600 text-center" />
                                         </div>
                                       </div>
 
@@ -1547,9 +1616,21 @@ export default function App() {
                         </div>
                       )}
 
-                      {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, elindusSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
+                      {/* Detail Berekening Weergave */}
+                      {!outcomes.every(o => o.showCoachMessage) && (
+                        <div className="px-2 mb-4 mt-6">
+                          <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">{text.detailCalculation}</h3>
+                        </div>
+                      )}
+
+                      {outcomes.map(({ type, cons, showEneco, showElindus, showCoachMessage, currPrice, enecoPrice, appliedPromoValue, elindusEsimatedPrice, enecoSavingsTotal, elindusSavingsTotal, enecoSavingsPercentage, elindusSavingsPercentage, enecoFixedFee, elindusFixedFee: elindusFeeVal, currentFixedFee, enecoFixedFeeSaving, elindusFixedFeeSaving }) => (
                         <div key={type} className="border border-slate-100 rounded-3xl p-6 bg-slate-50 relative overflow-hidden">
-                          <h4 className="font-bold text-slate-600 mb-4 pl-0 uppercase tracking-widest border-b border-slate-200 pb-2">{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</h4>
+                          <h4 className="font-bold text-slate-600 mb-4 pl-0 uppercase tracking-widest border-b border-slate-200 pb-2 flex items-center justify-between">
+                            <span>{type === 'ELEC' ? text.elec : text.gas} ({cons} MWh)</span>
+                            {includeFixedFeeSavings && (
+                              <span className="text-[10px] font-bold text-slate-400 normal-case tracking-normal">{lang === 'NL' ? 'Huidige VV' : 'FF actuel'}: €{currentFixedFee}/jaar</span>
+                            )}
+                          </h4>
 
                           {showCoachMessage ? (
                             <div className="pl-4 py-6 text-center">
@@ -1566,15 +1647,32 @@ export default function App() {
                                   <motion.div key="eneco-card" layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.25 }} className="flex-1 w-full p-4 rounded-xl border-2 border-slate-200 bg-white relative flex flex-col h-full">
                                     <div className="flex justify-between items-center mb-2 h-[44px] min-[2000px]:h-[48px]">
                                       <img src="./eneco-grey.png" alt="Eneco" className="h-[2.75rem] min-[2000px]:h-12 object-contain" />
-                                      <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200/80 shadow-inner w-[90px]">
-                                        <button onClick={() => type === 'ELEC' ? setElecTariff('VAST') : setGasTariff('VAST')} className={`flex-1 py-1 text-[9px] font-black rounded-md transition-all ${type === 'ELEC' ? (elecTariff === 'VAST' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600') : (gasTariff === 'VAST' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600')}`}>VAST</button>
-                                        <button onClick={() => type === 'ELEC' ? setElecTariff('VARIABEL') : setGasTariff('VARIABEL')} className={`flex-1 py-1 text-[9px] font-black rounded-md transition-all ${type === 'ELEC' ? (elecTariff === 'VARIABEL' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600') : (gasTariff === 'VARIABEL' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600')}`}>VAR</button>
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200/80 shadow-inner w-[90px]">
+                                          <button onClick={() => type === 'ELEC' ? setElecTariff('VARIABEL') : setGasTariff('VARIABEL')} className={`flex-1 py-1 text-[9px] font-black rounded-md transition-all ${type === 'ELEC' ? (elecTariff === 'VARIABEL' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600') : (gasTariff === 'VARIABEL' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600')}`}>VAR</button>
+                                          <button onClick={() => type === 'ELEC' ? setElecTariff('VAST') : setGasTariff('VAST')} className={`flex-1 py-1 text-[9px] font-black rounded-md transition-all ${type === 'ELEC' ? (elecTariff === 'VAST' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600') : (gasTariff === 'VAST' ? 'bg-eneco-gradient text-white shadow-md' : 'text-slate-400 hover:text-slate-600')}`}>VAST</button>
+                                        </div>
                                       </div>
                                     </div>
-                                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center">
+                                    <div className="w-full bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 font-bold mb-2 text-sm text-slate-600 flex justify-between items-center relative">
                                       <span>€{showInMWh ? enecoPrice.toFixed(2) : (enecoPrice / 1000).toFixed(4)}</span>
-                                      <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
+                                      <div className="flex items-center gap-2">
+                                        {appliedPromoValue > 0 && <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">-€{appliedPromoValue}</span>}
+                                        <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
+                                      </div>
                                     </div>
+                                    {includeFixedFeeSavings && (
+                                      <div className="w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 px-3 text-xs text-slate-500 flex justify-between items-center mb-1">
+                                        <span className="font-bold">{text.vasteVergoedingVV}</span>
+                                        <span className="font-black">€{enecoFixedFee}/jaar</span>
+                                      </div>
+                                    )}
+                                    {appliedPromoValue > 0 && (
+                                      <div className="w-full bg-emerald-50 border border-emerald-100 rounded-lg py-1.5 px-3 text-xs text-emerald-600 flex justify-between items-center mb-1">
+                                        <span className="font-bold">Promo</span>
+                                        <span className="font-black">-€{appliedPromoValue}</span>
+                                      </div>
+                                    )}
                                     <div className="mt-auto">
                                       <div className="text-right flex items-center justify-end gap-2 mt-2">
                                         <span className="text-xs text-slate-400 font-bold">{enecoSavingsTotal > 0 ? text.savingWord : (lang === 'NL' ? 'Meerkost:' : 'Surcoût:')}</span>
@@ -1595,6 +1693,12 @@ export default function App() {
                                       <span>€{showInMWh ? elindusEsimatedPrice.toFixed(2) : (elindusEsimatedPrice / 1000).toFixed(4)}</span>
                                       <span className="text-[10px] text-slate-300">/{showInMWh ? 'MWh' : 'kWh'}</span>
                                     </div>
+                                    {includeFixedFeeSavings && (
+                                      <div className="w-full bg-slate-50 border border-slate-100 rounded-lg py-1.5 px-3 text-xs text-slate-500 flex justify-between items-center mb-1">
+                                        <span className="font-bold">{text.vasteVergoedingVV}</span>
+                                        <span className="font-black">€{elindusFeeVal}/jaar</span>
+                                      </div>
+                                    )}
                                     <div className="mt-auto">
                                       <div className="text-right flex items-center justify-end gap-2 mt-2">
                                         <span className="text-xs text-slate-400 font-bold">{elindusSavingsTotal > 0 ? text.savingWord : (lang === 'NL' ? 'Meerkost:' : 'Surcoût:')}</span>
@@ -1704,6 +1808,14 @@ export default function App() {
                                         </div>
                                       )}
 
+                                      {/* Huidige VV bij huidige prijs */}
+                                      {includeFixedFeeSavings && (
+                                        <div className="flex justify-between items-center text-xs mt-1">
+                                          <span className="text-slate-400">{lang === 'NL' ? 'Huidige Vaste Vergoeding:' : 'Frais fixes actuels:'}</span>
+                                          <span className="font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">€{o.currentFixedFee}/jaar</span>
+                                        </div>
+                                      )}
+
                                       {o.type === 'ELEC' && hasSolarPanels && (
                                         <div className="flex flex-col gap-1 mt-1">
                                           <div className="flex justify-between text-slate-400"><span>{text.huidigInjectieTarief}:</span><span className="font-medium bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded text-xs">€{(showInMWh ? o.currInjPrice : o.currInjPrice / 1000).toFixed(showInMWh ? 2 : 4)} / {showInMWh ? 'MWh' : 'kWh'}</span></div>
@@ -1738,8 +1850,20 @@ export default function App() {
                                         )}
                                       </div>
 
+                                      {/* Nieuwe VV bij voorstel */}
                                       {includeFixedFeeSavings && (
-                                        <div className="flex justify-between items-center border-t border-slate-100 pt-2"><span className="text-slate-400 text-xs">{text.vasteVergoedingVV}:</span><span className="font-bold text-slate-500 text-[10px] uppercase bg-slate-100 px-1.5 py-0.5 rounded">€{o.currentFixedFee} → €{newFixedFee}</span></div>
+                                        <div className="flex justify-between items-center text-xs mt-1">
+                                          <span className="text-slate-400">{text.vasteVergoedingVV} {displayProvider}:</span>
+                                          <span className="font-bold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">€{newFixedFee}/jaar</span>
+                                        </div>
+                                      )}
+
+                                      {/* Promo */}
+                                      {(globalCalcOpen === 'ENECO' || useEnecoForThis) && o.appliedPromoValue > 0 && (
+                                        <div className="flex justify-between items-center text-xs mt-1">
+                                          <span className="text-emerald-600 font-bold">Promo Korting:</span>
+                                          <span className="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">-€{o.appliedPromoValue}</span>
+                                        </div>
                                       )}
 
                                       <div className={`flex justify-between items-center border-t border-dashed border-slate-200 pt-2 font-black ${savings > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
@@ -1755,6 +1879,8 @@ export default function App() {
                           </motion.div>
                         )}
                       </AnimatePresence>
+                        </>
+                      )}
 
                     </div>
                   </motion.div>
