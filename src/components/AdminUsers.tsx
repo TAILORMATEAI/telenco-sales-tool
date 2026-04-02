@@ -309,7 +309,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
               const diffMs = lastSeenDate ? now.getTime() - lastSeenDate.getTime() : Infinity;
               const diffMins = Math.floor(diffMs / 1000 / 60);
 
-              const isOnline = user.is_active && (user.email === currentUserEmail || diffMins < 5 || !lastSeenDate);
+              const isOnline = user.is_active && (user.email === currentUserEmail || (lastSeenDate && diffMins < 5));
 
               let timeString = 'Offline';
               let dotColor = 'bg-slate-300';
