@@ -295,7 +295,7 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-20"
+            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pb-20"
           >
             {(tab === 'active' ? activeUsers : archivedUsers).map(user => {
               const isImage = user.avatar_id && (user.avatar_id.startsWith('http') || user.avatar_id.includes('/'));
@@ -316,9 +316,9 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
               let borderColor = 'border-slate-300';
 
               if (isOnline) {
-                 timeString = 'Online';
-                 dotColor = 'bg-[#91C848]';
-                 borderColor = 'border-[#91C848]';
+                timeString = 'Online';
+                dotColor = 'bg-[#91C848]';
+                borderColor = 'border-[#91C848]';
               } else if (lastSeenDate) {
                 if (diffMins < 60) {
                   timeString = `${diffMins}m geleden`;
@@ -516,22 +516,20 @@ export default function AdminUsers({ currentUserEmail }: { currentUserEmail: str
                     <button
                       type="button"
                       onClick={() => setFormRole('user')}
-                      className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
-                        formRole === 'user'
+                      className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider transition-all ${formRole === 'user'
                           ? 'bg-white text-slate-600 shadow-sm border-r border-slate-200'
                           : 'text-slate-400 hover:text-slate-500'
-                      }`}
+                        }`}
                     >
                       Gebruiker
                     </button>
                     <button
                       type="button"
                       onClick={() => setFormRole('admin')}
-                      className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
-                        formRole === 'admin'
+                      className={`flex-1 py-2.5 text-xs font-black uppercase tracking-wider transition-all ${formRole === 'admin'
                           ? 'bg-blue-500 text-white shadow-sm'
                           : 'text-slate-400 hover:text-slate-500'
-                      }`}
+                        }`}
                     >
                       Admin
                     </button>

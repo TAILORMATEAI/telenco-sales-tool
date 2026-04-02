@@ -557,7 +557,7 @@ export default function AdminDashboard() {
 
         {/* Main Content Area */}
         <main className="flex-1 h-full min-h-0 overflow-y-auto relative bg-transparent w-full overflow-x-hidden flex flex-col">
-          <div className="flex-1 w-full max-w-[clamp(50rem,130vh,85rem)] min-[2000px]:max-w-[clamp(75rem,150vh,110rem)] mx-auto px-4 sm:px-[clamp(1.5rem,3vw,3.5rem)] py-[clamp(1.5rem,4vh,4rem)] relative z-20">
+          <div className={`flex-1 w-full mx-auto px-4 sm:px-[clamp(1.5rem,3vw,3.5rem)] py-[clamp(1.5rem,4vh,4rem)] relative z-20 ${activeTab === 'users' ? '' : 'max-w-[clamp(50rem,130vh,85rem)] min-[2000px]:max-w-[clamp(75rem,150vh,110rem)]'}`}>
 
             {syncError && (
               <div className="mb-6 bg-rose-50 border border-rose-200 p-5 rounded-2xl flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm relative overflow-hidden">
