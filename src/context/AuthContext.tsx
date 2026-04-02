@@ -51,8 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: new Error('Account gearchiveerd') };
       }
       setProfile(data as Profile);
-      // Update last_login asynchronously so it doesn't block the loading phase
-      supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', userId);
+      // Update last_login asynchronously via server (bypasses RLS)
+      fetch('/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId }) }).catch(() => {});
       return { data };
     } else {
       // Auto-create profile for new users (pull name from auth metadata)
@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!isUpdating && now - lastUpdateTimer > 3 * 60 * 1000) { // Max once every 3 minutes
         isUpdating = true;
         try {
-          await supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', user.id);
+          await fetch('/api/presence', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id }) }).catch(() => {});
           lastUpdateTimer = Date.now();
         } catch (e) {
           console.error("Failed to update presence:", e);

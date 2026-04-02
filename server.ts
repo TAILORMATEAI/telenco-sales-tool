@@ -772,6 +772,22 @@ async function startServer() {
     }
   });
 
+  // ── Presence heartbeat (bypasses RLS via service role) ──
+  app.post('/api/presence', express.json(), async (req, res) => {
+    const serviceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceKey) return res.status(500).json({ error: 'No service key' });
+    const adminClient = createClient(supabaseUrl, serviceKey);
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    try {
+      const { error } = await adminClient.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', userId);
+      if (error) throw error;
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
   // ── Vite dev middleware ──
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
